@@ -10,6 +10,8 @@ class Role extends Model
     protected $table = 'roles';
     protected $primaryKey = 'cod_roles';
 
+    public $timestamps = true;
+
     const CREATED_AT = 'fcr_rol';
     const UPDATED_AT = 'fmo_rol';
 
@@ -21,6 +23,8 @@ class Role extends Model
 
     protected $casts = [
         'act_rol' => 'boolean',
+        'fcr_rol' => 'datetime',
+        'fmo_rol' => 'datetime',
     ];
 
     public function usuarios(): HasMany
