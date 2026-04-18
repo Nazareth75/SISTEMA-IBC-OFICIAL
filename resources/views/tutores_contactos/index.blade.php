@@ -26,12 +26,8 @@
 
     <div class="py-6">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            @if (session('success'))
-                <div class="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-green-800">
-                    {{ session('success') }}
-                </div>
-            @endif
-
+            
+            
             <div class="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
@@ -81,8 +77,7 @@
                                                     Editar
                                                 </a>
 
-                                                <form action="{{ route('personas-no-videntes.tutores.destroy', [$persona, $tutor]) }}" method="POST"
-                                                      onsubmit="return confirm('¿Está seguro de eliminar este tutor/contacto?');">
+                                                <form action="{{ route('personas-no-videntes.tutores.destroy', [$persona, $tutor]) }}" method="POST" class="form-eliminar-tutor">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit"

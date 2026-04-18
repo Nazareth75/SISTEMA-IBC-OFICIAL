@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Auth;
 
 class PersonaNoVidenteController extends Controller
 {
@@ -42,6 +43,8 @@ class PersonaNoVidenteController extends Controller
 
     public function create(): View
     {
+        abort_unless(Auth::user()?->puedeCrearPersonaNoVidente(), 403);
+
         return view('personas_no_videntes.create', [
             'generos' => ['MASCULINO', 'FEMENINO', 'OTRO'],
             'grados' => ['TOTAL', 'PARCIAL', 'BAJA VISIÓN'],
@@ -53,6 +56,9 @@ class PersonaNoVidenteController extends Controller
 
     public function store(StorePersonaNoVidenteRequest $request): RedirectResponse
     {
+
+        abort_unless(Auth::user()?->puedeCrearPersonaNoVidente(), 403);
+
         DB::transaction(function () use ($request) {
             $data = $request->validated();
 
@@ -88,6 +94,9 @@ class PersonaNoVidenteController extends Controller
 
     public function edit(PersonaNoVidente $personaNoVidente): View
     {
+
+        abort_unless(Auth::user()?->puedeEditarPersonaNoVidente(), 403);
+
         return view('personas_no_videntes.edit', [
             'persona' => $personaNoVidente,
             'estados' => ['PENDIENTE', 'ACTIVO', 'INACTIVO', 'SUSPENDIDO', 'EGRESADO'],
@@ -99,10 +108,17 @@ class PersonaNoVidenteController extends Controller
         ]);
     }
 
+    
     public function update(UpdatePersonaNoVidenteRequest $request, PersonaNoVidente $personaNoVidente): RedirectResponse
     {
+        abort_unless(Auth::user()?->puedeEditarPersonaNoVidente(), 403);
+
         DB::transaction(function () use ($request, $personaNoVidente) {
             $data = $request->validated();
+
+             if (!Auth::user()?->puedeCambiarEstadoPersonaNoVidente()) {
+                unset($data['est_pnv']);
+            }
 
             if ($request->hasFile('fot_pnv')) {
                 if ($personaNoVidente->fot_pnv && Storage::disk('public')->exists($personaNoVidente->fot_pnv)) {
@@ -122,6 +138,9 @@ class PersonaNoVidenteController extends Controller
 
     public function destroy(PersonaNoVidente $personaNoVidente): RedirectResponse
     {
+
+        abort_unless(Auth::user()?->puedeEliminarPersonaNoVidente(), 403);
+        
         if ($personaNoVidente->tieneAfiliacionActiva()) {
             return redirect()
                 ->route('personas-no-videntes.index')

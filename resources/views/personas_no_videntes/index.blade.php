@@ -11,27 +11,21 @@
             </div>
 
             <div>
-                <a href="{{ route('personas-no-videntes.create') }}"
-                   class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-lg font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 transition">
-                    Registrar nueva persona
-                </a>
+                @php($usuario = auth()->user())
+                @if($usuario?->puedeCrearPersonaNoVidente())
+                    <div>
+                        <a href="{{ route('personas-no-videntes.create') }}"
+                        class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-lg font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 transition">
+                            Registrar nueva persona
+                        </a>
+                    </div>
+                @endif
             </div>
         </div>
     </x-slot>
 
     <div class="py-6">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            @if (session('success'))
-                <div class="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-green-800">
-                    {{ session('success') }}
-                </div>
-            @endif
-
-            @if (session('error'))
-                <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-800">
-                    {{ session('error') }}
-                </div>
-            @endif
 
             <div class="bg-white shadow-sm rounded-xl border border-gray-100 mb-6">
                 @include('personas_no_videntes.partials.filtros')

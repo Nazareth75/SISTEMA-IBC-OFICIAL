@@ -55,25 +55,28 @@
                     <td class="px-4 py-3 text-sm text-center whitespace-nowrap">
                         <div class="flex flex-wrap justify-center gap-2">
                             <a href="{{ route('personas-no-videntes.show', $persona) }}"
-                               class="inline-flex items-center px-3 py-1.5 bg-sky-100 text-sky-700 rounded-lg text-xs font-semibold hover:bg-sky-200 transition">
+                            class="inline-flex items-center px-3 py-1.5 bg-sky-100 text-sky-700 rounded-lg text-xs font-semibold hover:bg-sky-200 transition">
                                 Ver
                             </a>
 
-                            <a href="{{ route('personas-no-videntes.edit', $persona) }}"
-                               class="inline-flex items-center px-3 py-1.5 bg-amber-100 text-amber-700 rounded-lg text-xs font-semibold hover:bg-amber-200 transition">
-                                Editar
-                            </a>
+                            @if(auth()->user()?->puedeEditarPersonaNoVidente())
+                                <a href="{{ route('personas-no-videntes.edit', $persona) }}"
+                                class="inline-flex items-center px-3 py-1.5 bg-amber-100 text-amber-700 rounded-lg text-xs font-semibold hover:bg-amber-200 transition">
+                                    Editar
+                                </a>
+                            @endif
 
-                            <form action="{{ route('personas-no-videntes.destroy', $persona) }}" method="POST"
-                                  onsubmit="return confirm('¿Está seguro de eliminar esta persona no vidente?');">
-                                @csrf
-                                @method('DELETE')
+                            @if(auth()->user()?->puedeEliminarPersonaNoVidente())
+                                <form action="{{ route('personas-no-videntes.destroy', $persona) }}" method="POST" class="form-eliminar-persona">
+                                    @csrf
+                                    @method('DELETE')
 
-                                <button type="submit"
-                                        class="inline-flex items-center px-3 py-1.5 bg-red-100 text-red-700 rounded-lg text-xs font-semibold hover:bg-red-200 transition">
-                                    Eliminar
-                                </button>
-                            </form>
+                                    <button type="submit"
+                                            class="inline-flex items-center px-3 py-1.5 bg-red-100 text-red-700 rounded-lg text-xs font-semibold hover:bg-red-200 transition">
+                                        Eliminar
+                                    </button>
+                                </form>
+                            @endif
                         </div>
                     </td>
                 </tr>

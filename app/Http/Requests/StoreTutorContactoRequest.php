@@ -3,7 +3,6 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class StoreTutorContactoRequest extends FormRequest
 {
@@ -19,7 +18,7 @@ class StoreTutorContactoRequest extends FormRequest
             'ape_tco' => $this->ape_tco ? mb_strtoupper(trim($this->ape_tco), 'UTF-8') : null,
             'par_tco' => $this->par_tco ? mb_strtoupper(trim($this->par_tco), 'UTF-8') : null,
             'cor_tco' => $this->cor_tco ? mb_strtolower(trim($this->cor_tco), 'UTF-8') : null,
-            'tel_tco' => $this->tel_tco ? preg_replace('/\D+/', '', $this->tel_tco) : null,
+            'tel_tco' => $this->tel_tco ? trim($this->tel_tco) : null,
             'etl_tco' => $this->boolean('etl_tco'),
         ]);
     }
@@ -27,12 +26,26 @@ class StoreTutorContactoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nom_tco' => ['required', 'string', 'max:100'],
-            'ape_tco' => ['required', 'string', 'max:100'],
-            'par_tco' => ['required', 'string', 'max:50'],
-            'tel_tco' => ['required', 'string', 'max:20'],
+            'nom_tco' => ['required', 'string', 'min:2', 'max:100', 'regex:/^[\pL\s]+$/u'],
+            'ape_tco' => ['required', 'string', 'min:2', 'max:100', 'regex:/^[\pL\s]+$/u'],
+            'par_tco' => ['required', 'string', 'min:2', 'max:50', 'regex:/^[\pL\s]+$/u'],
+            'tel_tco' => ['required', 'string', 'min:7', 'max:20', 'regex:/^\d+$/'],
             'cor_tco' => ['nullable', 'email', 'max:150'],
             'etl_tco' => ['nullable', 'boolean'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'nom_tco.regex' => 'El nombre solo puede contener letras y espacios.',
+            'nom_tco.min' => 'El nombre debe tener al menos 2 caracteres.',
+            'ape_tco.regex' => 'El apellido solo puede contener letras y espacios.',
+            'ape_tco.min' => 'El apellido debe tener al menos 2 caracteres.',
+            'par_tco.regex' => 'El parentesco solo puede contener letras y espacios.',
+            'par_tco.min' => 'El parentesco debe tener al menos 2 caracteres.',
+            'tel_tco.regex' => 'El teléfono solo puede contener números.',
+            'tel_tco.min' => 'El teléfono debe tener al menos 7 dígitos.',
         ];
     }
 

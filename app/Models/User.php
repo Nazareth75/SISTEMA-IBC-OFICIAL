@@ -67,4 +67,45 @@ class User extends Authenticatable
     {
         return $this->hasMany(PersonaNoVidente::class, 'cod_usuarios_pnv', 'cod_usuarios');
     }
+
+    public function esAdministrador(): bool
+    {
+        return strtoupper($this->role?->nom_rol ?? '') === 'ADMINISTRADOR';
+    }
+
+    public function esTecnico(): bool
+    {
+        return strtoupper($this->role?->nom_rol ?? '') === 'TECNICO';
+    }
+
+    public function esTutor(): bool
+    {
+        $rol = strtoupper($this->role?->nom_rol ?? '');
+        return in_array($rol, ['TUTOR', 'VOLUNTARIO'], true);
+    }
+
+    public function puedeCrearPersonaNoVidente(): bool
+    {
+        return $this->esAdministrador() || $this->esTecnico();
+    }
+
+    public function puedeEditarPersonaNoVidente(): bool
+    {
+        return $this->esAdministrador() || $this->esTecnico();
+    }
+
+    public function puedeCambiarEstadoPersonaNoVidente(): bool
+    {
+        return $this->esAdministrador();
+    }
+
+    public function puedeEliminarPersonaNoVidente(): bool
+    {
+        return $this->esAdministrador();
+    }
+
+    public function puedeGestionarTutores(): bool
+    {
+        return $this->esAdministrador() || $this->esTecnico();
+    }
 }

@@ -9,11 +9,13 @@ use App\Models\TutorContacto;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Auth;
 
 class TutorContactoController extends Controller
 {
     public function index(PersonaNoVidente $personaNoVidente): View
     {
+        abort_unless(Auth::user()?->puedeGestionarTutores(), 403);
         $personaNoVidente->load([
             'tutoresContactos' => fn ($q) => $q->orderByDesc('etl_tco')
                 ->orderByRaw('CASE WHEN fbj_tco IS NULL THEN 0 ELSE 1 END')
@@ -27,6 +29,7 @@ class TutorContactoController extends Controller
 
     public function create(PersonaNoVidente $personaNoVidente): View
     {
+        abort_unless(Auth::user()?->puedeGestionarTutores(), 403);
         return view('tutores_contactos.create', [
             'persona' => $personaNoVidente,
         ]);
@@ -34,6 +37,7 @@ class TutorContactoController extends Controller
 
     public function store(StoreTutorContactoRequest $request, PersonaNoVidente $personaNoVidente): RedirectResponse
     {
+        abort_unless(Auth::user()?->puedeGestionarTutores(), 403);
         DB::transaction(function () use ($request, $personaNoVidente) {
             $data = $request->validated();
             $data['cod_personas_no_videntes_tco'] = $personaNoVidente->cod_personas_no_videntes;
@@ -54,6 +58,7 @@ class TutorContactoController extends Controller
 
     public function edit(PersonaNoVidente $personaNoVidente, TutorContacto $tutore): View
     {
+        abort_unless(Auth::user()?->puedeGestionarTutores(), 403);
         abort_unless(
             $tutore->cod_personas_no_videntes_tco === $personaNoVidente->cod_personas_no_videntes,
             404
@@ -75,6 +80,7 @@ class TutorContactoController extends Controller
             404
         );
 
+        abort_unless(Auth::user()?->puedeGestionarTutores(), 403);
         DB::transaction(function () use ($request, $personaNoVidente, $tutore) {
             $data = $request->validated();
 
@@ -95,6 +101,7 @@ class TutorContactoController extends Controller
 
     public function destroy(PersonaNoVidente $personaNoVidente, TutorContacto $tutore): RedirectResponse
     {
+        abort_unless(Auth::user()?->puedeGestionarTutores(), 403);
         abort_unless(
             $tutore->cod_personas_no_videntes_tco === $personaNoVidente->cod_personas_no_videntes,
             404

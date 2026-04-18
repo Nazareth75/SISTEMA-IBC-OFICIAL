@@ -11,13 +11,15 @@
             </div>
 
             <div class="flex gap-2">
-                <a href="{{ route('personas-no-videntes.edit', $persona) }}"
-                   class="inline-flex items-center px-4 py-2 bg-amber-500 border border-transparent rounded-lg font-semibold text-xs text-white uppercase tracking-widest hover:bg-amber-600 transition">
-                    Editar
-                </a>
+                @if(auth()->user()?->puedeEditarPersonaNoVidente())
+                    <a href="{{ route('personas-no-videntes.edit', $persona) }}"
+                    class="inline-flex items-center px-4 py-2 bg-amber-500 border border-transparent rounded-lg font-semibold text-xs text-white uppercase tracking-widest hover:bg-amber-600 transition">
+                        Editar
+                    </a>
+                @endif
 
-                <a href="{{ route('personas-no-videntes.index') }}"
-                   class="inline-flex items-center px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg font-semibold text-xs text-gray-700 uppercase tracking-widest hover:bg-gray-200 transition">
+                <a href="{{ route('personas-no-videntes.index', $persona) }}"
+                class="inline-flex items-center px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg font-semibold text-xs text-gray-700 uppercase tracking-widest hover:bg-gray-200 transition">
                     Volver
                 </a>
             </div>
@@ -37,6 +39,12 @@
 
     <div class="py-6">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+
+            @if($persona->fbj_pnv)
+                <div class="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-red-800 text-sm">
+                    Esta persona fue dada de baja lógicamente el {{ optional($persona->fbj_pnv)->format('d/m/Y H:i') }}.
+                </div>
+            @endif
 
             <div class="bg-white shadow-sm rounded-xl border border-gray-100 p-6">
                 <div class="flex flex-col lg:flex-row gap-6">
@@ -107,6 +115,20 @@
                                 <p class="font-medium text-gray-900">{{ $persona->ciu_pnv }}</p>
                             </div>
 
+                            <div>
+                                <p class="text-gray-500">Registrado por</p>
+                                <p class="font-medium text-gray-900">
+                                    {{ $persona->usuarioRegistro?->nombre_completo ?? '—' }}
+                                </p>
+                            </div>
+
+                            <div>
+                                <p class="text-gray-500">Fecha de registro</p>
+                                <p class="font-medium text-gray-900">
+                                    {{ optional($persona->fcr_pnv)->format('d/m/Y H:i') }}
+                                </p>
+                            </div>
+
                             <div class="md:col-span-2 xl:col-span-3">
                                 <p class="text-gray-500">Dirección</p>
                                 <p class="font-medium text-gray-900">{{ $persona->dir_pnv ?: '—' }}</p>
@@ -147,10 +169,12 @@
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-lg font-semibold text-gray-800">Tutor / Contactos</h3>
 
-                        <a href="{{ route('personas-no-videntes.tutores.index', $persona) }}"
-                           class="inline-flex items-center px-3 py-2 bg-indigo-600 border border-transparent rounded-lg font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 transition">
-                            Agregar tutor
-                        </a>
+                        @if(auth()->user()?->puedeGestionarTutores())
+                            <a href="{{ route('personas-no-videntes.tutores.index', $persona) }}"
+                            class="inline-flex items-center px-3 py-2 bg-indigo-600 border border-transparent rounded-lg font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 transition">
+                                Gestionar tutores
+                            </a>
+                        @endif
                     </div>
 
                     @if($persona->tutoresContactos->count())

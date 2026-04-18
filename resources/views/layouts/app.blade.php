@@ -5,6 +5,14 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
+        @if(session('success'))
+            <meta name="flash-success" content="{{ session('success') }}">
+        @endif
+
+        @if(session('error'))
+            <meta name="flash-error" content="{{ session('error') }}">
+        @endif
+
         <title>{{ config('app.name', 'Laravel') }}</title>
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">

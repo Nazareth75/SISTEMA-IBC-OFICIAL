@@ -269,7 +269,7 @@
                 @enderror
             </div>
 
-            @if(isset($estados))
+            @if(isset($estados) && auth()->user()?->puedeCambiarEstadoPersonaNoVidente())
                 <div>
                     <label for="est_pnv" class="block text-sm font-medium text-gray-700 mb-1">
                         Estado
