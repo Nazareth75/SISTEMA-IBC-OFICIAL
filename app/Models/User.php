@@ -1,0 +1,64 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+
+class User extends Authenticatable
+{
+    use Notifiable;
+
+    protected $table = 'usuarios';
+    protected $primaryKey = 'cod_usuarios';
+
+    const CREATED_AT = 'fcr_usu';
+    const UPDATED_AT = 'fmo_usu';
+
+    protected $fillable = [
+        'ide_usu',
+        'nom_usu',
+        'ape_usu',
+        'cii_usu',
+        'cor_usu',
+        'con_usu',
+        'tel_usu',
+        'fot_usu',
+        'cod_roles_usu',
+        'est_usu',
+        'tok_usu',
+        'uac_usu',
+        'fbj_usu',
+    ];
+
+    protected $hidden = [
+        'con_usu',
+        'remember_token',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'uac_usu' => 'datetime',
+            'fcr_usu' => 'datetime',
+            'fmo_usu' => 'datetime',
+            'fbj_usu' => 'datetime',
+        ];
+    }
+
+    public function getAuthPassword()
+    {
+        return $this->con_usu;
+    }
+
+    public function role(): BelongsTo
+    {
+        return $this->belongsTo(Role::class, 'cod_roles_usu', 'cod_roles');
+    }
+
+    public function getNombreCompletoAttribute(): string
+    {
+        return "{$this->nom_usu} {$this->ape_usu}";
+    }
+}
