@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -40,8 +42,53 @@ class Afiliacion extends Model
         return $this->belongsTo(PersonaNoVidente::class, 'cod_personas_no_videntes_afi', 'cod_personas_no_videntes');
     }
 
+    public function tipoAfiliado(): BelongsTo
+    {
+        return $this->belongsTo(TipoAfiliado::class, 'cod_tipos_afiliado_afi', 'cod_tipos_afiliado');
+    }
+
     public function usuarioRegistro(): BelongsTo
     {
         return $this->belongsTo(User::class, 'cod_usuarios_afi', 'cod_usuarios');
+    }
+
+    public function scopeActivas($query): Builder
+    {
+        return $query->where('est_afi', 'ACTIVA')->whereNull('fbj_afi');
+    }
+
+    public function scopeNoEliminadas($query): Builder
+    {
+        return $query->whereNull('fbj_afi');
+    }
+
+    public function scopeBuscar($query, ?string $texto): Builder
+    {
+        if (!$texto) {
+            return $query;
+        }
+
+        return $query->where(function ($q) use ($texto) {
+            $q->where('ide_afi', 'like', "%{$texto}%")
+                ->orWhereHas('persona', function ($sub) use ($texto) {
+                    $sub->where('nom_pnv', 'like', "%{$texto}%")
+                        ->orWhere('ape_pnv', 'like', "%{$texto}%")
+                        ->orWhere('cii_pnv', 'like', "%{$texto}%");
+                });
+        });
+    }
+
+    public function actualizarEstadoPorVencimiento(): void
+    {
+        if (
+            $this->fve_afi &&
+            $this->est_afi === 'ACTIVA' &&
+            Carbon::parse($this->fve_afi)->isPast() &&
+            !Carbon::parse($this->fve_afi)->isToday()
+        ) {
+            $this->updateQuietly([
+                'est_afi' => 'VENCIDA',
+            ]);
+        }
     }
 }

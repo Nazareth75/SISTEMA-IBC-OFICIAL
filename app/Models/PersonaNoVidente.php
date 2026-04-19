@@ -100,6 +100,11 @@ class PersonaNoVidente extends Model
             ->exists();
     }
 
+    public function puedeSerAfiliada(): bool
+    {
+        return $this->est_pnv === 'ACTIVO' && is_null($this->fbj_pnv);
+    }
+
     public function scopeWithTrashedFake($query)
     {
         return $query;

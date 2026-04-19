@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PersonaNoVidenteController;
 use App\Http\Controllers\TutorContactoController;
+use App\Http\Controllers\AfiliacionController;
 
 
 Route::get('/', function () {
@@ -32,6 +33,11 @@ Route::middleware('auth')->group(function () {
     ->parameters([
         'personas-no-videntes' => 'personaNoVidente',
         'tutores' => 'tutore',
+    ]);
+
+        Route::resource('afiliaciones', AfiliacionController::class)
+    ->parameters([
+        'afiliaciones' => 'afiliacione',
     ]);
 });
 

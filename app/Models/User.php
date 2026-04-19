@@ -108,4 +108,24 @@ class User extends Authenticatable
     {
         return $this->esAdministrador() || $this->esTecnico();
     }
+
+    public function puedeCrearAfiliacion(): bool
+    {
+        return $this->esAdministrador() || $this->esTecnico();
+    }
+
+    public function puedeEditarAfiliacion(): bool
+    {
+        return $this->esAdministrador() || $this->esTecnico();
+    }
+
+    public function puedeEliminarAfiliacion(): bool
+    {
+        return $this->esAdministrador();
+    }
+
+    public function puedeGestionarTiposAfiliado(): bool
+    {
+        return $this->esAdministrador();
+    }
 }
