@@ -73,6 +73,16 @@ class User extends Authenticatable
         return $this->hasMany(AsignacionBeneficio::class, 'cod_usuarios_abe', 'cod_usuarios');
     }
 
+    public function tramitesRegistrados(): HasMany
+    {
+        return $this->hasMany(TramiteInstitucion::class, 'cod_usuarios_tin', 'cod_usuarios');
+    }
+
+    public function accesosSaludRegistrados(): HasMany
+    {
+        return $this->hasMany(AccesoSalud::class, 'cod_usuarios_asa', 'cod_usuarios');
+    }
+
     public function esAdministrador(): bool
     {
         return strtoupper($this->role?->nom_rol ?? '') === 'ADMINISTRADOR';

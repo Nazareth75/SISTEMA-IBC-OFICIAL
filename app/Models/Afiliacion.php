@@ -62,6 +62,24 @@ class Afiliacion extends Model
         );
     }
 
+    public function tramitesInstituciones(): HasMany
+    {
+        return $this->hasMany(
+            TramiteInstitucion::class,
+            'cod_afiliaciones_tin',
+            'cod_afiliaciones'
+        );
+    }
+
+    public function accesosSalud(): HasMany
+    {
+        return $this->hasMany(
+            AccesoSalud::class,
+            'cod_afiliaciones_asa',
+            'cod_afiliaciones'
+        );
+    }
+
     public function scopeActivas($query): Builder
     {
         return $query->where('est_afi', 'ACTIVA')->whereNull('fbj_afi');

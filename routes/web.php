@@ -7,6 +7,9 @@ use App\Http\Controllers\TutorContactoController;
 use App\Http\Controllers\AfiliacionController;
 use App\Http\Controllers\BeneficioController;
 use App\Http\Controllers\AsignacionBeneficioController;
+use App\Http\Controllers\InstitucionExternaController;
+use App\Http\Controllers\TramiteInstitucionController;
+use App\Http\Controllers\AccesoSaludController;
 
 
 Route::get('/', function () {
@@ -74,6 +77,40 @@ Route::middleware('auth')->group(function () {
             }),
         ]);
     })->name('afiliados.debug');
+
+    /**
+     * MÓDULO 5: Trámites en Instituciones Externas
+     */
+
+    // Instituciones Externas
+    Route::resource('instituciones-externas', InstitucionExternaController::class)
+        ->parameters([
+            'instituciones-externas' => 'institucionExterna',
+        ]);
+
+    Route::patch('instituciones-externas/{institucionExterna}/toggle', [InstitucionExternaController::class, 'toggle'])
+        ->name('instituciones-externas.toggle');
+
+    // Trámites Instituciones
+    Route::resource('tramites-instituciones', TramiteInstitucionController::class)
+        ->parameters([
+            'tramites-instituciones' => 'tramiteInstitucion',
+        ]);
+
+    Route::get('api/afiliados-tramites', [TramiteInstitucionController::class, 'buscarAfiliados'])
+        ->name('afiliados.tramites');
+
+    Route::post('tramites-instituciones/{tramiteInstitucion}/cambiar-estado', [TramiteInstitucionController::class, 'cambiarEstado'])
+        ->name('tramites-instituciones.cambiar-estado');
+
+    // Accesos Salud
+    Route::resource('accesos-salud', AccesoSaludController::class)
+        ->parameters([
+            'accesos-salud' => 'accesoSalud',
+        ]);
+
+    Route::get('api/afiliados-accesos', [AccesoSaludController::class, 'buscarAfiliados'])
+        ->name('afiliados.accesos');
 });
 
 
