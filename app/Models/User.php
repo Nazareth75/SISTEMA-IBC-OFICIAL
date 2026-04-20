@@ -68,6 +68,11 @@ class User extends Authenticatable
         return $this->hasMany(PersonaNoVidente::class, 'cod_usuarios_pnv', 'cod_usuarios');
     }
 
+    public function asignacionesBeneficiosRegistradas(): HasMany
+    {
+        return $this->hasMany(AsignacionBeneficio::class, 'cod_usuarios_abe', 'cod_usuarios');
+    }
+
     public function esAdministrador(): bool
     {
         return strtoupper($this->role?->nom_rol ?? '') === 'ADMINISTRADOR';

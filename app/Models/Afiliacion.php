@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Afiliacion extends Model
 {
@@ -50,6 +51,15 @@ class Afiliacion extends Model
     public function usuarioRegistro(): BelongsTo
     {
         return $this->belongsTo(User::class, 'cod_usuarios_afi', 'cod_usuarios');
+    }
+
+    public function asignacionesBeneficios(): HasMany
+    {
+        return $this->hasMany(
+            AsignacionBeneficio::class,
+            'cod_afiliaciones_abe',
+            'cod_afiliaciones'
+        );
     }
 
     public function scopeActivas($query): Builder
