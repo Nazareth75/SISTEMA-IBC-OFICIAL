@@ -32,7 +32,6 @@ class StoreTramiteInstitucionRequest extends FormRequest
             'des_tin' => 'required|string|max:500',
             'fei_tin' => 'required|date|date_format:Y-m-d',
             'fer_tin' => 'nullable|date|date_format:Y-m-d|after_or_equal:fei_tin',
-            'est_tin' => 'required|in:' . implode(',', array_keys(TramiteInstitucion::ESTADOS)),
             'obs_tin' => 'nullable|string|max:500',
         ];
     }
@@ -57,8 +56,6 @@ class StoreTramiteInstitucionRequest extends FormRequest
             'fer_tin.date' => 'La fecha de resolución debe ser una fecha válida.',
             'fer_tin.date_format' => 'La fecha de resolución debe estar en formato YYYY-MM-DD.',
             'fer_tin.after_or_equal' => 'La fecha de resolución debe ser igual o posterior a la fecha de inicio.',
-            'est_tin.required' => 'El estado es requerido.',
-            'est_tin.in' => 'El estado seleccionado no es válido.',
             'obs_tin.max' => 'Las observaciones no pueden exceder 500 caracteres.',
         ];
     }

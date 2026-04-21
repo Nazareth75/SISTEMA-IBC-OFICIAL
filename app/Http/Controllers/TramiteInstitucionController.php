@@ -77,9 +77,8 @@ class TramiteInstitucionController extends Controller
         $validated = $request->validated();
 
         try {
+            $validated['est_tin'] = 'PENDIENTE';
             $validated['cod_usuarios_tin'] = Auth::id();
-            $validated['fcr_tin'] = now();
-            $validated['fmo_tin'] = now();
 
             TramiteInstitucion::create($validated);
 

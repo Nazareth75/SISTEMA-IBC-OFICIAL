@@ -41,7 +41,7 @@
             </div>
 
             <div class="bg-white shadow-sm rounded-xl border border-gray-100 p-6">
-                <form action="{{ route('tramites-instituciones.update', $tramite) }}" method="POST">
+                <form id="form-editar" action="{{ route('tramites-instituciones.update', $tramite) }}" method="POST">
                     @csrf
                     @method('PUT')
 
@@ -51,8 +51,8 @@
                             <label class="block text-sm font-medium text-gray-700 mb-2">
                                 Afiliado (No editable)
                             </label>
-                            <input 
-                                type="text" 
+                            <input
+                                type="text"
                                 value="{{ $tramite->afiliacion->persona->nom_pnv ?? 'N/A' }}"
                                 class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
                                 disabled
@@ -65,7 +65,7 @@
                                 Institución Externa
                                 <span class="text-red-500 ml-1">*</span>
                             </label>
-                            <select 
+                            <select
                                 id="cod_instituciones_externas_tin"
                                 name="cod_instituciones_externas_tin"
                                 class="w-full px-4 py-2 border @error('cod_instituciones_externas_tin') border-red-500 @else border-gray-300 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -73,8 +73,8 @@
                             >
                                 <option value="">Selecciona una institución...</option>
                                 @foreach(\App\Models\InstitucionExterna::activas()->get() as $institucion)
-                                    <option value="{{ $institucion->cod_instituciones_externas }}" 
-                                            @selected(old('cod_instituciones_externas_tin', $tramite->cod_instituciones_externas_tin) === (string)$institucion->cod_instituciones_externas)>
+                                    <option value="{{ $institucion->cod_instituciones_externas }}"
+                                            @selected(old('cod_instituciones_externas_tin', (string)$tramite->cod_instituciones_externas_tin) === (string)$institucion->cod_instituciones_externas)>
                                         {{ $institucion->nom_iex }}
                                     </option>
                                 @endforeach
@@ -90,16 +90,16 @@
                                 Tipo de Trámite
                                 <span class="text-red-500 ml-1">*</span>
                             </label>
-                            <select 
+                            <select
                                 id="tti_tin"
                                 name="tti_tin"
                                 class="w-full px-4 py-2 border @error('tti_tin') border-red-500 @else border-gray-300 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 required
                             >
                                 <option value="">Selecciona un tipo...</option>
-                                @foreach(\App\Models\TramiteInstitucion::TIPOS as $tipo)
-                                    <option value="{{ $tipo }}" @selected(old('tti_tin', $tramite->tti_tin) === $tipo)>
-                                        {{ $tipo }}
+                                @foreach(\App\Models\TramiteInstitucion::TIPOS as $clave => $etiqueta)
+                                    <option value="{{ $clave }}" @selected(old('tti_tin', $tramite->tti_tin) === $clave)>
+                                        {{ $etiqueta }}
                                     </option>
                                 @endforeach
                             </select>
@@ -114,9 +114,9 @@
                                 Descripción del Trámite
                                 <span class="text-red-500 ml-1">*</span>
                             </label>
-                            <textarea 
+                            <textarea
                                 id="des_tin"
-                                name="des_tin" 
+                                name="des_tin"
                                 rows="3"
                                 placeholder="Describe el trámite a realizar..."
                                 class="w-full px-4 py-2 border @error('des_tin') border-red-500 @else border-gray-300 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -133,10 +133,10 @@
                                 Fecha de Inicio
                                 <span class="text-red-500 ml-1">*</span>
                             </label>
-                            <input 
-                                type="date" 
+                            <input
+                                type="date"
                                 id="fei_tin"
-                                name="fei_tin" 
+                                name="fei_tin"
                                 value="{{ old('fei_tin', $tramite->fei_tin->format('Y-m-d')) }}"
                                 class="w-full px-4 py-2 border @error('fei_tin') border-red-500 @else border-gray-300 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 required
@@ -150,15 +150,13 @@
                         <div>
                             <label for="fer_tin" class="flex items-center text-sm font-medium text-gray-700 mb-2">
                                 Fecha de Resolución Esperada
-                                <span class="text-red-500 ml-1">*</span>
                             </label>
-                            <input 
-                                type="date" 
+                            <input
+                                type="date"
                                 id="fer_tin"
-                                name="fer_tin" 
-                                value="{{ old('fer_tin', $tramite->fer_tin->format('Y-m-d')) }}"
+                                name="fer_tin"
+                                value="{{ old('fer_tin', $tramite->fer_tin?->format('Y-m-d')) }}"
                                 class="w-full px-4 py-2 border @error('fer_tin') border-red-500 @else border-gray-300 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                required
                             />
                             @error('fer_tin')
                                 <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
@@ -171,16 +169,16 @@
                                 Estado del Trámite
                                 <span class="text-red-500 ml-1">*</span>
                             </label>
-                            <select 
+                            <select
                                 id="est_tin"
                                 name="est_tin"
                                 class="w-full px-4 py-2 border @error('est_tin') border-red-500 @else border-gray-300 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 required
                             >
                                 <option value="">Selecciona un estado...</option>
-                                @foreach(\App\Models\TramiteInstitucion::ESTADOS as $estado => $label)
-                                    <option value="{{ $estado }}" @selected(old('est_tin', $tramite->est_tin) === $estado)>
-                                        {{ $label }}
+                                @foreach(\App\Models\TramiteInstitucion::ESTADOS as $clave => $etiqueta)
+                                    <option value="{{ $clave }}" @selected(old('est_tin', $tramite->est_tin) === $clave)>
+                                        {{ $etiqueta }}
                                     </option>
                                 @endforeach
                             </select>
@@ -189,34 +187,39 @@
                             @enderror
                         </div>
                     </div>
-
-                    <!-- Botones -->
-                    <div class="flex gap-4 mt-8">
-                        <button 
-                            type="submit"
-                            class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
-                        >
-                            Guardar Cambios
-                        </button>
-                        <form action="{{ route('tramites-instituciones.destroy', $tramite) }}" 
-                              method="POST" class="flex-1"
-                              data-confirm-delete
-                              data-confirm-message="¿Estás seguro de que quieres eliminar este trámite? Esta acción no se puede deshacer.">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit"
-                                    class="w-full px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium">
-                                Eliminar
-                            </button>
-                        </form>
-                        <a 
-                            href="{{ route('tramites-instituciones.index') }}"
-                            class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium text-center"
-                        >
-                            Cancelar
-                        </a>
-                    </div>
                 </form>
+
+                <!-- Botones fuera del form principal pero vinculados por form="form-editar" -->
+                <div class="flex gap-4 mt-8">
+                    <button
+                        type="submit"
+                        form="form-editar"
+                        class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+                    >
+                        Guardar Cambios
+                    </button>
+
+                    <form
+                        action="{{ route('tramites-instituciones.destroy', $tramite) }}"
+                        method="POST"
+                        class="flex-1"
+                        data-confirm-delete
+                        data-confirm-message="¿Estás seguro de que quieres eliminar este trámite? Esta acción no se puede deshacer.">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit"
+                                class="w-full px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium">
+                            Eliminar
+                        </button>
+                    </form>
+
+                    <a
+                        href="{{ route('tramites-instituciones.index') }}"
+                        class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium text-center"
+                    >
+                        Cancelar
+                    </a>
+                </div>
             </div>
         </div>
     </div>

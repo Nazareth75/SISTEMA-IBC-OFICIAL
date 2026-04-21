@@ -91,9 +91,9 @@
                                 required
                             >
                                 <option value="">Selecciona un tipo...</option>
-                                @foreach(\App\Models\TramiteInstitucion::TIPOS as $tipo)
-                                    <option value="{{ $tipo }}" @selected(old('tti_tin') === $tipo)>
-                                        {{ $tipo }}
+                                @foreach(\App\Models\TramiteInstitucion::TIPOS as $clave => $etiqueta)
+                                    <option value="{{ $clave }}" @selected(old('tti_tin') === $clave)>
+                                        {{ $etiqueta }}
                                     </option>
                                 @endforeach
                             </select>
@@ -146,13 +146,12 @@
                                 Fecha de Resolución Esperada
                                 <span class="text-red-500 ml-1">*</span>
                             </label>
-                            <input 
-                                type="date" 
+                            <input
+                                type="date"
                                 id="fer_tin"
-                                name="fer_tin" 
+                                name="fer_tin"
                                 value="{{ old('fer_tin') }}"
                                 class="w-full px-4 py-2 border @error('fer_tin') border-red-500 @else border-gray-300 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                required
                             />
                             @error('fer_tin')
                                 <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
@@ -198,7 +197,7 @@
                     },
                     processResults: function(data) {
                         return {
-                            results: data
+                            results: data.results
                         };
                     }
                 },

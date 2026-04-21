@@ -10,6 +10,9 @@ use App\Http\Controllers\AsignacionBeneficioController;
 use App\Http\Controllers\InstitucionExternaController;
 use App\Http\Controllers\TramiteInstitucionController;
 use App\Http\Controllers\AccesoSaludController;
+use App\Http\Controllers\TipoCapacitacionController;
+use App\Http\Controllers\CapacitacionController;
+use App\Http\Controllers\ParticipacionCapacitacionController;
 
 
 Route::get('/', function () {
@@ -111,6 +114,29 @@ Route::middleware('auth')->group(function () {
 
     Route::get('api/afiliados-accesos', [AccesoSaludController::class, 'buscarAfiliados'])
         ->name('afiliados.accesos');
+
+    // =====================================================
+    // MÓDULO 6 — Capacitaciones
+    // =====================================================
+
+    Route::resource('tipos-capacitacion', TipoCapacitacionController::class)
+        ->parameters(['tipos-capacitacion' => 'tipoCapacitacion']);
+
+    Route::patch('tipos-capacitacion/{tipoCapacitacion}/toggle', [TipoCapacitacionController::class, 'toggle'])
+        ->name('tipos-capacitacion.toggle');
+
+    Route::resource('capacitaciones', CapacitacionController::class)
+        ->parameters(['capacitaciones' => 'capacitacion']);
+
+    Route::post('capacitaciones/{capacitacion}/cambiar-estado', [CapacitacionController::class, 'cambiarEstado'])
+        ->name('capacitaciones.cambiar-estado');
+
+    Route::resource('capacitaciones.participaciones', ParticipacionCapacitacionController::class)
+        ->only(['store', 'update', 'destroy'])
+        ->parameters(['participaciones' => 'participacion']);
+
+    Route::get('api/personas-buscar', [ParticipacionCapacitacionController::class, 'buscarPersonas'])
+        ->name('personas.buscar');
 });
 
 

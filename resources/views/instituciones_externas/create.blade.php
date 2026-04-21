@@ -56,9 +56,9 @@
                                 required
                             >
                                 <option value="">Selecciona un tipo...</option>
-                                @foreach(\App\Models\InstitucionExterna::TIPOS as $tipo)
-                                    <option value="{{ $tipo }}" @selected(old('tip_iex') === $tipo)>
-                                        {{ $tipo }}
+                                @foreach(\App\Models\InstitucionExterna::TIPOS as $clave => $etiqueta)
+                                    <option value="{{ $clave }}" @selected(old('tip_iex') === $clave)>
+                                        {{ $etiqueta }}
                                     </option>
                                 @endforeach
                             </select>
