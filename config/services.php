@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    'nominatim' => [
+        'url' => env('NOMINATIM_URL', 'https://nominatim.openstreetmap.org'),
+        'user_agent' => env('NOMINATIM_USER_AGENT', env('APP_NAME', 'SISTEMA-IBC') . '/1.0'),
+    ],
+
+    'osrm' => [
+        'url' => env('OSRM_URL', 'https://router.project-osrm.org'),
+    ],
+
 ];

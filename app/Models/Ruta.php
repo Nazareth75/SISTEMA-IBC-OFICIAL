@@ -51,6 +51,7 @@ class Ruta extends Model
         'des_rut',
         'ori_rut',
         'dst_rut',
+        'geo_rut',
         'dis_rut',
         'tim_rut',
         'est_rut',
@@ -61,6 +62,7 @@ class Ruta extends Model
     ];
 
     protected $casts = [
+        'geo_rut' => 'array',
         'dis_rut' => 'decimal:2',
         'fap_rut' => 'datetime',
         'fcr_rut' => 'datetime',

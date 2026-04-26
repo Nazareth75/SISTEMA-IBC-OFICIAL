@@ -14,7 +14,7 @@
     </x-slot>
 
     <div class="py-6">
-        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <form action="{{ route('rutas.store') }}" method="POST">
                 @csrf
                 <div class="bg-white rounded-lg shadow p-6">

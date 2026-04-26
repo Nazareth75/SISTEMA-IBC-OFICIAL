@@ -165,6 +165,12 @@ Route::middleware('auth')->group(function () {
     Route::resource('rutas', RutaController::class)
         ->parameters(['rutas' => 'ruta']);
 
+    Route::post('api/rutas/estimar-trayecto', [RutaController::class, 'estimarTrayecto'])
+        ->name('rutas.estimar-trayecto');
+
+    Route::get('api/rutas/puntos-interes', [RutaController::class, 'buscarPuntosInteres'])
+        ->name('rutas.puntos-interes');
+
     Route::post('rutas/{ruta}/cambiar-estado', [RutaController::class, 'cambiarEstado'])
         ->name('rutas.cambiar-estado');
 

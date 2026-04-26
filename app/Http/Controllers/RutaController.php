@@ -6,6 +6,8 @@ use App\Http\Requests\StoreRutaRequest;
 use App\Http\Requests\UpdateRutaRequest;
 use App\Models\NivelSeguridad;
 use App\Models\Ruta;
+use App\Services\RutaEstimacionService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -44,12 +46,27 @@ class RutaController extends Controller
         return view('rutas.create');
     }
 
-    public function store(StoreRutaRequest $request): RedirectResponse
+    public function store(StoreRutaRequest $request, RutaEstimacionService $estimador): RedirectResponse
     {
         $data = $request->validated();
         $data['ide_rut']              = Ruta::generarCodigo();
         $data['est_rut']              = 'BORRADOR';
         $data['cod_usuarios_rut_cre'] = Auth::id();
+
+        $geoPersistida = $this->normalizarGeoDesdeRequest($data['geo_rut'] ?? null);
+
+        if ($geoPersistida) {
+            $data['geo_rut'] = $geoPersistida;
+            $data['dis_rut'] = $data['dis_rut'] ?? ($geoPersistida['distancia_metros'] ?? null);
+            $data['tim_rut'] = $data['tim_rut'] ?? ($geoPersistida['tiempo_minutos'] ?? null);
+        }
+
+        $estimacion = $this->estimarSiFaltaDistanciaTiempo($data, $estimador);
+        if ($estimacion) {
+            $data['dis_rut'] = $estimacion['distancia_metros'];
+            $data['tim_rut'] = $estimacion['tiempo_minutos'];
+            $data['geo_rut'] = $this->normalizarGeoDesdeEstimacion($estimacion);
+        }
 
         $ruta = Ruta::create($data);
 
@@ -59,7 +76,7 @@ class RutaController extends Controller
 
     // ─── Detalle ──────────────────────────────────────────────
 
-    public function show(Ruta $ruta): View
+    public function show(Ruta $ruta, RutaEstimacionService $estimador): View
     {
         $ruta->load([
             'creador',
@@ -74,8 +91,13 @@ class RutaController extends Controller
         $nivelGeneral    = $ruta->nivelSeguridadGeneral();
         $transiciones    = $ruta->transicionesPosibles();
         $puedePublicarse = ($ruta->est_rut === 'APROBADA') ? $ruta->puedePublicarse() : null;
+        $trayectoDetalle = is_array($ruta->geo_rut) ? $ruta->geo_rut : null;
 
-        return view('rutas.show', compact('ruta', 'nivelGeneral', 'transiciones', 'puedePublicarse'));
+        if (!$trayectoDetalle && !empty($ruta->ori_rut) && !empty($ruta->dst_rut)) {
+            $trayectoDetalle = $estimador->estimar((string) $ruta->ori_rut, (string) $ruta->dst_rut);
+        }
+
+        return view('rutas.show', compact('ruta', 'nivelGeneral', 'transiciones', 'puedePublicarse', 'trayectoDetalle'));
     }
 
     // ─── Editar ───────────────────────────────────────────────
@@ -91,12 +113,99 @@ class RutaController extends Controller
         return view('rutas.edit', compact('ruta'));
     }
 
-    public function update(UpdateRutaRequest $request, Ruta $ruta): RedirectResponse
+    public function update(UpdateRutaRequest $request, Ruta $ruta, RutaEstimacionService $estimador): RedirectResponse
     {
-        $ruta->update($request->validated());
+        $data = $request->validated();
+
+        $geoPersistida = $this->normalizarGeoDesdeRequest($data['geo_rut'] ?? null);
+
+        if ($geoPersistida) {
+            $data['geo_rut'] = $geoPersistida;
+            $data['dis_rut'] = $data['dis_rut'] ?? ($geoPersistida['distancia_metros'] ?? null);
+            $data['tim_rut'] = $data['tim_rut'] ?? ($geoPersistida['tiempo_minutos'] ?? null);
+        }
+
+        $estimacion = $this->estimarSiFaltaDistanciaTiempo($data, $estimador);
+        if ($estimacion) {
+            $data['dis_rut'] = $estimacion['distancia_metros'];
+            $data['tim_rut'] = $estimacion['tiempo_minutos'];
+            $data['geo_rut'] = $this->normalizarGeoDesdeEstimacion($estimacion);
+        }
+
+        $ruta->update($data);
 
         return redirect()->route('rutas.show', $ruta)
             ->with('success', 'RUTA ACTUALIZADA CORRECTAMENTE.');
+    }
+
+    public function estimarTrayecto(Request $request, RutaEstimacionService $estimador): JsonResponse
+    {
+        abort_unless(Auth::user()?->puedeCrearRuta() || Auth::user()?->puedeEditarRuta(), 403);
+
+        $usaCoordenadas = $request->filled(['origen_lat', 'origen_lng', 'destino_lat', 'destino_lng']);
+
+        if ($usaCoordenadas) {
+            $data = $request->validate([
+                'origen_lat' => 'required|numeric|between:-90,90',
+                'origen_lng' => 'required|numeric|between:-180,180',
+                'destino_lat' => 'required|numeric|between:-90,90',
+                'destino_lng' => 'required|numeric|between:-180,180',
+            ]);
+
+            $estimacion = $estimador->estimarPorCoordenadas(
+                (float) $data['origen_lat'],
+                (float) $data['origen_lng'],
+                (float) $data['destino_lat'],
+                (float) $data['destino_lng']
+            );
+        } else {
+            $data = $request->validate([
+                'origen' => 'required|string|max:200',
+                'destino' => 'required|string|max:200',
+            ], [
+                'origen.required' => 'EL ORIGEN ES OBLIGATORIO.',
+                'destino.required' => 'EL DESTINO ES OBLIGATORIO.',
+            ]);
+
+            $estimacion = $estimador->estimar(
+                strtoupper(trim($data['origen'])),
+                strtoupper(trim($data['destino']))
+            );
+        }
+
+        if (!$estimacion) {
+            return response()->json([
+                'ok' => false,
+                'mensaje' => 'NO SE PUDO CALCULAR LA RUTA CON EL SERVICIO EXTERNO. VERIFIQUE ORIGEN/DESTINO E INTENTE NUEVAMENTE.',
+            ], 422);
+        }
+
+        return response()->json([
+            'ok' => true,
+            'distancia_metros' => $estimacion['distancia_metros'],
+            'tiempo_minutos' => $estimacion['tiempo_minutos'],
+            'origen_resuelto' => $estimacion['origen_resuelto'],
+            'destino_resuelto' => $estimacion['destino_resuelto'],
+            'origen_coords' => $estimacion['origen_coords'] ?? null,
+            'destino_coords' => $estimacion['destino_coords'] ?? null,
+            'trayecto_coords' => $estimacion['trayecto_coords'] ?? [],
+        ]);
+    }
+
+    public function buscarPuntosInteres(Request $request, RutaEstimacionService $estimador): JsonResponse
+    {
+        abort_unless(Auth::user()?->puedeCrearRuta() || Auth::user()?->puedeEditarRuta(), 403);
+
+        $data = $request->validate([
+            'termino' => 'required|string|max:120',
+        ], [
+            'termino.required' => 'EL TÉRMINO DE BÚSQUEDA ES OBLIGATORIO.',
+        ]);
+
+        return response()->json([
+            'ok' => true,
+            'resultados' => $estimador->buscarPuntosInteres($data['termino']),
+        ]);
     }
 
     // ─── Eliminar ─────────────────────────────────────────────
@@ -168,5 +277,65 @@ class RutaController extends Controller
 
         return redirect()->route('rutas.show', $ruta)
             ->with('success', "ESTADO ACTUALIZADO A {$nuevoEstado} CORRECTAMENTE.");
+    }
+
+    private function estimarSiFaltaDistanciaTiempo(array $data, RutaEstimacionService $estimador): ?array
+    {
+        if (!empty($data['dis_rut']) && !empty($data['tim_rut'])) {
+            return null;
+        }
+
+        if (empty($data['ori_rut']) || empty($data['dst_rut'])) {
+            return null;
+        }
+
+        return $estimador->estimar($data['ori_rut'], $data['dst_rut']);
+    }
+
+    private function normalizarGeoDesdeRequest(mixed $geo): ?array
+    {
+        if (!$geo) {
+            return null;
+        }
+
+        $arr = is_array($geo) ? $geo : json_decode((string) $geo, true);
+
+        if (!is_array($arr)) {
+            return null;
+        }
+
+        $coords = collect($arr['trayecto_coords'] ?? [])
+            ->filter(fn ($p) => is_array($p) && isset($p['lat'], $p['lng']))
+            ->map(fn ($p) => [
+                'lat' => (float) $p['lat'],
+                'lng' => (float) $p['lng'],
+            ])
+            ->values()
+            ->all();
+
+        if (count($coords) < 2) {
+            return null;
+        }
+
+        return [
+            'distancia_metros' => isset($arr['distancia_metros']) ? (float) $arr['distancia_metros'] : null,
+            'tiempo_minutos' => isset($arr['tiempo_minutos']) ? (int) $arr['tiempo_minutos'] : null,
+            'origen_resuelto' => (string) ($arr['origen_resuelto'] ?? ''),
+            'destino_resuelto' => (string) ($arr['destino_resuelto'] ?? ''),
+            'origen_coords' => isset($arr['origen_coords']) && is_array($arr['origen_coords']) ? [
+                'lat' => (float) ($arr['origen_coords']['lat'] ?? 0),
+                'lng' => (float) ($arr['origen_coords']['lng'] ?? 0),
+            ] : null,
+            'destino_coords' => isset($arr['destino_coords']) && is_array($arr['destino_coords']) ? [
+                'lat' => (float) ($arr['destino_coords']['lat'] ?? 0),
+                'lng' => (float) ($arr['destino_coords']['lng'] ?? 0),
+            ] : null,
+            'trayecto_coords' => $coords,
+        ];
+    }
+
+    private function normalizarGeoDesdeEstimacion(array $estimacion): ?array
+    {
+        return $this->normalizarGeoDesdeRequest($estimacion);
     }
 }

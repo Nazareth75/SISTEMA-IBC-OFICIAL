@@ -131,6 +131,37 @@
                 @endif
             </div>
 
+            {{-- ── VISTA PREVIA DEL TRAYECTO ───────────────────── --}}
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center justify-between gap-3 mb-3">
+                    <h3 class="font-bold text-gray-700 uppercase">
+                        <i class="fas fa-map-marked-alt mr-2" style="color:#2d6a27"></i>
+                        VISTA PREVIA DEL TRAYECTO
+                    </h3>
+                    @if($trayectoDetalle && !empty($trayectoDetalle['distancia_metros']))
+                        <span class="text-xs font-bold uppercase bg-green-100 text-green-700 px-2 py-1 rounded">
+                            {{ number_format((float) $trayectoDetalle['distancia_metros'], 1) }} M · {{ (int) ($trayectoDetalle['tiempo_minutos'] ?? 0) }} MIN
+                        </span>
+                    @endif
+                </div>
+
+                <p class="text-xs text-gray-500 uppercase mb-3">
+                    ORIGEN: {{ $ruta->ori_rut }} <span class="mx-1">→</span> DESTINO: {{ $ruta->dst_rut }}
+                </p>
+
+                @if($trayectoDetalle && !empty($trayectoDetalle['trayecto_coords']))
+                    <div id="mapa-detalle-ruta" class="w-full rounded border border-green-100 h-[360px] lg:h-[460px]"></div>
+                    <p class="text-[11px] text-green-700 font-semibold uppercase mt-2">
+                        EL TRAZO MOSTRADO CORRESPONDE A LA RUTA CALCULADA SOBRE RED VIAL.
+                    </p>
+                @else
+                    <div class="rounded border border-yellow-200 bg-yellow-50 p-4 text-xs text-yellow-700 uppercase font-semibold">
+                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                        NO SE PUDO GENERAR GEOMETRÍA DE TRAYECTO PARA ESTA COMBINACIÓN DE ORIGEN Y DESTINO.
+                    </div>
+                @endif
+            </div>
+
             {{-- ── TRAMOS ──────────────────────────────────────────── --}}
             <div>
                 <h3 class="font-bold text-gray-700 uppercase mb-3">
@@ -434,6 +465,78 @@
         if (s) Swal.fire({ toast:true, position:'top-end', icon:'success', title: s.content, showConfirmButton:false, timer:3500, timerProgressBar:true });
         const e = document.querySelector('meta[name="flash-error"]');
         if (e) Swal.fire({ toast:true, position:'top-end', icon:'error', title: e.content, showConfirmButton:false, timer:4000, timerProgressBar:true });
+
+        const trayectoDetalle = @json($trayectoDetalle);
+        const mapContainer = document.getElementById('mapa-detalle-ruta');
+
+        if (!mapContainer || !trayectoDetalle || !Array.isArray(trayectoDetalle.trayecto_coords) || trayectoDetalle.trayecto_coords.length < 2) {
+            return;
+        }
+
+        const initLeafletAssets = () => {
+            if (!document.querySelector('link[data-leaflet="1"]')) {
+                const css = document.createElement('link');
+                css.rel = 'stylesheet';
+                css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+                css.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
+                css.crossOrigin = '';
+                css.setAttribute('data-leaflet', '1');
+                document.head.appendChild(css);
+            }
+
+            if (window.L) {
+                return Promise.resolve();
+            }
+
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+                script.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
+                script.crossOrigin = '';
+                script.onload = resolve;
+                script.onerror = () => reject(new Error('NO SE PUDO CARGAR LEAFLET.'));
+                document.body.appendChild(script);
+            });
+        };
+
+        initLeafletAssets().then(() => {
+            const map = window.L.map(mapContainer, { zoomControl: true }).setView([-16.5, -68.15], 13);
+
+            window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; OPENSTREETMAP CONTRIBUTORS',
+            }).addTo(map);
+
+            const puntos = trayectoDetalle.trayecto_coords
+                .filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lng))
+                .map((p) => [p.lat, p.lng]);
+
+            if (puntos.length < 2) {
+                return;
+            }
+
+            const line = window.L.polyline(puntos, {
+                color: '#2d6a27',
+                weight: 5,
+                opacity: 0.9,
+            }).addTo(map);
+
+            const origen = trayectoDetalle.origen_coords;
+            const destino = trayectoDetalle.destino_coords;
+
+            if (origen && Number.isFinite(origen.lat) && Number.isFinite(origen.lng)) {
+                window.L.marker([origen.lat, origen.lng]).addTo(map).bindPopup('ORIGEN');
+            }
+
+            if (destino && Number.isFinite(destino.lat) && Number.isFinite(destino.lng)) {
+                window.L.marker([destino.lat, destino.lng]).addTo(map).bindPopup('DESTINO');
+            }
+
+            map.fitBounds(line.getBounds(), { padding: [30, 30] });
+            setTimeout(() => map.invalidateSize(), 120);
+        }).catch(() => {
+            // No interrumpir la vista de detalle si falla la carga del mapa.
+        });
     });
     </script>
     @endpush
