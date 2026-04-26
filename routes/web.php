@@ -13,6 +13,13 @@ use App\Http\Controllers\AccesoSaludController;
 use App\Http\Controllers\TipoCapacitacionController;
 use App\Http\Controllers\CapacitacionController;
 use App\Http\Controllers\ParticipacionCapacitacionController;
+use App\Http\Controllers\RutaController;
+use App\Http\Controllers\TramoController;
+use App\Http\Controllers\CondicionEntornoController;
+use App\Http\Controllers\EvaluacionRiesgoController;
+use App\Http\Controllers\ZonaRiesgoController;
+use App\Http\Controllers\ObstaculoController;
+use App\Http\Controllers\NivelSeguridadController;
 
 
 
@@ -150,6 +157,64 @@ Route::middleware('auth')->group(function () {
 
     Route::get('api/personas-buscar', [ParticipacionCapacitacionController::class, 'buscarPersonas'])
         ->name('personas.buscar');
+
+    // =====================================================
+    // MÓDULO 7 — Rutas Seguras
+    // =====================================================
+
+    Route::resource('rutas', RutaController::class)
+        ->parameters(['rutas' => 'ruta']);
+
+    Route::post('rutas/{ruta}/cambiar-estado', [RutaController::class, 'cambiarEstado'])
+        ->name('rutas.cambiar-estado');
+
+    // Tramos (nested bajo rutas)
+    Route::post('rutas/{ruta}/tramos', [TramoController::class, 'store'])
+        ->name('rutas.tramos.store');
+    Route::patch('rutas/{ruta}/tramos/reordenar', [TramoController::class, 'reordenar'])
+        ->name('rutas.tramos.reordenar');
+    Route::put('rutas/{ruta}/tramos/{tramo}', [TramoController::class, 'update'])
+        ->name('rutas.tramos.update');
+    Route::delete('rutas/{ruta}/tramos/{tramo}', [TramoController::class, 'destroy'])
+        ->name('rutas.tramos.destroy');
+
+    // Condiciones de entorno (nested bajo tramos)
+    Route::post('tramos/{tramo}/condiciones', [CondicionEntornoController::class, 'store'])
+        ->name('tramos.condiciones.store');
+    Route::delete('tramos/{tramo}/condiciones/{condicion}', [CondicionEntornoController::class, 'destroy'])
+        ->name('tramos.condiciones.destroy');
+
+    // Evaluaciones de riesgo (nested bajo tramos)
+    Route::post('tramos/{tramo}/evaluaciones', [EvaluacionRiesgoController::class, 'store'])
+        ->name('tramos.evaluaciones.store');
+    Route::delete('tramos/{tramo}/evaluaciones/{evaluacion}', [EvaluacionRiesgoController::class, 'destroy'])
+        ->name('tramos.evaluaciones.destroy');
+
+    // Zonas de riesgo (nested bajo tramos)
+    Route::post('tramos/{tramo}/zonas', [ZonaRiesgoController::class, 'store'])
+        ->name('tramos.zonas.store');
+    Route::delete('tramos/{tramo}/zonas/{zona}', [ZonaRiesgoController::class, 'destroy'])
+        ->name('tramos.zonas.destroy');
+
+    // Obstáculos — reporte y flujo de validación técnico
+    Route::get('obstaculos', [ObstaculoController::class, 'index'])
+        ->name('obstaculos.index');
+    Route::post('tramos/{tramo}/obstaculos', [ObstaculoController::class, 'store'])
+        ->name('tramos.obstaculos.store');
+    Route::patch('obstaculos/{obstaculo}/confirmar', [ObstaculoController::class, 'confirmar'])
+        ->name('obstaculos.confirmar');
+    Route::patch('obstaculos/{obstaculo}/resolver', [ObstaculoController::class, 'resolver'])
+        ->name('obstaculos.resolver');
+    Route::delete('obstaculos/{obstaculo}', [ObstaculoController::class, 'rechazar'])
+        ->name('obstaculos.rechazar');
+
+    // Niveles de seguridad — catálogo (Pantalla 5)
+    Route::get('niveles-seguridad', [NivelSeguridadController::class, 'index'])
+        ->name('niveles-seguridad.index');
+    Route::get('niveles-seguridad/{nivelSeguridad}/edit', [NivelSeguridadController::class, 'edit'])
+        ->name('niveles-seguridad.edit');
+    Route::put('niveles-seguridad/{nivelSeguridad}', [NivelSeguridadController::class, 'update'])
+        ->name('niveles-seguridad.update');
     });
 
 

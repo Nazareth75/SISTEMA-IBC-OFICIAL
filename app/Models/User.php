@@ -187,4 +187,51 @@ class User extends Authenticatable
     {
         return $this->esAdministrador();
     }
+
+    // ─── Permisos M7 — Rutas Seguras ─────────────────────────
+
+    public function puedeCrearRuta(): bool
+    {
+        return $this->esAdministrador() || $this->esTecnico();
+    }
+
+    public function puedeEditarRuta(): bool
+    {
+        return $this->esAdministrador() || $this->esTecnico();
+    }
+
+    public function puedeEnviarRutaARevision(): bool
+    {
+        return $this->esAdministrador() || $this->esTecnico();
+    }
+
+    public function puedeAprobarRuta(): bool
+    {
+        return $this->esAdministrador();
+    }
+
+    public function puedePublicarRuta(): bool
+    {
+        return $this->esAdministrador();
+    }
+
+    public function puedeArchivarRuta(): bool
+    {
+        return $this->esAdministrador();
+    }
+
+    public function puedeEliminarRuta(): bool
+    {
+        return $this->esAdministrador();
+    }
+
+    public function puedeGestionarObstaculos(): bool
+    {
+        return $this->esAdministrador() || $this->esTecnico();
+    }
+
+    public function puedeGestionarNivelesSeguridad(): bool
+    {
+        return $this->esAdministrador();
+    }
 }

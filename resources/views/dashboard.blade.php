@@ -205,6 +205,100 @@
                         </div>
                     </a>
                 @endif
+
+                {{-- ── MÓDULO 7: RUTAS SEGURAS (Admin + Técnico) ─────────────── --}}
+                @if(auth()->user()?->puedeCrearRuta())
+
+                    {{-- Separador de sección --}}
+                    <div class="col-span-1 md:col-span-2 lg:col-span-3 mt-2">
+                        <div class="flex items-center gap-3">
+                            <div class="flex-1 border-t border-gray-200"></div>
+                            <span class="text-xs font-bold text-gray-400 uppercase tracking-widest px-2">
+                                MÓDULO 7 — RUTAS SEGURAS
+                            </span>
+                            <div class="flex-1 border-t border-gray-200"></div>
+                        </div>
+                    </div>
+
+                    {{-- Botón: Rutas Seguras --}}
+                    <a href="{{ route('rutas.index') }}"
+                        class="group bg-white overflow-hidden shadow-sm sm:rounded-lg hover:shadow-md transition-shadow duration-300 border-l-4 border-green-600 hover:border-green-800"
+                        aria-label="Acceder a gestión de Rutas Seguras">
+                        <div class="p-6 text-gray-900">
+                            <div class="flex items-center mb-3">
+                                <i class="fas fa-route w-8 h-8 mr-3 text-2xl" style="color:#2d6a27"></i>
+                                <h4 class="text-lg font-semibold group-hover:text-green-700 transition-colors uppercase">
+                                    RUTAS SEGURAS
+                                </h4>
+                            </div>
+                            <p class="text-gray-600 text-sm uppercase">
+                                GESTIONA Y APRUEBA RUTAS URBANAS SEGURAS PARA AFILIADOS
+                            </p>
+                            <div class="mt-4">
+                                <span class="inline-flex items-center font-semibold text-sm" style="color:#2d6a27">
+                                    ACCEDER
+                                    <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                    </svg>
+                                </span>
+                            </div>
+                        </div>
+                    </a>
+
+                    {{-- Botón: Gestión de Obstáculos --}}
+                    <a href="{{ route('obstaculos.index') }}"
+                        class="group bg-white overflow-hidden shadow-sm sm:rounded-lg hover:shadow-md transition-shadow duration-300 border-l-4 border-yellow-500 hover:border-yellow-700"
+                        aria-label="Acceder a gestión de Obstáculos">
+                        <div class="p-6 text-gray-900">
+                            <div class="flex items-center mb-3">
+                                <i class="fas fa-exclamation-triangle w-8 h-8 mr-3 text-2xl" style="color:#f0b429"></i>
+                                <h4 class="text-lg font-semibold group-hover:text-yellow-600 transition-colors uppercase">
+                                    OBSTÁCULOS
+                                </h4>
+                            </div>
+                            <p class="text-gray-600 text-sm uppercase">
+                                VALIDAR Y DAR SEGUIMIENTO A OBSTÁCULOS REPORTADOS EN RUTAS
+                            </p>
+                            <div class="mt-4">
+                                <span class="inline-flex items-center text-yellow-600 group-hover:text-yellow-700 font-semibold text-sm">
+                                    ACCEDER
+                                    <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                    </svg>
+                                </span>
+                            </div>
+                        </div>
+                    </a>
+
+                @endif
+
+                {{-- Niveles de Seguridad: visible para Admin y Técnico --}}
+                @if(auth()->user()?->puedeGestionarNivelesSeguridad() || auth()->user()?->esTecnico())
+                    <a href="{{ route('niveles-seguridad.index') }}"
+                        class="group bg-white overflow-hidden shadow-sm sm:rounded-lg hover:shadow-md transition-shadow duration-300 border-l-4 border-emerald-500 hover:border-emerald-700"
+                        aria-label="Acceder al catálogo de Niveles de Seguridad">
+                        <div class="p-6 text-gray-900">
+                            <div class="flex items-center mb-3">
+                                <i class="fas fa-shield-alt w-8 h-8 mr-3 text-2xl text-emerald-600"></i>
+                                <h4 class="text-lg font-semibold group-hover:text-emerald-700 transition-colors uppercase">
+                                    NIVELES DE SEGURIDAD
+                                </h4>
+                            </div>
+                            <p class="text-gray-600 text-sm uppercase">
+                                CATÁLOGO DE NIVELES PARA EVALUACIÓN DE TRAMOS Y RUTAS
+                            </p>
+                            <div class="mt-4">
+                                <span class="inline-flex items-center text-emerald-600 group-hover:text-emerald-700 font-semibold text-sm">
+                                    ACCEDER
+                                    <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                    </svg>
+                                </span>
+                            </div>
+                        </div>
+                    </a>
+                @endif
+
             </div>
         </div>
     </div>
