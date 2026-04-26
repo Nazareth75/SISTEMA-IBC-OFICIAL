@@ -15,6 +15,7 @@ use App\Http\Controllers\CapacitacionController;
 use App\Http\Controllers\ParticipacionCapacitacionController;
 
 
+
 Route::get('/', function () {
     return view('welcome');
 });
@@ -26,6 +27,22 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
+
+    Route::post(
+        'capacitaciones/{capacitacion}/participaciones',
+        [ParticipacionCapacitacionController::class, 'store']
+    )->name('capacitaciones.participaciones.store');
+
+    Route::put(
+        'capacitaciones/{capacitacion}/participaciones/{participacion}',
+        [ParticipacionCapacitacionController::class, 'update']
+    )->name('capacitaciones.participaciones.update');
+
+    Route::delete(
+        'capacitaciones/{capacitacion}/participaciones/{participacion}',
+        [ParticipacionCapacitacionController::class, 'destroy']
+    )->name('capacitaciones.participaciones.destroy');
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -120,7 +137,7 @@ Route::middleware('auth')->group(function () {
     // =====================================================
 
     Route::resource('tipos-capacitacion', TipoCapacitacionController::class)
-        ->parameters(['tipos-capacitacion' => 'tipoCapacitacion']);
+    ->parameters(['tipos-capacitacion' => 'tipoCapacitacion']);
 
     Route::patch('tipos-capacitacion/{tipoCapacitacion}/toggle', [TipoCapacitacionController::class, 'toggle'])
         ->name('tipos-capacitacion.toggle');
@@ -131,13 +148,9 @@ Route::middleware('auth')->group(function () {
     Route::post('capacitaciones/{capacitacion}/cambiar-estado', [CapacitacionController::class, 'cambiarEstado'])
         ->name('capacitaciones.cambiar-estado');
 
-    Route::resource('capacitaciones.participaciones', ParticipacionCapacitacionController::class)
-        ->only(['store', 'update', 'destroy'])
-        ->parameters(['participaciones' => 'participacion']);
-
     Route::get('api/personas-buscar', [ParticipacionCapacitacionController::class, 'buscarPersonas'])
         ->name('personas.buscar');
-});
+    });
 
 
 require __DIR__.'/auth.php';

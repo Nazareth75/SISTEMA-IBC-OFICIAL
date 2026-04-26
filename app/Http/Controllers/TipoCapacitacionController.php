@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\TipoCapacitacion;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class TipoCapacitacionController extends Controller
@@ -26,7 +27,10 @@ class TipoCapacitacionController extends Controller
             $query->buscador($request->get('buscar'));
         }
 
-        $tipos = $query->orderBy('nom_tca')->paginate(10)->withQueryString();
+        $tipos = $query
+            ->orderBy('nom_tca')
+            ->paginate(10)
+            ->withQueryString();
 
         return view('tipos_capacitacion.index', compact('tipos'));
     }
@@ -43,8 +47,14 @@ class TipoCapacitacionController extends Controller
         $this->soloAdmin();
 
         $request->validate([
-            'nom_tca' => 'required|string|max:100|unique:tipos_capacitacion,nom_tca',
-            'des_tca' => 'nullable|string|max:250',
+            'nom_tca' => [
+                'required',
+                'string',
+                'max:100',
+                Rule::unique('tipos_capacitacion', 'nom_tca')
+                    ->whereNull('fbj_tca'),
+            ],
+            'des_tca' => ['nullable', 'string', 'max:250'],
         ], [
             'nom_tca.required' => 'EL NOMBRE DEL TIPO ES OBLIGATORIO.',
             'nom_tca.max'      => 'EL NOMBRE NO PUEDE EXCEDER 100 CARACTERES.',
@@ -58,24 +68,34 @@ class TipoCapacitacionController extends Controller
             'act_tca' => true,
         ]);
 
-        return redirect()->route('tipos-capacitacion.index')
+        return redirect()
+            ->route('tipos-capacitacion.index')
             ->with('success', 'TIPO DE CAPACITACIÓN REGISTRADO CORRECTAMENTE.');
     }
 
-    public function edit(TipoCapacitacion $tiposCapacitacion): View
+    public function edit(TipoCapacitacion $tipoCapacitacion): View
     {
         $this->soloAdmin();
 
-        return view('tipos_capacitacion.edit', ['tipo' => $tiposCapacitacion]);
+        return view('tipos_capacitacion.edit', [
+            'tipo' => $tipoCapacitacion,
+        ]);
     }
 
-    public function update(Request $request, TipoCapacitacion $tiposCapacitacion): RedirectResponse
+    public function update(Request $request, TipoCapacitacion $tipoCapacitacion): RedirectResponse
     {
         $this->soloAdmin();
 
         $request->validate([
-            'nom_tca' => 'required|string|max:100|unique:tipos_capacitacion,nom_tca,' . $tiposCapacitacion->cod_tipos_capacitacion . ',cod_tipos_capacitacion',
-            'des_tca' => 'nullable|string|max:250',
+            'nom_tca' => [
+                'required',
+                'string',
+                'max:100',
+                Rule::unique('tipos_capacitacion', 'nom_tca')
+                    ->ignore($tipoCapacitacion->cod_tipos_capacitacion, 'cod_tipos_capacitacion')
+                    ->whereNull('fbj_tca'),
+            ],
+            'des_tca' => ['nullable', 'string', 'max:250'],
         ], [
             'nom_tca.required' => 'EL NOMBRE DEL TIPO ES OBLIGATORIO.',
             'nom_tca.max'      => 'EL NOMBRE NO PUEDE EXCEDER 100 CARACTERES.',
@@ -83,41 +103,47 @@ class TipoCapacitacionController extends Controller
             'des_tca.max'      => 'LA DESCRIPCIÓN NO PUEDE EXCEDER 250 CARACTERES.',
         ]);
 
-        $tiposCapacitacion->update([
+        $tipoCapacitacion->update([
             'nom_tca' => $request->nom_tca,
             'des_tca' => $request->des_tca,
         ]);
 
-        return redirect()->route('tipos-capacitacion.index')
+        return redirect()
+            ->route('tipos-capacitacion.index')
             ->with('success', 'TIPO DE CAPACITACIÓN ACTUALIZADO CORRECTAMENTE.');
     }
 
-    public function destroy(TipoCapacitacion $tiposCapacitacion): RedirectResponse
+    public function destroy(TipoCapacitacion $tipoCapacitacion): RedirectResponse
     {
         $this->soloAdmin();
 
-        if ($tiposCapacitacion->capacitaciones()->exists()) {
-            return redirect()->route('tipos-capacitacion.index')
+        if ($tipoCapacitacion->capacitaciones()->exists()) {
+            return redirect()
+                ->route('tipos-capacitacion.index')
                 ->with('error', 'NO SE PUEDE ELIMINAR: EL TIPO TIENE CAPACITACIONES ASOCIADAS.');
         }
 
-        $tiposCapacitacion->delete();
+        $tipoCapacitacion->delete();
 
-        return redirect()->route('tipos-capacitacion.index')
+        return redirect()
+            ->route('tipos-capacitacion.index')
             ->with('success', 'TIPO DE CAPACITACIÓN ELIMINADO CORRECTAMENTE.');
     }
 
-    public function toggle(TipoCapacitacion $tiposCapacitacion): RedirectResponse
+    public function toggle(TipoCapacitacion $tipoCapacitacion): RedirectResponse
     {
         $this->soloAdmin();
 
-        $tiposCapacitacion->update(['act_tca' => !$tiposCapacitacion->act_tca]);
+        $tipoCapacitacion->update([
+            'act_tca' => !$tipoCapacitacion->act_tca,
+        ]);
 
-        $mensaje = $tiposCapacitacion->act_tca
+        $mensaje = $tipoCapacitacion->act_tca
             ? 'TIPO DE CAPACITACIÓN ACTIVADO CORRECTAMENTE.'
             : 'TIPO DE CAPACITACIÓN DESACTIVADO CORRECTAMENTE.';
 
-        return redirect()->route('tipos-capacitacion.index')
+        return redirect()
+            ->route('tipos-capacitacion.index')
             ->with('success', $mensaje);
     }
 }

@@ -83,6 +83,15 @@ class User extends Authenticatable
         return $this->hasMany(AccesoSalud::class, 'cod_usuarios_asa', 'cod_usuarios');
     }
 
+    public function capacitacionesResponsable(): HasMany
+    {
+        return $this->hasMany(
+            Capacitacion::class,
+            'cod_usuarios_cap',
+            'cod_usuarios'
+        );
+    }
+
     public function esAdministrador(): bool
     {
         return strtoupper($this->role?->nom_rol ?? '') === 'ADMINISTRADOR';
@@ -140,6 +149,41 @@ class User extends Authenticatable
     }
 
     public function puedeGestionarTiposAfiliado(): bool
+    {
+        return $this->esAdministrador();
+    }
+
+    public function puedeCrearCapacitacion(): bool
+    {
+        return $this->esAdministrador() || $this->esTecnico();
+    }
+
+    public function puedeEditarCapacitacion(): bool
+    {
+        return $this->esAdministrador() || $this->esTecnico();
+    }
+
+    public function puedeEliminarCapacitacion(): bool
+    {
+        return $this->esAdministrador();
+    }
+
+    public function puedeGestionarTiposCapacitacion(): bool
+    {
+        return $this->esAdministrador();
+    }
+
+    public function puedeInscribirParticipanteCapacitacion(): bool
+    {
+        return $this->esAdministrador() || $this->esTecnico();
+    }
+
+    public function puedeEditarParticipacionCapacitacion(): bool
+    {
+        return $this->esAdministrador() || $this->esTecnico();
+    }
+
+    public function puedeEliminarParticipacionCapacitacion(): bool
     {
         return $this->esAdministrador();
     }

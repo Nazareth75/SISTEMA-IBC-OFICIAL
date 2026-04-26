@@ -28,7 +28,10 @@ class CapacitacionController extends Controller
     {
         $this->soloAdmin();
 
-        $query = Capacitacion::with(['tipoCapacitacion']);
+        $query = Capacitacion::with([
+            'tipoCapacitacion',
+            'responsable',
+        ]);
 
         if ($request->filled('buscar')) {
             $query->buscador($request->get('buscar'));
@@ -42,25 +45,47 @@ class CapacitacionController extends Controller
             $query->porEstado($request->get('estado'));
         }
 
-        $capacitaciones = $query->orderBy('fcr_cap', 'desc')
+        $capacitaciones = $query
+            ->orderBy('fcr_cap', 'desc')
             ->paginate(10)
             ->withQueryString();
 
-        $tipos   = TipoCapacitacion::activos()->orderBy('nom_tca')->get();
+        $tipos = TipoCapacitacion::activos()
+            ->orderBy('nom_tca')
+            ->get();
+
         $estados = Capacitacion::ESTADOS;
 
-        return view('capacitaciones.index', compact('capacitaciones', 'tipos', 'estados'));
+        return view('capacitaciones.index', compact(
+            'capacitaciones',
+            'tipos',
+            'estados'
+        ));
     }
 
     public function create(): View
     {
         $this->soloAdmin();
 
-        $tipos    = TipoCapacitacion::activos()->orderBy('nom_tca')->get();
-        $usuarios = User::orderBy('ape_usu')->get();
-        $estados  = Capacitacion::ESTADOS;
+        $tipos = TipoCapacitacion::activos()
+            ->orderBy('nom_tca')
+            ->get();
 
-        return view('capacitaciones.create', compact('tipos', 'usuarios', 'estados'));
+        $usuarios = User::where('est_usu', 'ACTIVO')
+            ->whereHas('role', function ($query) {
+                $query->whereIn('nom_rol', ['ADMINISTRADOR', 'TECNICO']);
+            })
+            ->orderBy('ape_usu')
+            ->orderBy('nom_usu')
+            ->get();
+
+        $estados = Capacitacion::ESTADOS;
+
+        return view('capacitaciones.create', compact(
+            'tipos',
+            'usuarios',
+            'estados'
+        ));
     }
 
     public function store(Request $request): RedirectResponse
@@ -88,6 +113,15 @@ class CapacitacionController extends Controller
             'cod_usuarios_cap.exists'             => 'EL RESPONSABLE SELECCIONADO NO ES VÁLIDO.',
         ]);
 
+        $tipo = TipoCapacitacion::findOrFail($request->cod_tipos_capacitacion_cap);
+
+        if (!$tipo->act_tca) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'NO SE PUEDE USAR UN TIPO DE CAPACITACIÓN INACTIVO.');
+        }
+
         Capacitacion::create([
             'ide_cap'                    => Capacitacion::generarCodigo(),
             'nom_cap'                    => $request->nom_cap,
@@ -100,7 +134,8 @@ class CapacitacionController extends Controller
             'est_cap'                    => 'PLANIFICADA',
         ]);
 
-        return redirect()->route('capacitaciones.index')
+        return redirect()
+            ->route('capacitaciones.index')
             ->with('success', 'CAPACITACIÓN REGISTRADA CORRECTAMENTE.');
     }
 
@@ -111,7 +146,9 @@ class CapacitacionController extends Controller
         $capacitacion->load([
             'tipoCapacitacion',
             'responsable',
-            'participaciones' => fn ($q) => $q->with('persona')->orderBy('fcr_pca', 'desc'),
+            'participaciones' => fn ($query) => $query
+                ->with('persona')
+                ->orderBy('fcr_pca', 'desc'),
         ]);
 
         return view('capacitaciones.show', compact('capacitacion'));
@@ -121,11 +158,26 @@ class CapacitacionController extends Controller
     {
         $this->soloAdmin();
 
-        $tipos    = TipoCapacitacion::activos()->orderBy('nom_tca')->get();
-        $usuarios = User::orderBy('ape_usu')->get();
-        $estados  = Capacitacion::ESTADOS;
+        $tipos = TipoCapacitacion::activos()
+            ->orderBy('nom_tca')
+            ->get();
 
-        return view('capacitaciones.edit', compact('capacitacion', 'tipos', 'usuarios', 'estados'));
+        $usuarios = User::where('est_usu', 'ACTIVO')
+            ->whereHas('role', function ($query) {
+                $query->whereIn('nom_rol', ['ADMINISTRADOR', 'TECNICO']);
+            })
+            ->orderBy('ape_usu')
+            ->orderBy('nom_usu')
+            ->get();
+
+        $estados = Capacitacion::ESTADOS;
+
+        return view('capacitaciones.edit', compact(
+            'capacitacion',
+            'tipos',
+            'usuarios',
+            'estados'
+        ));
     }
 
     public function update(Request $request, Capacitacion $capacitacion): RedirectResponse
@@ -153,6 +205,15 @@ class CapacitacionController extends Controller
             'cod_usuarios_cap.exists'             => 'EL RESPONSABLE SELECCIONADO NO ES VÁLIDO.',
         ]);
 
+        $tipo = TipoCapacitacion::findOrFail($request->cod_tipos_capacitacion_cap);
+
+        if (!$tipo->act_tca) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'NO SE PUEDE USAR UN TIPO DE CAPACITACIÓN INACTIVO.');
+        }
+
         $capacitacion->update([
             'nom_cap'                    => $request->nom_cap,
             'obj_cap'                    => $request->obj_cap,
@@ -163,7 +224,8 @@ class CapacitacionController extends Controller
             'cod_usuarios_cap'           => $request->cod_usuarios_cap,
         ]);
 
-        return redirect()->route('capacitaciones.index')
+        return redirect()
+            ->route('capacitaciones.index')
             ->with('success', 'CAPACITACIÓN ACTUALIZADA CORRECTAMENTE.');
     }
 
@@ -172,22 +234,21 @@ class CapacitacionController extends Controller
         $this->soloAdmin();
 
         if ($capacitacion->participaciones()->activas()->exists()) {
-            return redirect()->route('capacitaciones.index')
+            return redirect()
+                ->route('capacitaciones.index')
                 ->with('error', 'NO SE PUEDE ELIMINAR: LA CAPACITACIÓN TIENE PARTICIPACIONES ACTIVAS (INSCRITO O EN CURSO).');
         }
 
         $capacitacion->delete();
 
-        return redirect()->route('capacitaciones.index')
+        return redirect()
+            ->route('capacitaciones.index')
             ->with('success', 'CAPACITACIÓN ELIMINADA CORRECTAMENTE.');
     }
 
     public function cambiarEstado(Request $request, Capacitacion $capacitacion): RedirectResponse
     {
         $this->soloAdmin();
-
-        $estadoActual     = $capacitacion->est_cap;
-        $permitidos       = self::TRANSICIONES[$estadoActual] ?? [];
 
         $request->validate([
             'nuevo_estado' => 'required|in:' . implode(',', array_keys(Capacitacion::ESTADOS)),
@@ -196,24 +257,28 @@ class CapacitacionController extends Controller
             'nuevo_estado.in'       => 'EL ESTADO INDICADO NO ES VÁLIDO.',
         ]);
 
-        $nuevoEstado = $request->get('nuevo_estado');
+        $estadoActual = $capacitacion->est_cap;
+        $nuevoEstado  = $request->get('nuevo_estado');
+        $permitidos   = self::TRANSICIONES[$estadoActual] ?? [];
 
         if (empty($permitidos)) {
-            return redirect()->back()
+            return redirect()
+                ->back()
                 ->with('error', 'EL ESTADO ACTUAL (' . $estadoActual . ') NO PERMITE CAMBIOS DE ESTADO.');
         }
 
-        if (!in_array($nuevoEstado, $permitidos)) {
-            return redirect()->back()
+        if (!in_array($nuevoEstado, $permitidos, true)) {
+            return redirect()
+                ->back()
                 ->with('error', 'TRANSICIÓN NO PERMITIDA: ' . $estadoActual . ' → ' . $nuevoEstado . '. ESTADOS VÁLIDOS: ' . implode(', ', $permitidos) . '.');
         }
 
         $capacitacion->update([
             'est_cap' => $nuevoEstado,
-            'fmo_cap' => now(),
         ]);
 
-        return redirect()->back()
+        return redirect()
+            ->back()
             ->with('success', 'ESTADO ACTUALIZADO DE ' . $estadoActual . ' A ' . $nuevoEstado . ' CORRECTAMENTE.');
     }
 }

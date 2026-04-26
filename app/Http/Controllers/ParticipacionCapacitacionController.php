@@ -13,7 +13,7 @@ class ParticipacionCapacitacionController extends Controller
 {
     private const TRANSICIONES = [
         'INSCRITO' => ['EN CURSO', 'ABANDONÓ'],
-        'EN CURSO'  => ['APROBADO', 'REPROBADO', 'ABANDONÓ'],
+        'EN CURSO' => ['APROBADO', 'REPROBADO', 'ABANDONÓ'],
     ];
 
     private function soloAdmin(): void
@@ -23,43 +23,47 @@ class ParticipacionCapacitacionController extends Controller
         }
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, Capacitacion $capacitacion): RedirectResponse
     {
         $this->soloAdmin();
 
         $request->validate([
             'cod_personas_no_videntes_pca' => 'required|integer|exists:personas_no_videntes,cod_personas_no_videntes',
-            'cod_capacitaciones_pca'       => 'required|integer|exists:capacitaciones,cod_capacitaciones',
             'fei_pca'                      => 'required|date|date_format:Y-m-d',
             'obs_pca'                      => 'nullable|string|max:500',
         ], [
             'cod_personas_no_videntes_pca.required' => 'DEBE SELECCIONAR UNA PERSONA.',
             'cod_personas_no_videntes_pca.exists'   => 'LA PERSONA SELECCIONADA NO EXISTE.',
-            'cod_capacitaciones_pca.required'       => 'DEBE INDICAR LA CAPACITACIÓN.',
-            'cod_capacitaciones_pca.exists'         => 'LA CAPACITACIÓN INDICADA NO EXISTE.',
             'fei_pca.required'                      => 'LA FECHA DE INSCRIPCIÓN ES OBLIGATORIA.',
             'fei_pca.date_format'                   => 'LA FECHA DE INSCRIPCIÓN DEBE TENER FORMATO YYYY-MM-DD.',
             'obs_pca.max'                           => 'LAS OBSERVACIONES NO PUEDEN EXCEDER 500 CARACTERES.',
         ]);
 
-        $persona      = PersonaNoVidente::findOrFail($request->cod_personas_no_videntes_pca);
-        $capacitacion = Capacitacion::findOrFail($request->cod_capacitaciones_pca);
+        $persona = PersonaNoVidente::findOrFail($request->cod_personas_no_videntes_pca);
 
         if ($persona->est_pnv !== 'ACTIVO') {
-            return redirect()->back()->withInput()
+            return redirect()
+                ->back()
+                ->withInput()
                 ->with('error', 'LA PERSONA NO ESTÁ EN ESTADO ACTIVO. SOLO SE PUEDEN INSCRIBIR PERSONAS ACTIVAS.');
         }
 
         if (!$capacitacion->estaDisponible()) {
-            return redirect()->back()->withInput()
+            return redirect()
+                ->back()
+                ->withInput()
                 ->with('error', 'LA CAPACITACIÓN NO ESTÁ DISPONIBLE. SOLO SE ACEPTAN INSCRIPCIONES EN CAPACITACIONES PLANIFICADAS O EN CURSO.');
         }
 
-        if (ParticipacionCapacitacion::yaInscrita(
-            $persona->cod_personas_no_videntes,
-            $capacitacion->cod_capacitaciones
-        )) {
-            return redirect()->back()->withInput()
+        if (
+            ParticipacionCapacitacion::yaInscritaActiva(
+                $persona->cod_personas_no_videntes,
+                $capacitacion->cod_capacitaciones
+            )
+        ) {
+            return redirect()
+                ->back()
+                ->withInput()
                 ->with('error', 'LA PERSONA YA TIENE UNA PARTICIPACIÓN ACTIVA EN ESTA CAPACITACIÓN.');
         }
 
@@ -71,16 +75,18 @@ class ParticipacionCapacitacionController extends Controller
             'obs_pca'                      => $request->obs_pca,
         ]);
 
-        return redirect()->route('capacitaciones.show', $capacitacion)
+        return redirect()
+            ->route('capacitaciones.show', $capacitacion)
             ->with('success', 'PARTICIPACIÓN REGISTRADA CORRECTAMENTE.');
     }
 
-    public function update(Request $request, ParticipacionCapacitacion $participacion): RedirectResponse
+    public function update(Request $request, Capacitacion $capacitacion, ParticipacionCapacitacion $participacion): RedirectResponse
     {
         $this->soloAdmin();
 
-        $estadoActual = $participacion->est_pca;
-        $permitidos   = self::TRANSICIONES[$estadoActual] ?? [];
+        if ($participacion->cod_capacitaciones_pca !== $capacitacion->cod_capacitaciones) {
+            abort(404);
+        }
 
         $request->validate([
             'est_pca' => 'required|in:' . implode(',', array_keys(ParticipacionCapacitacion::ESTADOS)),
@@ -91,36 +97,46 @@ class ParticipacionCapacitacionController extends Controller
             'obs_pca.max'      => 'LAS OBSERVACIONES NO PUEDEN EXCEDER 500 CARACTERES.',
         ]);
 
-        $nuevoEstado = $request->est_pca;
+        $estadoActual = $participacion->est_pca;
+        $nuevoEstado  = $request->est_pca;
+        $permitidos   = self::TRANSICIONES[$estadoActual] ?? [];
 
         if (empty($permitidos)) {
-            return redirect()->back()
+            return redirect()
+                ->back()
                 ->with('error', 'EL ESTADO ACTUAL (' . $estadoActual . ') NO PERMITE NINGÚN CAMBIO DE ESTADO.');
         }
 
-        if (!in_array($nuevoEstado, $permitidos)) {
-            return redirect()->back()
+        if (!in_array($nuevoEstado, $permitidos, true)) {
+            return redirect()
+                ->back()
                 ->with('error', 'TRANSICIÓN NO PERMITIDA: ' . $estadoActual . ' → ' . $nuevoEstado . '. DESDE AQUÍ SOLO SE PUEDE PASAR A: ' . implode(', ', $permitidos) . '.');
         }
 
         $participacion->update([
             'est_pca' => $nuevoEstado,
-            'obs_pca' => $request->obs_pca ?? $participacion->obs_pca,
+            'obs_pca' => $request->filled('obs_pca')
+                ? $request->obs_pca
+                : $participacion->obs_pca,
         ]);
 
-        return redirect()->back()
+        return redirect()
+            ->route('capacitaciones.show', $capacitacion)
             ->with('success', 'ESTADO DE PARTICIPACIÓN ACTUALIZADO A ' . $nuevoEstado . ' CORRECTAMENTE.');
     }
 
-    public function destroy(ParticipacionCapacitacion $participacion): RedirectResponse
+    public function destroy(Capacitacion $capacitacion, ParticipacionCapacitacion $participacion): RedirectResponse
     {
         $this->soloAdmin();
 
-        $capacitacion = $participacion->capacitacion;
+        if ($participacion->cod_capacitaciones_pca !== $capacitacion->cod_capacitaciones) {
+            abort(404);
+        }
 
         $participacion->delete();
 
-        return redirect()->route('capacitaciones.show', $capacitacion)
+        return redirect()
+            ->route('capacitaciones.show', $capacitacion)
             ->with('success', 'PARTICIPACIÓN ELIMINADA CORRECTAMENTE.');
     }
 
@@ -131,25 +147,37 @@ class ParticipacionCapacitacionController extends Controller
 
             $query = PersonaNoVidente::where('est_pnv', 'ACTIVO');
 
-            if (!empty($termino)) {
+            if ($termino !== '') {
                 $query->where(function ($q) use ($termino) {
                     $q->where('nom_pnv', 'like', "%{$termino}%")
-                      ->orWhere('ape_pnv', 'like', "%{$termino}%")
-                      ->orWhere('cii_pnv', 'like', "%{$termino}%");
+                        ->orWhere('ape_pnv', 'like', "%{$termino}%")
+                        ->orWhere('cii_pnv', 'like', "%{$termino}%");
                 });
             }
 
-            $personas = $query->orderBy('ape_pnv')->limit(15)->get()
-                ->map(fn ($p) => [
-                    'id'   => $p->cod_personas_no_videntes,
-                    'text' => strtoupper("{$p->nom_pnv} {$p->ape_pnv}") . " ({$p->cii_pnv})",
+            $personas = $query
+                ->orderBy('ape_pnv')
+                ->orderBy('nom_pnv')
+                ->limit(15)
+                ->get()
+                ->map(fn ($persona) => [
+                    'id'   => $persona->cod_personas_no_videntes,
+                    'text' => mb_strtoupper(
+                        "{$persona->nom_pnv} {$persona->ape_pnv}",
+                        'UTF-8'
+                    ) . " ({$persona->cii_pnv})",
                 ])
                 ->values();
 
-            return response()->json(['results' => $personas]);
+            return response()->json([
+                'results' => $personas,
+            ]);
 
-        } catch (\Exception $e) {
-            return response()->json(['results' => [], 'error' => 'ERROR AL BUSCAR PERSONAS.'], 500);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'results' => [],
+                'error'   => 'ERROR AL BUSCAR PERSONAS.',
+            ], 500);
         }
     }
 }

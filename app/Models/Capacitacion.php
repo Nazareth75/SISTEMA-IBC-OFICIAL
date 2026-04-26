@@ -55,12 +55,12 @@ class Capacitacion extends Model
 
     public function setNomCapAttribute(string $value): void
     {
-        $this->attributes['nom_cap'] = strtoupper(trim($value));
+        $this->attributes['nom_cap'] = mb_strtoupper(trim($value), 'UTF-8');
     }
 
     public function setLugCapAttribute(?string $value): void
     {
-        $this->attributes['lug_cap'] = $value ? strtoupper(trim($value)) : null;
+        $this->attributes['lug_cap'] = $value ? mb_strtoupper(trim($value), 'UTF-8') : null;
     }
 
     // --- Scopes ---

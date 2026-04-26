@@ -87,4 +87,12 @@ class ParticipacionCapacitacion extends Model
             ->where('cod_capacitaciones_pca', $capacitacionId)
             ->exists();
     }
+
+    public static function yaInscritaActiva(int $personaId, int $capacitacionId): bool
+    {
+        return static::where('cod_personas_no_videntes_pca', $personaId)
+            ->where('cod_capacitaciones_pca', $capacitacionId)
+            ->whereIn('est_pca', ['INSCRITO', 'EN CURSO'])
+            ->exists();
+    }
 }

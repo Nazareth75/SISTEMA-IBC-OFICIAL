@@ -31,7 +31,7 @@ class TipoCapacitacion extends Model
 
     public function setNomTcaAttribute(string $value): void
     {
-        $this->attributes['nom_tca'] = strtoupper(trim($value));
+        $this->attributes['nom_tca'] = mb_strtoupper(trim($value), 'UTF-8');
     }
 
     public function scopeActivos(Builder $query): Builder
