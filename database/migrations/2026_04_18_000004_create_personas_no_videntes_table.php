@@ -11,7 +11,9 @@ return new class extends Migration {
             $table->id('cod_personas_no_videntes');
             $table->string('ide_pnv', 20)->unique();
             $table->string('nom_pnv', 100);
-            $table->string('ape_pnv', 100);
+            $table->string('app_pnv', 100);
+            $table->string('apm_pnv', 100);
+            $table->string('ape_pnv', 255);
             $table->string('cii_pnv', 20)->unique();
             $table->string('ext_pnv', 10)->nullable();
             $table->date('fen_pnv');

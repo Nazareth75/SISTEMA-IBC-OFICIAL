@@ -20,6 +20,8 @@ class PersonaNoVidente extends Model
     protected $fillable = [
         'ide_pnv',
         'nom_pnv',
+        'app_pnv',
+        'apm_pnv',
         'ape_pnv',
         'cii_pnv',
         'ext_pnv',
@@ -81,6 +83,8 @@ class PersonaNoVidente extends Model
 
         return $query->where(function ($q) use ($texto) {
             $q->where('nom_pnv', 'like', "%{$texto}%")
+                ->orWhere('app_pnv', 'like', "%{$texto}%")
+                ->orWhere('apm_pnv', 'like', "%{$texto}%")
                 ->orWhere('ape_pnv', 'like', "%{$texto}%")
                 ->orWhere('cii_pnv', 'like', "%{$texto}%")
                 ->orWhere('ide_pnv', 'like', "%{$texto}%");
@@ -89,7 +93,12 @@ class PersonaNoVidente extends Model
 
     public function getNombreCompletoAttribute(): string
     {
-        return trim("{$this->nom_pnv} {$this->ape_pnv}");
+        $apellidos = trim((string) $this->app_pnv . ' ' . (string) $this->apm_pnv);
+        if ($apellidos === '') {
+            $apellidos = (string) $this->ape_pnv;
+        }
+
+        return trim((string) $this->nom_pnv . ' ' . $apellidos);
     }
 
     public function tieneAfiliacionActiva(): bool

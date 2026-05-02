@@ -17,6 +17,9 @@
                     name="nom_pnv"
                     id="nom_pnv"
                     value="{{ old('nom_pnv', $persona?->nom_pnv) }}"
+                    title="SOLO LETRAS Y ESPACIOS"
+                    pattern="^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ\\s]+$"
+                    oninput="this.value = this.value.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s]/g, '')"
                     class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
                     required
                 >
@@ -25,21 +28,46 @@
                 @enderror
             </div>
 
-            <div>
-                <label for="ape_pnv" class="block text-sm font-medium text-gray-700 mb-1">
-                    Apellido *
-                </label>
-                <input
-                    type="text"
-                    name="ape_pnv"
-                    id="ape_pnv"
-                    value="{{ old('ape_pnv', $persona?->ape_pnv) }}"
-                    class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
-                    required
-                >
-                @error('ape_pnv')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                @enderror
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="app_pnv" class="block text-sm font-medium text-gray-700 mb-1">
+                        Apellido paterno *
+                    </label>
+                    <input
+                        type="text"
+                        name="app_pnv"
+                        id="app_pnv"
+                        value="{{ old('app_pnv', $persona?->app_pnv) }}"
+                        title="SOLO LETRAS Y ESPACIOS"
+                        pattern="^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ\\s]+$"
+                        oninput="this.value = this.value.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s]/g, '')"
+                        class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                        required
+                    >
+                    @error('app_pnv')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div>
+                    <label for="apm_pnv" class="block text-sm font-medium text-gray-700 mb-1">
+                        Apellido materno *
+                    </label>
+                    <input
+                        type="text"
+                        name="apm_pnv"
+                        id="apm_pnv"
+                        value="{{ old('apm_pnv', $persona?->apm_pnv) }}"
+                        title="SOLO LETRAS Y ESPACIOS"
+                        pattern="^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ\\s]+$"
+                        oninput="this.value = this.value.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s]/g, '')"
+                        class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                        required
+                    >
+                    @error('apm_pnv')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -52,6 +80,9 @@
                         name="cii_pnv"
                         id="cii_pnv"
                         value="{{ old('cii_pnv', $persona?->cii_pnv) }}"
+                        inputmode="numeric"
+                        pattern="^[0-9]+$"
+                        oninput="this.value = this.value.replace(/\D/g, '')"
                         title="INGRESE SOLO NÚMEROS SIN EXTENSIÓN"
                         class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
                         required
@@ -141,6 +172,10 @@
                     name="tel_pnv"
                     id="tel_pnv"
                     value="{{ old('tel_pnv', $persona?->tel_pnv) }}"
+                    inputmode="numeric"
+                    pattern="^[0-9]*$"
+                    oninput="this.value = this.value.replace(/\D/g, '')"
+                    title="SOLO NÚMEROS"
                     class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
                 >
                 @error('tel_pnv')
