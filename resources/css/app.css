@@ -1,3 +1,12 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+:root {
+    --ibc-verde: #009966;
+    --ibc-verde-claro: #9aaa63;
+    --ibc-naranja: #d66a00;
+    --ibc-mostaza: #c99a2e;
+    --ibc-fondo: #f5f7f6;
+    --ibc-texto: #1f2937;
+    --ibc-blanco: #ffffff;
+}

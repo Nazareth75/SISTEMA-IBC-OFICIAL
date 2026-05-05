@@ -40,6 +40,7 @@ class TutorContactoController extends Controller
         abort_unless(Auth::user()?->puedeGestionarTutores(), 403);
         DB::transaction(function () use ($request, $personaNoVidente) {
             $data = $request->validated();
+            $data['ape_tco'] = trim((string) ($data['app_tco'] ?? '') . ' ' . (string) ($data['apm_tco'] ?? ''));
             $data['cod_personas_no_videntes_tco'] = $personaNoVidente->cod_personas_no_videntes;
 
             if (($data['etl_tco'] ?? false) === true) {
@@ -83,6 +84,7 @@ class TutorContactoController extends Controller
         abort_unless(Auth::user()?->puedeGestionarTutores(), 403);
         DB::transaction(function () use ($request, $personaNoVidente, $tutore) {
             $data = $request->validated();
+            $data['ape_tco'] = trim((string) ($data['app_tco'] ?? '') . ' ' . (string) ($data['apm_tco'] ?? ''));
 
             if (($data['etl_tco'] ?? false) === true) {
                 TutorContacto::where('cod_personas_no_videntes_tco', $personaNoVidente->cod_personas_no_videntes)

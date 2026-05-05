@@ -19,6 +19,8 @@ class TutorContacto extends Model
     protected $fillable = [
         'cod_personas_no_videntes_tco',
         'nom_tco',
+        'app_tco',
+        'apm_tco',
         'ape_tco',
         'par_tco',
         'tel_tco',
@@ -46,6 +48,11 @@ class TutorContacto extends Model
 
     public function getNombreCompletoAttribute(): string
     {
-        return trim("{$this->nom_tco} {$this->ape_tco}");
+        $apellidos = trim((string) $this->app_tco . ' ' . (string) $this->apm_tco);
+        if ($apellidos === '') {
+            $apellidos = (string) $this->ape_tco;
+        }
+
+        return trim((string) $this->nom_tco . ' ' . $apellidos);
     }
 }

@@ -11,7 +11,9 @@ return new class extends Migration {
             $table->id('cod_tutores_contactos');
             $table->unsignedBigInteger('cod_personas_no_videntes_tco');
             $table->string('nom_tco', 100);
-            $table->string('ape_tco', 100);
+            $table->string('app_tco', 100);
+            $table->string('apm_tco', 100);
+            $table->string('ape_tco', 255);
             $table->string('par_tco', 50);
             $table->string('tel_tco', 20);
             $table->string('cor_tco', 150)->nullable();

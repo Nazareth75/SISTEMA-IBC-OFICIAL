@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PersonaNoVidenteController;
 use App\Http\Controllers\TutorContactoController;
 use App\Http\Controllers\AfiliacionController;
@@ -29,9 +30,13 @@ Route::get('/', function () {
 
 
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
+
+Route::get('/api/dashboard/estadisticas', [DashboardController::class, 'estadisticas'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard.estadisticas');
 
 Route::middleware('auth')->group(function () {
 
