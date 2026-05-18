@@ -130,6 +130,46 @@ class AfiliacionController extends Controller
             ->with('success', 'Afiliación eliminada correctamente.');
     }
 
+    public function buscarPersonasSinAfiliacion(Request $request)
+    {
+        abort_unless(Auth::user()?->puedeCrearAfiliacion(), 403);
+
+        $query = trim((string) $request->get('q', ''));
+
+        // Obtener IDs de personas que ya tienen afiliación activa/vigente
+        $personasConAfiliacion = Afiliacion::query()
+            ->where(function ($q) {
+                $q->where('est_afi', 'ACTIVA')
+                  ->orWhere('est_afi', 'VENCIDA');
+            })
+            ->whereNull('fbj_afi')
+            ->distinct()
+            ->pluck('cod_personas_no_videntes_afi');
+
+        // Buscar personas sin afiliación
+        $personas = PersonaNoVidente::query()
+            ->whereNotIn('cod_personas_no_videntes', $personasConAfiliacion)
+            ->where('est_pnv', 'ACTIVO')
+            ->when($query !== '', function ($q) use ($query) {
+                return $q->where('nom_pnv', 'LIKE', $query . '%')
+                         ->orWhere('cii_pnv', 'LIKE', '%' . $query . '%');
+            })
+            ->orderBy('nom_pnv')
+            ->limit(5)
+            ->get(['cod_personas_no_videntes', 'ide_pnv', 'nom_pnv', 'app_pnv', 'apm_pnv', 'cii_pnv', 'gen_pnv'])
+            ->map(function ($persona) {
+                return [
+                    'id' => $persona->cod_personas_no_videntes,
+                    'nombre_completo' => $persona->nombre_completo,
+                    'cii' => $persona->cii_pnv,
+                    'genero' => $persona->gen_pnv,
+                    'codigo' => $persona->ide_pnv,
+                ];
+            });
+
+        return response()->json($personas);
+    }
+
     private function generarCodigo(): string
     {
         $ultimo = Afiliacion::query()

@@ -77,6 +77,9 @@ Route::middleware('auth')->group(function () {
         'afiliaciones' => 'afiliacione',
     ]);
 
+    Route::get('api/afiliaciones/buscar-personas', [AfiliacionController::class, 'buscarPersonasSinAfiliacion'])
+        ->name('afiliaciones.buscar-personas');
+
     Route::resource('beneficios', BeneficioController::class)
         ->parameters([
             'beneficios' => 'beneficio',

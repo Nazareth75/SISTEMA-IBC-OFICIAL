@@ -9,27 +9,44 @@
         <div class="space-y-4">
             @if(!$afiliacion)
                 <div>
-                    <label for="cod_personas_no_videntes_afi" class="block text-sm font-medium text-gray-700 mb-1">
-                        Persona no vidente *
+                    <label for="buscar_persona" class="block text-sm font-medium text-gray-700 mb-1">
+                        Buscar persona no vidente *
                     </label>
-                    <select
+                    <input
+                        type="text"
+                        id="buscar_persona"
+                        placeholder="Escriba nombre o CI..."
+                        class="w-full rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2"
+                        autocomplete="off"
+                    >
+                    
+                    <!-- Contenedor de resultados en formato fichas -->
+                    <div id="resultados_personas" class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <!-- Las fichas se cargarán aquí con JavaScript -->
+                    </div>
+
+                    <!-- Input oculto para almacenar el valor seleccionado -->
+                    <input
+                        type="hidden"
                         name="cod_personas_no_videntes_afi"
                         id="cod_personas_no_videntes_afi"
-                        class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                        value="{{ old('cod_personas_no_videntes_afi', '') }}"
                         required
                     >
-                        <option value="">SELECCIONE</option>
-                        @foreach ($personas as $persona)
-                            <option value="{{ $persona->cod_personas_no_videntes }}" @selected(old('cod_personas_no_videntes_afi') == $persona->cod_personas_no_videntes)>
-                                {{ $persona->nombre_completo }} — CI: {{ $persona->cii_pnv }}
-                            </option>
-                        @endforeach
-                    </select>
+
+                    <!-- Mostrar persona seleccionada -->
+                    <div id="persona_seleccionada" class="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg hidden">
+                        <p class="text-sm text-green-700">
+                            <span class="font-semibold">✓ Persona seleccionada:</span>
+                            <span id="nombre_persona_sel"></span>
+                        </p>
+                    </div>
+
                     @error('cod_personas_no_videntes_afi')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                     <p class="mt-1 text-xs text-gray-500">
-                        Solo se listan personas ACTIVAS.
+                        Solo se muestran personas ACTIVAS SIN AFILIACIÓN VIGENTE. Máximo 5 resultados.
                     </p>
                 </div>
             @else
