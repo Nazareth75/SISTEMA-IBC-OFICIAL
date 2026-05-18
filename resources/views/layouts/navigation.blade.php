@@ -27,6 +27,7 @@
             <span>Inicio</span>
         </a>
 
+        @if(auth()->user()->tieneRol('SUPERADMINISTRADOR', 'ADMINISTRADOR'))
         <a href="{{ route('personas-no-videntes.index') }}"
            class="ibc-sidebar-link {{ request()->routeIs('personas-no-videntes.*') ? 'ibc-sidebar-active' : '' }}">
             <span class="material-symbols-outlined">person_search</span>
@@ -37,12 +38,6 @@
            class="ibc-sidebar-link {{ request()->routeIs('afiliaciones.*') ? 'ibc-sidebar-active' : '' }}">
             <span class="material-symbols-outlined">assignment_ind</span>
             <span>Afiliaciones</span>
-        </a>
-
-        <a href="{{ route('profile.edit') }}"
-           class="ibc-sidebar-link {{ request()->routeIs('profile.*') ? 'ibc-sidebar-active' : '' }}">
-            <span class="material-symbols-outlined">account_circle</span>
-            <span>Mi Perfil</span>
         </a>
 
         <a href="{{ route('beneficios.index') }}"
@@ -69,6 +64,32 @@
             <span>Tipos de Capacitación</span>
         </a>
 
+        <a href="{{ route('instituciones-externas.index') }}"
+           class="ibc-sidebar-link {{ request()->routeIs('instituciones-externas.*') ? 'ibc-sidebar-active' : '' }}">
+            <span class="material-symbols-outlined">apartment</span>
+            <span>Instituciones Externas</span>
+        </a>
+
+        <a href="{{ route('tramites-instituciones.index') }}"
+           class="ibc-sidebar-link {{ request()->routeIs('tramites-instituciones.*') ? 'ibc-sidebar-active' : '' }}">
+            <span class="material-symbols-outlined">description</span>
+            <span>Trámites</span>
+        </a>
+
+        <a href="{{ route('accesos-salud.index') }}"
+           class="ibc-sidebar-link {{ request()->routeIs('accesos-salud.*') ? 'ibc-sidebar-active' : '' }}">
+            <span class="material-symbols-outlined">health_and_safety</span>
+            <span>Accesos a Salud</span>
+        </a>
+
+        <a href="{{ route('niveles-seguridad.index') }}"
+           class="ibc-sidebar-link {{ request()->routeIs('niveles-seguridad.*') ? 'ibc-sidebar-active' : '' }}">
+            <span class="material-symbols-outlined">shield</span>
+            <span>Niveles de Seguridad</span>
+        </a>
+        @endif
+
+        @if(auth()->user()->tieneRol('SUPERADMINISTRADOR', 'ADMINISTRADOR', 'TECNICO'))
         <div class="px-5 pt-4 pb-2 text-[11px] font-bold uppercase tracking-widest text-gray-400">
             Módulo 7
         </div>
@@ -85,11 +106,7 @@
             <span>Obstáculos</span>
         </a>
 
-        <a href="{{ route('niveles-seguridad.index') }}"
-           class="ibc-sidebar-link {{ request()->routeIs('niveles-seguridad.*') ? 'ibc-sidebar-active' : '' }}">
-            <span class="material-symbols-outlined">shield</span>
-            <span>Niveles de Seguridad</span>
-        </a>
+        @endif
     </nav>
 
     {{-- Cerrar sesión --}}

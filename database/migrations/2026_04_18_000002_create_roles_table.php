@@ -18,6 +18,7 @@ return new class extends Migration {
         });
 
         DB::table('roles')->insert([
+            ['nom_rol' => 'SUPERADMINISTRADOR', 'des_rol' => 'Rol principal del sistema. No puede ser eliminado ni suspendido.'],
             ['nom_rol' => 'ADMINISTRADOR', 'des_rol' => 'Acceso total al sistema. Puede gestionar usuarios, parámetros y todos los módulos.'],
             ['nom_rol' => 'TECNICO', 'des_rol' => 'Responsable de mapear rutas, tramos, obstáculos y evaluaciones de riesgo.'],
             ['nom_rol' => 'VOLUNTARIO', 'des_rol' => 'Acompaña recorridos, reporta obstáculos y da seguimiento a afiliados.'],

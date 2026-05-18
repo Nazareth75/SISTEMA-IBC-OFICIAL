@@ -85,12 +85,13 @@ class InstitucionExternaController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(InstitucionExterna $institucionExterna)
-    {
-        return view('instituciones_externas.show', [
-            'institucion' => $institucionExterna,
-        ]);
-    }
+
+    public function show($id)
+{
+    $institucionExterna = InstitucionExterna::findOrFail($id);
+
+    return view('instituciones_externas.show', compact('institucionExterna'));
+}
 
     /**
      * Show the form for editing the specified resource.

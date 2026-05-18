@@ -63,6 +63,25 @@ class User extends Authenticatable
         return "{$this->nom_usu} {$this->ape_usu}";
     }
 
+    public function tieneRol(...$roles): bool
+    {
+        $rolUsuario = strtoupper($this->role?->nom_rol ?? '');
+
+        // SUPERADMINISTRADOR y ADMINISTRADOR tienen acceso total por defecto
+        if (in_array($rolUsuario, ['SUPERADMINISTRADOR', 'ADMINISTRADOR'], true)) {
+            return true;
+        }
+
+        $rolesNormalizados = array_map(static fn ($rol) => strtoupper((string) $rol), $roles);
+
+        return in_array($rolUsuario, $rolesNormalizados, true);
+    }
+
+    public function esSuperadministrador(): bool
+    {
+        return $this->tieneRol('SUPERADMINISTRADOR');
+    }
+
     public function personasRegistradas(): HasMany
     {
         return $this->hasMany(PersonaNoVidente::class, 'cod_usuarios_pnv', 'cod_usuarios');
@@ -94,18 +113,38 @@ class User extends Authenticatable
 
     public function esAdministrador(): bool
     {
-        return strtoupper($this->role?->nom_rol ?? '') === 'ADMINISTRADOR';
+        return $this->tieneRol('ADMINISTRADOR');
     }
 
     public function esTecnico(): bool
     {
-        return strtoupper($this->role?->nom_rol ?? '') === 'TECNICO';
+        return $this->tieneRol('TECNICO');
     }
 
-    public function esTutor(): bool
+    public function esVoluntario(): bool
     {
-        $rol = strtoupper($this->role?->nom_rol ?? '');
-        return in_array($rol, ['TUTOR', 'VOLUNTARIO'], true);
+        return $this->tieneRol('VOLUNTARIO');
+    }
+
+
+    public function puedeGestionarUsuarios(): bool
+    {
+        return $this->tieneRol('SUPERADMINISTRADOR', 'ADMINISTRADOR');
+    }
+
+    public function puedeGestionarRutas(): bool
+    {
+        return $this->tieneRol('SUPERADMINISTRADOR', 'ADMINISTRADOR', 'TECNICO');
+    }
+
+    public function puedeValidarObstaculos(): bool
+    {
+        return $this->tieneRol('SUPERADMINISTRADOR', 'ADMINISTRADOR', 'TECNICO');
+    }
+
+    public function puedeReportarObstaculos(): bool
+    {
+        return $this->tieneRol('SUPERADMINISTRADOR', 'ADMINISTRADOR', 'TECNICO', 'VOLUNTARIO');
     }
 
     public function puedeCrearPersonaNoVidente(): bool

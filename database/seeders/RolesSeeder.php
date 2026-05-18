@@ -11,6 +11,11 @@ class RolesSeeder extends Seeder
     {
         $roles = [
             [
+                'nom_rol' => 'SUPERADMINISTRADOR',
+                'des_rol' => 'Rol principal del sistema. No puede ser eliminado ni suspendido.',
+                'act_rol' => true,
+            ],
+            [
                 'nom_rol' => 'ADMINISTRADOR',
                 'des_rol' => 'Acceso total al sistema. Puede gestionar usuarios, parámetros y todos los módulos.',
                 'act_rol' => true,
