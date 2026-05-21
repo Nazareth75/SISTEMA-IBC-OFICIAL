@@ -21,6 +21,7 @@ use App\Http\Controllers\EvaluacionRiesgoController;
 use App\Http\Controllers\ZonaRiesgoController;
 use App\Http\Controllers\ObstaculoController;
 use App\Http\Controllers\NivelSeguridadController;
+use App\Http\Controllers\ReporteObstaculoController;
 
 
 
@@ -40,7 +41,18 @@ Route::middleware(['auth'])->group(function () {
         }
 
         if ($user->tieneRol('TECNICO')) {
-            return view('dashboard.tecnico');
+            $statsTecnico = [
+                'rutasValidar' => \App\Models\Ruta::whereIn('est_rut', ['BORRADOR', 'REVISION'])->count(),
+                'rutasHoy' => \App\Models\Ruta::whereIn('est_rut', ['BORRADOR', 'REVISION'])->whereDate('fcr_rut', today())->count(),
+                'reportesPendientes' => \App\Models\ReporteObstaculo::where('estado', 'REPORTADO')->count(),
+                'obstaculosCriticos' => \App\Models\ReporteObstaculo::where('nivel_riesgo', 'CRITICO')->whereIn('estado', ['REPORTADO', 'ACTIVO'])->count(),
+                'reportesCriticosList' => \App\Models\ReporteObstaculo::where('nivel_riesgo', 'CRITICO')
+                                                ->whereIn('estado', ['REPORTADO', 'ACTIVO'])
+                                                ->latest()
+                                                ->take(2)
+                                                ->get()
+            ];
+            return view('dashboard.tecnico', compact('statsTecnico'));
         }
 
         if ($user->tieneRol('VOLUNTARIO')) {
@@ -221,11 +233,33 @@ Route::middleware(['auth'])->group(function () {
             ->name('obstaculos.resolver');
         Route::delete('obstaculos/{obstaculo}', [ObstaculoController::class, 'rechazar'])
             ->name('obstaculos.rechazar');
+
+        Route::get('reportes-obstaculos', [ReporteObstaculoController::class, 'index'])
+            ->name('reportes-obstaculos.index');
+        Route::get('reportes-obstaculos/{reporte}', [ReporteObstaculoController::class, 'show'])
+            ->name('reportes-obstaculos.show')
+            ->where('reporte', '[0-9]+');
+        Route::patch('reportes-obstaculos/{reporte}/validar', [ReporteObstaculoController::class, 'validar'])
+            ->name('reportes-obstaculos.validar')
+            ->where('reporte', '[0-9]+');
+        Route::patch('reportes-obstaculos/{reporte}/descartar', [ReporteObstaculoController::class, 'descartar'])
+            ->name('reportes-obstaculos.descartar')
+            ->where('reporte', '[0-9]+');
+        Route::patch('reportes-obstaculos/{reporte}/resolver', [ReporteObstaculoController::class, 'resolver'])
+            ->name('reportes-obstaculos.resolver')
+            ->where('reporte', '[0-9]+');
     });
 
     Route::middleware(['role:SUPERADMINISTRADOR,ADMINISTRADOR,TECNICO,VOLUNTARIO'])->group(function () {
         Route::post('tramos/{tramo}/obstaculos', [ObstaculoController::class, 'store'])
             ->name('tramos.obstaculos.store');
+
+        Route::get('reportes-obstaculos/create', [ReporteObstaculoController::class, 'create'])
+            ->name('reportes-obstaculos.create');
+        Route::post('reportes-obstaculos', [ReporteObstaculoController::class, 'store'])
+            ->name('reportes-obstaculos.store');
+        Route::get('mis-reportes-obstaculos', [ReporteObstaculoController::class, 'misReportes'])
+            ->name('reportes-obstaculos.mis-reportes');
     });
 });
 

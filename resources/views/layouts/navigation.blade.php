@@ -107,6 +107,32 @@
         </a>
 
         @endif
+
+        @if(auth()->user()->tieneRol('SUPERADMINISTRADOR', 'ADMINISTRADOR', 'TECNICO', 'VOLUNTARIO'))
+        <div class="px-5 pt-4 pb-2 text-[11px] font-bold uppercase tracking-widest text-gray-400">
+            Observatorio
+        </div>
+
+        @if(auth()->user()->tieneRol('SUPERADMINISTRADOR', 'ADMINISTRADOR', 'TECNICO'))
+        <a href="{{ route('reportes-obstaculos.index') }}"
+           class="ibc-sidebar-link {{ request()->routeIs('reportes-obstaculos.index', 'reportes-obstaculos.show') ? 'ibc-sidebar-active' : '' }}">
+            <span class="material-symbols-outlined">visibility</span>
+            <span>Obstáculos Urbanos</span>
+        </a>
+        @endif
+
+        <a href="{{ route('reportes-obstaculos.create') }}"
+           class="ibc-sidebar-link {{ request()->routeIs('reportes-obstaculos.create') ? 'ibc-sidebar-active' : '' }}">
+            <span class="material-symbols-outlined">report</span>
+            <span>Reportar Obstáculo</span>
+        </a>
+
+        <a href="{{ route('reportes-obstaculos.mis-reportes') }}"
+           class="ibc-sidebar-link {{ request()->routeIs('reportes-obstaculos.mis-reportes') ? 'ibc-sidebar-active' : '' }}">
+            <span class="material-symbols-outlined">folder_shared</span>
+            <span>Mis Reportes</span>
+        </a>
+        @endif
     </nav>
 
     {{-- Cerrar sesión --}}

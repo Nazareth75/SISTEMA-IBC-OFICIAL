@@ -24,6 +24,7 @@
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @stack('styles')
     </head>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <body class="font-sans antialiased bg-[#f5f7f6] text-gray-900">
