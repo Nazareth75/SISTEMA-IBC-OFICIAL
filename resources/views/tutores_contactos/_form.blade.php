@@ -93,6 +93,59 @@
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
             @enderror
         </div>
+
+        <div id="seccion-documentos-legal" class="md:col-span-2 space-y-4 p-4 bg-gray-50 rounded-xl border border-gray-200 mt-2" style="display: none;">
+            <div class="flex items-center justify-between border-b border-gray-200 pb-2">
+                <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wider flex items-center gap-2">
+                    <span class="material-symbols-outlined text-indigo-600 text-base">folder_shared</span>
+                    Documentación de Respaldo (Tutor Legal)
+                </h3>
+                <a href="{{ route('personas-no-videntes.tutores.documento-base', $persona) }}{{ $tutor ? '?tutor_id=' . $tutor->getKey() : '' }}" 
+                   target="_blank" 
+                   class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 hover:underline flex items-center gap-1">
+                    <span class="material-symbols-outlined text-xs">print</span>
+                    Imprimir Documento Base
+                </a>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="doc_ci_tco" class="block text-xs font-bold text-gray-700 uppercase mb-1">Cédula de Identidad (PDF o Imagen)</label>
+                    <input type="file" name="doc_ci_tco" id="doc_ci_tco" accept=".pdf,image/*"
+                           class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 border border-gray-300 rounded-lg p-1">
+                    @error('doc_ci_tco')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                    @if($tutor && $tutor->doc_ci_tco)
+                        <div class="mt-2 flex items-center gap-2 text-xs">
+                            <span class="text-green-600 font-semibold flex items-center gap-1">
+                                <span class="material-symbols-outlined text-xs">check_circle</span>
+                                Archivo cargado
+                            </span>
+                            <a href="{{ asset('storage/' . $tutor->doc_ci_tco) }}" target="_blank" class="text-indigo-600 hover:underline">Ver actual</a>
+                        </div>
+                    @endif
+                </div>
+
+                <div>
+                    <label for="doc_legal_tco" class="block text-xs font-bold text-gray-700 uppercase mb-1">Papel Legal / Resolución (PDF o Imagen)</label>
+                    <input type="file" name="doc_legal_tco" id="doc_legal_tco" accept=".pdf,image/*"
+                           class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 border border-gray-300 rounded-lg p-1">
+                    @error('doc_legal_tco')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                    @if($tutor && $tutor->doc_legal_tco)
+                        <div class="mt-2 flex items-center gap-2 text-xs">
+                            <span class="text-green-600 font-semibold flex items-center gap-1">
+                                <span class="material-symbols-outlined text-xs">check_circle</span>
+                                Archivo cargado
+                            </span>
+                            <a href="{{ asset('storage/' . $tutor->doc_legal_tco) }}" target="_blank" class="text-indigo-600 hover:underline">Ver actual</a>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="mt-6 flex flex-col sm:flex-row gap-3">
@@ -107,3 +160,25 @@
         </a>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const checkbox = document.querySelector('input[name="etl_tco"]');
+        const docSection = document.getElementById('seccion-documentos-legal');
+        
+        function toggleSection() {
+            if (checkbox && docSection) {
+                if (checkbox.checked) {
+                    docSection.style.display = 'block';
+                } else {
+                    docSection.style.display = 'none';
+                }
+            }
+        }
+        
+        if (checkbox) {
+            checkbox.addEventListener('change', toggleSection);
+            toggleSection();
+        }
+    });
+</script>

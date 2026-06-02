@@ -34,6 +34,8 @@ class StoreTutorContactoRequest extends FormRequest
             'tel_tco' => ['required', 'string', 'min:7', 'max:20', 'regex:/^\d+$/'],
             'cor_tco' => ['nullable', 'email', 'max:150'],
             'etl_tco' => ['nullable', 'boolean'],
+            'doc_ci_tco' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
+            'doc_legal_tco' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
         ];
     }
 
@@ -50,6 +52,10 @@ class StoreTutorContactoRequest extends FormRequest
             'par_tco.min' => 'El parentesco debe tener al menos 2 caracteres.',
             'tel_tco.regex' => 'El teléfono solo puede contener números.',
             'tel_tco.min' => 'El teléfono debe tener al menos 7 dígitos.',
+            'doc_ci_tco.mimes' => 'El documento de identidad de respaldo debe ser un archivo de tipo: pdf, jpg, jpeg, png.',
+            'doc_ci_tco.max' => 'El documento de identidad de respaldo no puede pesar más de 2MB.',
+            'doc_legal_tco.mimes' => 'El documento de tutoría legal debe ser un archivo de tipo: pdf, jpg, jpeg, png.',
+            'doc_legal_tco.max' => 'El documento de tutoría legal no puede pesar más de 2MB.',
         ];
     }
 
@@ -63,6 +69,8 @@ class StoreTutorContactoRequest extends FormRequest
             'tel_tco' => 'teléfono',
             'cor_tco' => 'correo',
             'etl_tco' => 'tutor legal',
+            'doc_ci_tco' => 'cédula de identidad de respaldo',
+            'doc_legal_tco' => 'documento de tutoría legal de respaldo',
         ];
     }
 }

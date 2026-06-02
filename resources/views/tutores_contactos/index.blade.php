@@ -51,9 +51,43 @@
                                     <td class="px-4 py-3 text-sm text-gray-900">{{ $tutor->cor_tco ?: '—' }}</td>
                                     <td class="px-4 py-3 text-sm">
                                         @if($tutor->etl_tco && !$tutor->fbj_tco)
-                                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800">
-                                                Sí
-                                            </span>
+                                            <div class="flex flex-col gap-1">
+                                                <span class="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800 w-12">
+                                                    Sí
+                                                </span>
+                                                <div class="flex items-center gap-2 mt-1">
+                                                    @if($tutor->doc_ci_tco)
+                                                        <a href="{{ asset('storage/' . $tutor->doc_ci_tco) }}" target="_blank" 
+                                                           title="Ver Cédula de Identidad de Respaldo"
+                                                           class="text-gray-500 hover:text-indigo-600 transition flex items-center">
+                                                            <span class="material-symbols-outlined text-[18px]">badge</span>
+                                                        </a>
+                                                    @else
+                                                        <span class="text-gray-300 cursor-not-allowed" title="Sin Cédula de Identidad cargada">
+                                                            <span class="material-symbols-outlined text-[18px]">badge</span>
+                                                        </span>
+                                                    @endif
+
+                                                    @if($tutor->doc_legal_tco)
+                                                        <a href="{{ asset('storage/' . $tutor->doc_legal_tco) }}" target="_blank" 
+                                                           title="Ver Documento de Tutoría Legal"
+                                                           class="text-gray-500 hover:text-indigo-600 transition flex items-center">
+                                                            <span class="material-symbols-outlined text-[18px]">gavel</span>
+                                                        </a>
+                                                    @else
+                                                        <span class="text-gray-300 cursor-not-allowed" title="Sin Papel Legal cargado">
+                                                            <span class="material-symbols-outlined text-[18px]">gavel</span>
+                                                        </span>
+                                                    @endif
+
+                                                    <a href="{{ route('personas-no-videntes.tutores.documento-base', $persona) }}?tutor_id={{ $tutor->getKey() }}" 
+                                                       target="_blank"
+                                                       title="Imprimir/Descargar Documento Base"
+                                                       class="text-gray-500 hover:text-indigo-600 transition flex items-center">
+                                                        <span class="material-symbols-outlined text-[18px]">print</span>
+                                                    </a>
+                                                </div>
+                                            </div>
                                         @else
                                             <span class="text-gray-500">No</span>
                                         @endif

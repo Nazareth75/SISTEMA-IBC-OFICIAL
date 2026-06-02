@@ -136,8 +136,9 @@
                                 <p class="font-label-bold text-label-bold text-primary">Observatorio GPS</p>
                                 <p class="font-body-md text-sm text-on-surface-variant">{{ $statsTecnico['reportesPendientes'] }} alertas urbanas activas</p>
                             </div>
-                            <a href="{{ route('reportes-obstaculos.index') }}" class="w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center text-primary pointer-events-auto active:scale-90 transition-transform hover:bg-gray-50">
-                                <span class="material-symbols-outlined">map</span>
+                            <a href="{{ route('reportes-obstaculos.mapa-monitoreo') }}" class="px-4 py-2.5 bg-primary text-white rounded-lg shadow-md flex items-center gap-2 font-bold text-xs uppercase pointer-events-auto active:scale-95 transition-transform hover:brightness-110">
+                                <span class="material-symbols-outlined text-[18px]">map</span>
+                                <span>Ingresar al Mapa</span>
                             </a>
                         </div>
                     </div>

@@ -121,6 +121,12 @@
         </a>
         @endif
 
+        <a href="{{ route('reportes-obstaculos.mapa-monitoreo') }}"
+           class="ibc-sidebar-link {{ request()->routeIs('reportes-obstaculos.mapa-monitoreo') ? 'ibc-sidebar-active' : '' }}">
+            <span class="material-symbols-outlined">map</span>
+            <span>Mapa de Riesgo</span>
+        </a>
+
         <a href="{{ route('reportes-obstaculos.create') }}"
            class="ibc-sidebar-link {{ request()->routeIs('reportes-obstaculos.create') ? 'ibc-sidebar-active' : '' }}">
             <span class="material-symbols-outlined">report</span>

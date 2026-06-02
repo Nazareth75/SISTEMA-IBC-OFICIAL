@@ -170,4 +170,18 @@ class ReporteObstaculoController extends Controller
 
         return view('reportes_obstaculos.mis_reportes', compact('reportes', 'stats'));
     }
+
+    public function mapaMonitoreo()
+    {
+        $reportes = ReporteObstaculo::with('reportadoPor', 'validadoPor')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $alertasHoy = ReporteObstaculo::whereDate('created_at', today())->count();
+        $zonasCriticas = ReporteObstaculo::where('nivel_riesgo', 'CRITICO')
+            ->whereIn('estado', ['REPORTADO', 'ACTIVO'])
+            ->count();
+
+        return view('reportes_obstaculos.mapa_monitoreo', compact('reportes', 'alertasHoy', 'zonasCriticas'));
+    }
 }

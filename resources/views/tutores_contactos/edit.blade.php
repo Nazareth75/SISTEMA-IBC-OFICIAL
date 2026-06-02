@@ -23,7 +23,7 @@
                 </div>
             @endif
 
-            <form action="{{ route('personas-no-videntes.tutores.update', [$persona, $tutor]) }}" method="POST">
+            <form action="{{ route('personas-no-videntes.tutores.update', [$persona, $tutor]) }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
                 @include('tutores_contactos._form')

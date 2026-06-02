@@ -93,6 +93,9 @@ Route::middleware(['auth'])->group(function () {
                 'personas-no-videntes' => 'personaNoVidente',
             ]);
 
+        Route::get('personas-no-videntes/{personaNoVidente}/tutores/documento-base', [TutorContactoController::class, 'descargarDocumentoBase'])
+            ->name('personas-no-videntes.tutores.documento-base');
+
         Route::resource('personas-no-videntes.tutores', TutorContactoController::class)
             ->except(['show'])
             ->parameters([
@@ -260,6 +263,8 @@ Route::middleware(['auth'])->group(function () {
             ->name('reportes-obstaculos.store');
         Route::get('mis-reportes-obstaculos', [ReporteObstaculoController::class, 'misReportes'])
             ->name('reportes-obstaculos.mis-reportes');
+        Route::get('mapa-monitoreo', [ReporteObstaculoController::class, 'mapaMonitoreo'])
+            ->name('reportes-obstaculos.mapa-monitoreo');
     });
 });
 

@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class TutorContactoController extends Controller
 {
@@ -47,6 +48,16 @@ class TutorContactoController extends Controller
                 TutorContacto::where('cod_personas_no_videntes_tco', $personaNoVidente->cod_personas_no_videntes)
                     ->whereNull('fbj_tco')
                     ->update(['etl_tco' => false]);
+
+                if ($request->hasFile('doc_ci_tco')) {
+                    $data['doc_ci_tco'] = $request->file('doc_ci_tco')->store('tutores/documentos', 'public');
+                }
+                if ($request->hasFile('doc_legal_tco')) {
+                    $data['doc_legal_tco'] = $request->file('doc_legal_tco')->store('tutores/documentos', 'public');
+                }
+            } else {
+                $data['doc_ci_tco'] = null;
+                $data['doc_legal_tco'] = null;
             }
 
             TutorContacto::create($data);
@@ -91,6 +102,28 @@ class TutorContactoController extends Controller
                     ->where('cod_tutores_contactos', '!=', $tutore->cod_tutores_contactos)
                     ->whereNull('fbj_tco')
                     ->update(['etl_tco' => false]);
+
+                if ($request->hasFile('doc_ci_tco')) {
+                    if ($tutore->doc_ci_tco) {
+                        Storage::disk('public')->delete($tutore->doc_ci_tco);
+                    }
+                    $data['doc_ci_tco'] = $request->file('doc_ci_tco')->store('tutores/documentos', 'public');
+                }
+                if ($request->hasFile('doc_legal_tco')) {
+                    if ($tutore->doc_legal_tco) {
+                        Storage::disk('public')->delete($tutore->doc_legal_tco);
+                    }
+                    $data['doc_legal_tco'] = $request->file('doc_legal_tco')->store('tutores/documentos', 'public');
+                }
+            } else {
+                if ($tutore->doc_ci_tco) {
+                    Storage::disk('public')->delete($tutore->doc_ci_tco);
+                }
+                if ($tutore->doc_legal_tco) {
+                    Storage::disk('public')->delete($tutore->doc_legal_tco);
+                }
+                $data['doc_ci_tco'] = null;
+                $data['doc_legal_tco'] = null;
             }
 
             $tutore->update($data);
@@ -117,5 +150,20 @@ class TutorContactoController extends Controller
         return redirect()
             ->route('personas-no-videntes.tutores.index', $personaNoVidente)
             ->with('success', 'Tutor/contacto eliminado correctamente.');
+    }
+
+    public function descargarDocumentoBase(PersonaNoVidente $personaNoVidente): View
+    {
+        abort_unless(Auth::user()?->puedeGestionarTutores(), 403);
+
+        $tutor = null;
+        if (request()->filled('tutor_id')) {
+            $tutor = TutorContacto::find(request()->get('tutor_id'));
+        }
+
+        return view('tutores_contactos.documento_base', [
+            'persona' => $personaNoVidente,
+            'tutor' => $tutor,
+        ]);
     }
 }

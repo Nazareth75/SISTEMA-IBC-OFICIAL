@@ -23,7 +23,7 @@
                 </div>
             @endif
 
-            <form action="{{ route('personas-no-videntes.tutores.store', $persona) }}" method="POST">
+            <form action="{{ route('personas-no-videntes.tutores.store', $persona) }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 @include('tutores_contactos._form')
             </form>

@@ -196,7 +196,7 @@
                     },
                     processResults: function(data) {
                         return {
-                            results: data
+                            results: data.results
                         };
                     }
                 },
