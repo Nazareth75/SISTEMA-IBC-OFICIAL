@@ -66,20 +66,30 @@ class User extends Authenticatable
     public function tieneRol(...$roles): bool
     {
         $rolUsuario = strtoupper($this->role?->nom_rol ?? '');
+        $rolesNormalizados = array_map(static fn ($rol) => strtoupper((string) $rol), $roles);
 
-        // SUPERADMINISTRADOR y ADMINISTRADOR tienen acceso total por defecto
-        if (in_array($rolUsuario, ['SUPERADMINISTRADOR', 'ADMINISTRADOR'], true)) {
+        // Si el usuario tiene el rol buscado directamente, tiene acceso
+        if (in_array($rolUsuario, $rolesNormalizados, true)) {
             return true;
         }
 
-        $rolesNormalizados = array_map(static fn ($rol) => strtoupper((string) $rol), $roles);
+        // SUPERADMINISTRADOR, ADMINISTRADOR y ADMINISTRADOR_NO_VIDENTE son roles de administración con acceso total,
+        // pero ADMINISTRADOR/SUPERADMINISTRADOR no deben acceder a funciones exclusivas de ADMINISTRADOR_NO_VIDENTE
+        if (in_array($rolUsuario, ['SUPERADMINISTRADOR', 'ADMINISTRADOR', 'ADMINISTRADOR_NO_VIDENTE'], true)) {
+            if ($rolUsuario === 'ADMINISTRADOR_NO_VIDENTE') {
+                return true;
+            }
+            if (!in_array('ADMINISTRADOR_NO_VIDENTE', $rolesNormalizados, true)) {
+                return true;
+            }
+        }
 
-        return in_array($rolUsuario, $rolesNormalizados, true);
+        return false;
     }
 
     public function esSuperadministrador(): bool
     {
-        return $this->tieneRol('SUPERADMINISTRADOR');
+        return strtoupper($this->role?->nom_rol ?? '') === 'SUPERADMINISTRADOR';
     }
 
     public function personasRegistradas(): HasMany

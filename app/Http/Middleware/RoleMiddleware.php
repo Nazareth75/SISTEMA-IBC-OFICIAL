@@ -30,9 +30,15 @@ class RoleMiddleware
             ))
         )));
 
-        $rolUsuario = strtoupper(trim((string) ($usuario->role?->nom_rol ?? '')));
+        $hasPermission = false;
+        foreach ($rolesPermitidos as $rol) {
+            if ($usuario->tieneRol($rol)) {
+                $hasPermission = true;
+                break;
+            }
+        }
 
-        if ($rolUsuario === '' || ! in_array($rolUsuario, $rolesPermitidos, true)) {
+        if (! $hasPermission) {
             abort(403, 'No tienes permiso para acceder a este módulo.');
         }
 

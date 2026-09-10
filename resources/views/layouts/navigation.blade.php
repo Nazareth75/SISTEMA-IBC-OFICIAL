@@ -27,7 +27,7 @@
             <span>Inicio</span>
         </a>
 
-        @if(auth()->user()->tieneRol('SUPERADMINISTRADOR', 'ADMINISTRADOR'))
+        @if(auth()->user()->tieneRol('SUPERADMINISTRADOR', 'ADMINISTRADOR', 'ADMINISTRADOR_NO_VIDENTE'))
         <a href="{{ route('personas-no-videntes.index') }}"
            class="ibc-sidebar-link {{ request()->routeIs('personas-no-videntes.*') ? 'ibc-sidebar-active' : '' }}">
             <span class="material-symbols-outlined">person_search</span>
@@ -46,11 +46,13 @@
             <span>Beneficios</span>
         </a>
 
+        @if(auth()->user()->tieneRol('SUPERADMINISTRADOR', 'ADMINISTRADOR'))
         <a href="{{ route('asignacion-beneficios.index') }}"
            class="ibc-sidebar-link {{ request()->routeIs('asignacion-beneficios.*') ? 'ibc-sidebar-active' : '' }}">
             <span class="material-symbols-outlined">payments</span>
             <span>Asignaciones</span>
         </a>
+        @endif
 
         <a href="{{ route('capacitaciones.index') }}"
            class="ibc-sidebar-link {{ request()->routeIs('capacitaciones.*') ? 'ibc-sidebar-active' : '' }}">
@@ -58,6 +60,7 @@
             <span>Capacitaciones</span>
         </a>
 
+        @if(auth()->user()->tieneRol('SUPERADMINISTRADOR', 'ADMINISTRADOR'))
         <a href="{{ route('tipos-capacitacion.index') }}"
            class="ibc-sidebar-link {{ request()->routeIs('tipos-capacitacion.*') ? 'ibc-sidebar-active' : '' }}">
             <span class="material-symbols-outlined">category</span>
@@ -87,9 +90,24 @@
             <span class="material-symbols-outlined">shield</span>
             <span>Niveles de Seguridad</span>
         </a>
+
+        @if(auth()->user()->esSuperadministrador())
+        <a href="{{ route('admin.logs.index') }}"
+           class="ibc-sidebar-link {{ request()->routeIs('admin.logs.*') ? 'ibc-sidebar-active' : '' }}">
+            <span class="material-symbols-outlined">terminal</span>
+            <span>Logs del Sistema</span>
+        </a>
+
+        <a href="{{ route('admin.backups.index') }}"
+           class="ibc-sidebar-link {{ request()->routeIs('admin.backups.*') ? 'ibc-sidebar-active' : '' }}">
+            <span class="material-symbols-outlined">backup</span>
+            <span>Copias de Seguridad</span>
+        </a>
+        @endif
+        @endif
         @endif
 
-        @if(auth()->user()->tieneRol('SUPERADMINISTRADOR', 'ADMINISTRADOR', 'TECNICO'))
+        @if(auth()->user()->tieneRol('SUPERADMINISTRADOR', 'ADMINISTRADOR', 'TECNICO') && !auth()->user()->tieneRol('ADMINISTRADOR_NO_VIDENTE'))
         <div class="px-5 pt-4 pb-2 text-[11px] font-bold uppercase tracking-widest text-gray-400">
             Módulo 7
         </div>
@@ -108,12 +126,12 @@
 
         @endif
 
-        @if(auth()->user()->tieneRol('SUPERADMINISTRADOR', 'ADMINISTRADOR', 'TECNICO', 'VOLUNTARIO'))
+        @if(auth()->user()->tieneRol('SUPERADMINISTRADOR', 'ADMINISTRADOR', 'TECNICO', 'VOLUNTARIO', 'ADMINISTRADOR_NO_VIDENTE'))
         <div class="px-5 pt-4 pb-2 text-[11px] font-bold uppercase tracking-widest text-gray-400">
             Observatorio
         </div>
 
-        @if(auth()->user()->tieneRol('SUPERADMINISTRADOR', 'ADMINISTRADOR', 'TECNICO'))
+        @if(auth()->user()->tieneRol('SUPERADMINISTRADOR', 'ADMINISTRADOR', 'TECNICO', 'ADMINISTRADOR_NO_VIDENTE'))
         <a href="{{ route('reportes-obstaculos.index') }}"
            class="ibc-sidebar-link {{ request()->routeIs('reportes-obstaculos.index', 'reportes-obstaculos.show') ? 'ibc-sidebar-active' : '' }}">
             <span class="material-symbols-outlined">visibility</span>
@@ -121,6 +139,7 @@
         </a>
         @endif
 
+        @if(!auth()->user()->tieneRol('ADMINISTRADOR_NO_VIDENTE'))
         <a href="{{ route('reportes-obstaculos.mapa-monitoreo') }}"
            class="ibc-sidebar-link {{ request()->routeIs('reportes-obstaculos.mapa-monitoreo') ? 'ibc-sidebar-active' : '' }}">
             <span class="material-symbols-outlined">map</span>
@@ -138,6 +157,7 @@
             <span class="material-symbols-outlined">folder_shared</span>
             <span>Mis Reportes</span>
         </a>
+        @endif
         @endif
     </nav>
 
@@ -162,7 +182,7 @@
     <div class="flex items-center gap-3">
         <span class="hidden sm:block text-sm text-gray-600">Gestión Institucional</span>
         <div class="w-10 h-10 rounded-full bg-[#e8f7ef] border-2 border-[#006837] flex items-center justify-center text-[#006837] font-bold">
-            {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+            {{ strtoupper(substr(Auth::user()->name ?? Auth::user()->nom_usu, 0, 1)) }}
         </div>
     </div>
 </header>

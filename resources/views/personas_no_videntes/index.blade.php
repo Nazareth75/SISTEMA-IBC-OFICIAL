@@ -12,7 +12,7 @@
 
             @php($usuario = auth()->user())
 
-            @if($usuario?->puedeCrearPersonaNoVidente())
+            @if($usuario?->puedeCrearPersonaNoVidente() && !$usuario->tieneRol('ADMINISTRADOR_NO_VIDENTE'))
                 <a href="{{ route('personas-no-videntes.create') }}"
                    class="inline-flex items-center gap-2 px-6 py-3 bg-[#006837] text-white rounded-xl font-bold text-sm uppercase tracking-widest shadow hover:bg-[#004d27] transition">
                     <span class="material-symbols-outlined text-xl">add</span>

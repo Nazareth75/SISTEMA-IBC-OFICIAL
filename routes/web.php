@@ -22,6 +22,8 @@ use App\Http\Controllers\ZonaRiesgoController;
 use App\Http\Controllers\ObstaculoController;
 use App\Http\Controllers\NivelSeguridadController;
 use App\Http\Controllers\ReporteObstaculoController;
+use App\Http\Controllers\LogController;
+use App\Http\Controllers\BackupController;
 
 
 
@@ -35,6 +37,10 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/dashboard', function () {
         $user = auth()->user();
+
+        if ($user->tieneRol('ADMINISTRADOR_NO_VIDENTE')) {
+            return view('dashboard.admin_no_vidente');
+        }
 
         if ($user->tieneRol('SUPERADMINISTRADOR', 'ADMINISTRADOR')) {
             return view('dashboard.admin');
@@ -73,6 +79,42 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::middleware(['role:SUPERADMINISTRADOR,ADMINISTRADOR'])->group(function () {
+        // API Helpers para Asistente de Voz
+        Route::get('api/asistente/beneficios-activos', function () {
+            $beneficios = \App\Models\BeneficioSocial::where('est_bso', 'ACTIVO')
+                ->whereNull('fbj_bso')
+                ->get(['nom_bso', 'des_bso']);
+            return response()->json($beneficios);
+        })->name('api.asistente.beneficios-activos');
+
+        Route::get('api/asistente/afiliaciones-vencidas', function () {
+            $vencidas = \App\Models\Afiliacion::where(function($q) {
+                    $q->where('est_afi', 'VENCIDA')
+                      ->orWhere('fve_afi', '<', today());
+                })
+                ->whereNull('fbj_afi')
+                ->with('persona')
+                ->limit(10)
+                ->get();
+
+            return response()->json($vencidas->map(function ($a) {
+                return [
+                    'id' => $a->cod_afiliaciones,
+                    'nombre' => $a->persona ? "{$a->persona->nom_pnv} {$a->persona->ape_pnv}" : 'Sin nombre',
+                    'ci' => $a->persona ? $a->persona->cii_pnv : '',
+                    'fecha_vencimiento' => $a->fve_afi ? $a->fve_afi->format('Y-m-d') : 'Sin fecha',
+                ];
+            }));
+        })->name('api.asistente.afiliaciones-vencidas');
+
+        Route::get('api/asistente/obstaculos-criticos', function () {
+            $criticos = \App\Models\ReporteObstaculo::where('nivel_riesgo', 'CRITICO')
+                ->whereIn('estado', ['REPORTADO', 'ACTIVO'])
+                ->limit(10)
+                ->get();
+            return response()->json($criticos);
+        })->name('api.asistente.obstaculos-criticos');
+
         Route::post(
             'capacitaciones/{capacitacion}/participaciones',
             [ParticipacionCapacitacionController::class, 'store']
@@ -189,6 +231,18 @@ Route::middleware(['auth'])->group(function () {
             ->name('niveles-seguridad.edit');
         Route::put('niveles-seguridad/{nivelSeguridad}', [NivelSeguridadController::class, 'update'])
             ->name('niveles-seguridad.update');
+
+        // Logs del sistema
+        Route::get('admin/logs', [LogController::class, 'index'])->name('admin.logs.index');
+        Route::get('admin/logs/descargar', [LogController::class, 'download'])->name('admin.logs.download');
+        Route::post('admin/logs/limpiar', [LogController::class, 'clear'])->name('admin.logs.clear');
+
+        // Copias de seguridad (Backups)
+        Route::get('admin/backups', [BackupController::class, 'index'])->name('admin.backups.index');
+        Route::post('admin/backups/crear', [BackupController::class, 'store'])->name('admin.backups.store');
+        Route::get('admin/backups/descargar/{filename}', [BackupController::class, 'download'])->name('admin.backups.download');
+        Route::post('admin/backups/restaurar/{filename}', [BackupController::class, 'restore'])->name('admin.backups.restore');
+        Route::delete('admin/backups/eliminar/{filename}', [BackupController::class, 'destroy'])->name('admin.backups.destroy');
     });
 
     Route::middleware(['role:SUPERADMINISTRADOR,ADMINISTRADOR,TECNICO'])->group(function () {

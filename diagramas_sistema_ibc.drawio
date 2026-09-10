@@ -1,0 +1,456 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="Electron" version="24.4.0">
+  <diagram id="page1" name="Clases Alto Nivel">
+    <mxGraphModel dx="1200" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1600" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="cls_0" value="Usuario" style="shape=mxgraph.basic.rect;fillColor=#2d6a27;strokeColor=#1a3d16;fontColor=#ffffff;fontStyle=1;align=center;verticalAlign=middle;rounded=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="50" y="50" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_1" value="Rol" style="shape=mxgraph.basic.rect;fillColor=#2d6a27;strokeColor=#1a3d16;fontColor=#ffffff;fontStyle=1;align=center;verticalAlign=middle;rounded=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="330" y="50" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_2" value="ParametroSistema" style="shape=mxgraph.basic.rect;fillColor=#2d6a27;strokeColor=#1a3d16;fontColor=#ffffff;fontStyle=1;align=center;verticalAlign=middle;rounded=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="610" y="50" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_3" value="PersonaNoVidente" style="shape=mxgraph.basic.rect;fillColor=#2d6a27;strokeColor=#1a3d16;fontColor=#ffffff;fontStyle=1;align=center;verticalAlign=middle;rounded=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="890" y="50" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_4" value="TutorContacto" style="shape=mxgraph.basic.rect;fillColor=#2d6a27;strokeColor=#1a3d16;fontColor=#ffffff;fontStyle=1;align=center;verticalAlign=middle;rounded=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="1170" y="50" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_5" value="TipoAfiliado" style="shape=mxgraph.basic.rect;fillColor=#2d6a27;strokeColor=#1a3d16;fontColor=#ffffff;fontStyle=1;align=center;verticalAlign=middle;rounded=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="50" y="230" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_6" value="Afiliacion" style="shape=mxgraph.basic.rect;fillColor=#2d6a27;strokeColor=#1a3d16;fontColor=#ffffff;fontStyle=1;align=center;verticalAlign=middle;rounded=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="330" y="230" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_7" value="Federacion" style="shape=mxgraph.basic.rect;fillColor=#2d6a27;strokeColor=#1a3d16;fontColor=#ffffff;fontStyle=1;align=center;verticalAlign=middle;rounded=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="610" y="230" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_8" value="AfiliacionFederacion" style="shape=mxgraph.basic.rect;fillColor=#2d6a27;strokeColor=#1a3d16;fontColor=#ffffff;fontStyle=1;align=center;verticalAlign=middle;rounded=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="890" y="230" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_9" value="BeneficioSocial" style="shape=mxgraph.basic.rect;fillColor=#2d6a27;strokeColor=#1a3d16;fontColor=#ffffff;fontStyle=1;align=center;verticalAlign=middle;rounded=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="1170" y="230" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_10" value="AsignacionBeneficio" style="shape=mxgraph.basic.rect;fillColor=#2d6a27;strokeColor=#1a3d16;fontColor=#ffffff;fontStyle=1;align=center;verticalAlign=middle;rounded=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="50" y="410" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_11" value="InstitucionExterna" style="shape=mxgraph.basic.rect;fillColor=#2d6a27;strokeColor=#1a3d16;fontColor=#ffffff;fontStyle=1;align=center;verticalAlign=middle;rounded=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="330" y="410" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_12" value="TramiteInstitucion" style="shape=mxgraph.basic.rect;fillColor=#2d6a27;strokeColor=#1a3d16;fontColor=#ffffff;fontStyle=1;align=center;verticalAlign=middle;rounded=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="610" y="410" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_13" value="AccesoSalud" style="shape=mxgraph.basic.rect;fillColor=#2d6a27;strokeColor=#1a3d16;fontColor=#ffffff;fontStyle=1;align=center;verticalAlign=middle;rounded=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="890" y="410" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_14" value="TipoCapacitacion" style="shape=mxgraph.basic.rect;fillColor=#2d6a27;strokeColor=#1a3d16;fontColor=#ffffff;fontStyle=1;align=center;verticalAlign=middle;rounded=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="1170" y="410" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_15" value="Capacitacion" style="shape=mxgraph.basic.rect;fillColor=#2d6a27;strokeColor=#1a3d16;fontColor=#ffffff;fontStyle=1;align=center;verticalAlign=middle;rounded=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="50" y="590" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_16" value="ParticipacionCapacitacion" style="shape=mxgraph.basic.rect;fillColor=#2d6a27;strokeColor=#1a3d16;fontColor=#ffffff;fontStyle=1;align=center;verticalAlign=middle;rounded=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="330" y="590" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_17" value="NivelSeguridad" style="shape=mxgraph.basic.rect;fillColor=#2d6a27;strokeColor=#1a3d16;fontColor=#ffffff;fontStyle=1;align=center;verticalAlign=middle;rounded=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="610" y="590" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_18" value="Ruta" style="shape=mxgraph.basic.rect;fillColor=#2d6a27;strokeColor=#1a3d16;fontColor=#ffffff;fontStyle=1;align=center;verticalAlign=middle;rounded=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="890" y="590" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_19" value="CalleTramo" style="shape=mxgraph.basic.rect;fillColor=#2d6a27;strokeColor=#1a3d16;fontColor=#ffffff;fontStyle=1;align=center;verticalAlign=middle;rounded=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="1170" y="590" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_20" value="CondicionEntorno" style="shape=mxgraph.basic.rect;fillColor=#2d6a27;strokeColor=#1a3d16;fontColor=#ffffff;fontStyle=1;align=center;verticalAlign=middle;rounded=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="50" y="770" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_21" value="Obstaculo" style="shape=mxgraph.basic.rect;fillColor=#2d6a27;strokeColor=#1a3d16;fontColor=#ffffff;fontStyle=1;align=center;verticalAlign=middle;rounded=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="330" y="770" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_22" value="EvaluacionRiesgo" style="shape=mxgraph.basic.rect;fillColor=#2d6a27;strokeColor=#1a3d16;fontColor=#ffffff;fontStyle=1;align=center;verticalAlign=middle;rounded=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="610" y="770" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_23" value="ZonaRiesgo" style="shape=mxgraph.basic.rect;fillColor=#2d6a27;strokeColor=#1a3d16;fontColor=#ffffff;fontStyle=1;align=center;verticalAlign=middle;rounded=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="890" y="770" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_24" value="ReporteObstaculo" style="shape=mxgraph.basic.rect;fillColor=#2d6a27;strokeColor=#1a3d16;fontColor=#ffffff;fontStyle=1;align=center;verticalAlign=middle;rounded=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="1170" y="770" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_25" value="RecorridoRealizado" style="shape=mxgraph.basic.rect;fillColor=#2d6a27;strokeColor=#1a3d16;fontColor=#ffffff;fontStyle=1;align=center;verticalAlign=middle;rounded=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="50" y="950" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_26" value="ExperienciaUsuario" style="shape=mxgraph.basic.rect;fillColor=#2d6a27;strokeColor=#1a3d16;fontColor=#ffffff;fontStyle=1;align=center;verticalAlign=middle;rounded=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="330" y="950" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_edge_0" value="Posee" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="cls_0" target="cls_1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_edge_1" value="Registra" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="cls_0" target="cls_3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_edge_2" value="Registra" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="cls_0" target="cls_10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_edge_3" value="Registra" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="cls_0" target="cls_12">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_edge_4" value="Registra" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="cls_0" target="cls_13">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_edge_5" value="Crea/Aprueba" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="cls_0" target="cls_18">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_edge_6" value="Registra" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="cls_0" target="cls_21">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_edge_7" value="Valida" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="cls_0" target="cls_24">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_edge_8" value="Tiene" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="cls_3" target="cls_4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_edge_9" value="Posee" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="cls_3" target="cls_6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_edge_10" value="Realiza" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="cls_3" target="cls_25">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_edge_11" value="Se inscribe" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="cls_3" target="cls_16">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_edge_12" value="Pertenece" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="cls_6" target="cls_5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_edge_13" value="Recibe" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="cls_6" target="cls_10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_edge_14" value="Realiza" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="cls_6" target="cls_12">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_edge_15" value="Registra" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="cls_6" target="cls_13">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_edge_16" value="Dirigido a" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="cls_8" target="cls_7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_edge_17" value="Historial" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="cls_6" target="cls_8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_edge_18" value="Corresponde" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="cls_10" target="cls_9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_edge_19" value="Gestionado en" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="cls_12" target="cls_11">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_edge_20" value="Realizado en" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="cls_13" target="cls_11">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_edge_21" value="Participa" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="cls_16" target="cls_15">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_edge_22" value="Clasificado en" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="cls_15" target="cls_14">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_edge_23" value="Contiene" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="cls_18" target="cls_19">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_edge_24" value="Evaluado en" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="cls_19" target="cls_20">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_edge_25" value="Contiene" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="cls_19" target="cls_21">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_edge_26" value="Calificado en" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="cls_19" target="cls_22">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_edge_27" value="Se encuentra en" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="cls_19" target="cls_23">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_edge_28" value="Determina" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="cls_22" target="cls_17">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_edge_29" value="Asignado con" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="cls_23" target="cls_17">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_edge_30" value="Sigue" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="cls_25" target="cls_18">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_edge_31" value="Registra" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="cls_25" target="cls_26">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="page2" name="Diagrama Fisico BD">
+    <mxGraphModel dx="1500" dy="1500" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2000" pageHeight="2000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="tbl_0" value="&lt;b style=&quot;font-size:13px;&quot;&gt;usuarios&lt;/b&gt;&lt;hr style=&quot;border:0;border-top:1px solid #ffffff;margin:4px 0;&quot;/&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_usuarios (PK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• ide_usu (UK) : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• nom_usu : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• ape_usu : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cii_usu (UK) : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cor_usu (UK) : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• con_usu : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• tel_usu : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_roles_usu (FK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• est_usu : enum&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• fcr_usu : timestamp&lt;/div&gt;" style="shape=mxgraph.basic.rect;fillColor=#1e3d59;strokeColor=#17b978;fontColor=#ffffff;align=center;verticalAlign=top;spacingTop=6;rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="50" y="50" width="240" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_1" value="&lt;b style=&quot;font-size:13px;&quot;&gt;roles&lt;/b&gt;&lt;hr style=&quot;border:0;border-top:1px solid #ffffff;margin:4px 0;&quot;/&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_roles (PK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• nom_rol (UK) : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• des_rol : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• act_rol : boolean&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• fcr_rol : timestamp&lt;/div&gt;" style="shape=mxgraph.basic.rect;fillColor=#1e3d59;strokeColor=#17b978;fontColor=#ffffff;align=center;verticalAlign=top;spacingTop=6;rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="430" y="50" width="240" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_2" value="&lt;b style=&quot;font-size:13px;&quot;&gt;parametros_sistema&lt;/b&gt;&lt;hr style=&quot;border:0;border-top:1px solid #ffffff;margin:4px 0;&quot;/&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_parametros_sistema (PK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cla_psi (UK) : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• val_psi : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• des_psi : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• tip_psi : enum&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• edi_psi : boolean&lt;/div&gt;" style="shape=mxgraph.basic.rect;fillColor=#1e3d59;strokeColor=#17b978;fontColor=#ffffff;align=center;verticalAlign=top;spacingTop=6;rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="810" y="50" width="240" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_3" value="&lt;b style=&quot;font-size:13px;&quot;&gt;personas_no_videntes&lt;/b&gt;&lt;hr style=&quot;border:0;border-top:1px solid #ffffff;margin:4px 0;&quot;/&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_personas_no_videntes (PK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• ide_pnv (UK) : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• nom_pnv : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• app_pnv : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• apm_pnv : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cii_pnv (UK) : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• fen_pnv : date&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• gen_pnv : enum&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• gdi_pnv : enum&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• aut_pnv : enum&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• est_pnv : enum&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_usuarios_pnv (FK) : bigint&lt;/div&gt;" style="shape=mxgraph.basic.rect;fillColor=#1e3d59;strokeColor=#17b978;fontColor=#ffffff;align=center;verticalAlign=top;spacingTop=6;rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1190" y="50" width="240" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_4" value="&lt;b style=&quot;font-size:13px;&quot;&gt;tutores_contactos&lt;/b&gt;&lt;hr style=&quot;border:0;border-top:1px solid #ffffff;margin:4px 0;&quot;/&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_tutores_contactos (PK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_personas_no_videntes_tco (FK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• nom_tco : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• ape_tco : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• par_tco : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• tel_tco : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• etl_tco : boolean&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• doc_ci_tco : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• doc_legal_tco : varchar&lt;/div&gt;" style="shape=mxgraph.basic.rect;fillColor=#1e3d59;strokeColor=#17b978;fontColor=#ffffff;align=center;verticalAlign=top;spacingTop=6;rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="50" y="410" width="240" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_5" value="&lt;b style=&quot;font-size:13px;&quot;&gt;tipos_afiliado&lt;/b&gt;&lt;hr style=&quot;border:0;border-top:1px solid #ffffff;margin:4px 0;&quot;/&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_tipos_afiliado (PK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• nom_taf (UK) : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• des_taf : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• act_taf : boolean&lt;/div&gt;" style="shape=mxgraph.basic.rect;fillColor=#1e3d59;strokeColor=#17b978;fontColor=#ffffff;align=center;verticalAlign=top;spacingTop=6;rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="430" y="410" width="240" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_6" value="&lt;b style=&quot;font-size:13px;&quot;&gt;afiliaciones&lt;/b&gt;&lt;hr style=&quot;border:0;border-top:1px solid #ffffff;margin:4px 0;&quot;/&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_afiliaciones (PK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• ide_afi (UK) : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_personas_no_videntes_afi (FK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_tipos_afiliado_afi (FK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• fia_afi : date&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• fve_afi : date&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• est_afi : enum&lt;/div&gt;" style="shape=mxgraph.basic.rect;fillColor=#1e3d59;strokeColor=#17b978;fontColor=#ffffff;align=center;verticalAlign=top;spacingTop=6;rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="810" y="410" width="240" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_7" value="&lt;b style=&quot;font-size:13px;&quot;&gt;federaciones&lt;/b&gt;&lt;hr style=&quot;border:0;border-top:1px solid #ffffff;margin:4px 0;&quot;/&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_federaciones (PK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• nom_fed (UK) : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• sig_fed : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• ciu_fed : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• act_fed : boolean&lt;/div&gt;" style="shape=mxgraph.basic.rect;fillColor=#1e3d59;strokeColor=#17b978;fontColor=#ffffff;align=center;verticalAlign=top;spacingTop=6;rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1190" y="410" width="240" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_8" value="&lt;b style=&quot;font-size:13px;&quot;&gt;afiliaciones_federaciones&lt;/b&gt;&lt;hr style=&quot;border:0;border-top:1px solid #ffffff;margin:4px 0;&quot;/&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_afiliaciones_federaciones (PK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_afiliaciones_afe (FK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_federaciones_afe (FK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• ffi_afe : date&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• fff_afe : date&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• est_afe : enum&lt;/div&gt;" style="shape=mxgraph.basic.rect;fillColor=#1e3d59;strokeColor=#17b978;fontColor=#ffffff;align=center;verticalAlign=top;spacingTop=6;rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="50" y="770" width="240" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_9" value="&lt;b style=&quot;font-size:13px;&quot;&gt;beneficios_sociales&lt;/b&gt;&lt;hr style=&quot;border:0;border-top:1px solid #ffffff;margin:4px 0;&quot;/&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_beneficios_sociales (PK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• nom_bso : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• tip_bso : enum&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• des_bso : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• act_bso : boolean&lt;/div&gt;" style="shape=mxgraph.basic.rect;fillColor=#1e3d59;strokeColor=#17b978;fontColor=#ffffff;align=center;verticalAlign=top;spacingTop=6;rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="430" y="770" width="240" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_10" value="&lt;b style=&quot;font-size:13px;&quot;&gt;asignacion_beneficios&lt;/b&gt;&lt;hr style=&quot;border:0;border-top:1px solid #ffffff;margin:4px 0;&quot;/&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_asignacion_beneficios (PK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_afiliaciones_abe (FK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_beneficios_sociales_abe (FK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• fas_abe : date&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• est_abe : enum&lt;/div&gt;" style="shape=mxgraph.basic.rect;fillColor=#1e3d59;strokeColor=#17b978;fontColor=#ffffff;align=center;verticalAlign=top;spacingTop=6;rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="810" y="770" width="240" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_11" value="&lt;b style=&quot;font-size:13px;&quot;&gt;instituciones_externas&lt;/b&gt;&lt;hr style=&quot;border:0;border-top:1px solid #ffffff;margin:4px 0;&quot;/&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_instituciones_externas (PK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• nom_iex (UK) : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• tip_iex : enum&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• ciu_iex : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• act_iex : boolean&lt;/div&gt;" style="shape=mxgraph.basic.rect;fillColor=#1e3d59;strokeColor=#17b978;fontColor=#ffffff;align=center;verticalAlign=top;spacingTop=6;rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1190" y="770" width="240" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_12" value="&lt;b style=&quot;font-size:13px;&quot;&gt;tramites_instituciones&lt;/b&gt;&lt;hr style=&quot;border:0;border-top:1px solid #ffffff;margin:4px 0;&quot;/&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_tramites_instituciones (PK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_afiliaciones_tin (FK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_instituciones_externas_tin (FK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• tti_tin : enum&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• est_tin : enum&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• fei_tin : date&lt;/div&gt;" style="shape=mxgraph.basic.rect;fillColor=#1e3d59;strokeColor=#17b978;fontColor=#ffffff;align=center;verticalAlign=top;spacingTop=6;rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="50" y="1130" width="240" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_13" value="&lt;b style=&quot;font-size:13px;&quot;&gt;accesos_salud&lt;/b&gt;&lt;hr style=&quot;border:0;border-top:1px solid #ffffff;margin:4px 0;&quot;/&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_accesos_salud (PK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_afiliaciones_asa (FK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_instituciones_externas_asa (FK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• fea_asa : date&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• mot_asa : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• est_asa : enum&lt;/div&gt;" style="shape=mxgraph.basic.rect;fillColor=#1e3d59;strokeColor=#17b978;fontColor=#ffffff;align=center;verticalAlign=top;spacingTop=6;rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="430" y="1130" width="240" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_14" value="&lt;b style=&quot;font-size:13px;&quot;&gt;tipos_capacitacion&lt;/b&gt;&lt;hr style=&quot;border:0;border-top:1px solid #ffffff;margin:4px 0;&quot;/&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_tipos_capacitacion (PK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• nom_tca (UK) : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• des_tca : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• act_tca : boolean&lt;/div&gt;" style="shape=mxgraph.basic.rect;fillColor=#1e3d59;strokeColor=#17b978;fontColor=#ffffff;align=center;verticalAlign=top;spacingTop=6;rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="810" y="1130" width="240" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_15" value="&lt;b style=&quot;font-size:13px;&quot;&gt;capacitaciones&lt;/b&gt;&lt;hr style=&quot;border:0;border-top:1px solid #ffffff;margin:4px 0;&quot;/&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_capacitaciones (PK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• ide_cap (UK) : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• nom_cap : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_tipos_capacitacion_cap (FK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• fei_cap : date&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• est_cap : enum&lt;/div&gt;" style="shape=mxgraph.basic.rect;fillColor=#1e3d59;strokeColor=#17b978;fontColor=#ffffff;align=center;verticalAlign=top;spacingTop=6;rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1190" y="1130" width="240" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_16" value="&lt;b style=&quot;font-size:13px;&quot;&gt;participaciones_capacitacion&lt;/b&gt;&lt;hr style=&quot;border:0;border-top:1px solid #ffffff;margin:4px 0;&quot;/&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_participaciones_capacitacion (PK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_personas_no_videntes_pca (FK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_capacitaciones_pca (FK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• est_pca : enum&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• obs_pca : text&lt;/div&gt;" style="shape=mxgraph.basic.rect;fillColor=#1e3d59;strokeColor=#17b978;fontColor=#ffffff;align=center;verticalAlign=top;spacingTop=6;rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="50" y="1490" width="240" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_17" value="&lt;b style=&quot;font-size:13px;&quot;&gt;niveles_seguridad&lt;/b&gt;&lt;hr style=&quot;border:0;border-top:1px solid #ffffff;margin:4px 0;&quot;/&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_niveles_seguridad (PK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• nom_nse (UK) : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• niv_nse (UK) : int&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• col_nse : varchar&lt;/div&gt;" style="shape=mxgraph.basic.rect;fillColor=#1e3d59;strokeColor=#17b978;fontColor=#ffffff;align=center;verticalAlign=top;spacingTop=6;rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="430" y="1490" width="240" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_18" value="&lt;b style=&quot;font-size:13px;&quot;&gt;rutas&lt;/b&gt;&lt;hr style=&quot;border:0;border-top:1px solid #ffffff;margin:4px 0;&quot;/&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_rutas (PK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• ide_rut (UK) : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• nom_rut : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• ori_rut : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• dst_rut : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• geo_rut : longtext&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• dis_rut : decimal&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• est_rut : enum&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_usuarios_rut_cre (FK) : bigint&lt;/div&gt;" style="shape=mxgraph.basic.rect;fillColor=#1e3d59;strokeColor=#17b978;fontColor=#ffffff;align=center;verticalAlign=top;spacingTop=6;rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="810" y="1490" width="240" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_19" value="&lt;b style=&quot;font-size:13px;&quot;&gt;calles_tramos&lt;/b&gt;&lt;hr style=&quot;border:0;border-top:1px solid #ffffff;margin:4px 0;&quot;/&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_calles_tramos (PK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_rutas_ctr (FK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• nom_ctr : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• tip_ctr : enum&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• ord_ctr : int&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• act_ctr : boolean&lt;/div&gt;" style="shape=mxgraph.basic.rect;fillColor=#1e3d59;strokeColor=#17b978;fontColor=#ffffff;align=center;verticalAlign=top;spacingTop=6;rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1190" y="1490" width="240" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_20" value="&lt;b style=&quot;font-size:13px;&quot;&gt;condiciones_entorno&lt;/b&gt;&lt;hr style=&quot;border:0;border-top:1px solid #ffffff;margin:4px 0;&quot;/&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_condiciones_entorno (PK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_calles_tramos_cen (FK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• tip_cen : enum&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• des_cen : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• niv_cen : enum&lt;/div&gt;" style="shape=mxgraph.basic.rect;fillColor=#1e3d59;strokeColor=#17b978;fontColor=#ffffff;align=center;verticalAlign=top;spacingTop=6;rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="50" y="1850" width="240" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_21" value="&lt;b style=&quot;font-size:13px;&quot;&gt;obstaculos&lt;/b&gt;&lt;hr style=&quot;border:0;border-top:1px solid #ffffff;margin:4px 0;&quot;/&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_obstaculos (PK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_calles_tramos_obs (FK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• tip_obs : enum&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• des_obs : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• est_obs : enum&lt;/div&gt;" style="shape=mxgraph.basic.rect;fillColor=#1e3d59;strokeColor=#17b978;fontColor=#ffffff;align=center;verticalAlign=top;spacingTop=6;rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="430" y="1850" width="240" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_22" value="&lt;b style=&quot;font-size:13px;&quot;&gt;evaluaciones_riesgo&lt;/b&gt;&lt;hr style=&quot;border:0;border-top:1px solid #ffffff;margin:4px 0;&quot;/&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_evaluaciones_riesgo (PK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_calles_tramos_eri (FK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_niveles_seguridad_eri (FK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• fee_eri : date&lt;/div&gt;" style="shape=mxgraph.basic.rect;fillColor=#1e3d59;strokeColor=#17b978;fontColor=#ffffff;align=center;verticalAlign=top;spacingTop=6;rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="810" y="1850" width="240" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_23" value="&lt;b style=&quot;font-size:13px;&quot;&gt;zonas_riesgo&lt;/b&gt;&lt;hr style=&quot;border:0;border-top:1px solid #ffffff;margin:4px 0;&quot;/&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_zonas_riesgo (PK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• nom_zri : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_calles_tramos_zri (FK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_niveles_seguridad_zri (FK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• act_zri : boolean&lt;/div&gt;" style="shape=mxgraph.basic.rect;fillColor=#1e3d59;strokeColor=#17b978;fontColor=#ffffff;align=center;verticalAlign=top;spacingTop=6;rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1190" y="1850" width="240" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_24" value="&lt;b style=&quot;font-size:13px;&quot;&gt;recorridos_realizados&lt;/b&gt;&lt;hr style=&quot;border:0;border-top:1px solid #ffffff;margin:4px 0;&quot;/&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_recorridos_realizados (PK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_personas_no_videntes_rre (FK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_afiliaciones_rre (FK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_rutas_rre (FK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• fer_rre : date&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• est_rre : enum&lt;/div&gt;" style="shape=mxgraph.basic.rect;fillColor=#1e3d59;strokeColor=#17b978;fontColor=#ffffff;align=center;verticalAlign=top;spacingTop=6;rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="50" y="2210" width="240" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_25" value="&lt;b style=&quot;font-size:13px;&quot;&gt;experiencias_usuario&lt;/b&gt;&lt;hr style=&quot;border:0;border-top:1px solid #ffffff;margin:4px 0;&quot;/&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_experiencias_usuario (PK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cod_recorridos_realizados_exu (FK, UK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• cal_exu : int&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• com_exu : text&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• rec_exu : boolean&lt;/div&gt;" style="shape=mxgraph.basic.rect;fillColor=#1e3d59;strokeColor=#17b978;fontColor=#ffffff;align=center;verticalAlign=top;spacingTop=6;rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="430" y="2210" width="240" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_26" value="&lt;b style=&quot;font-size:13px;&quot;&gt;reportes_obstaculos&lt;/b&gt;&lt;hr style=&quot;border:0;border-top:1px solid #ffffff;margin:4px 0;&quot;/&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• id (PK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• codigo (UK) : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• tipo_obstaculo : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• latitud : decimal&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• longitud : decimal&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• nivel_riesgo : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• estado : varchar&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• reportado_por (FK) : bigint&lt;/div&gt;&lt;div style=&quot;text-align:left;font-size:11px;&quot;&gt;• validado_por (FK) : bigint&lt;/div&gt;" style="shape=mxgraph.basic.rect;fillColor=#1e3d59;strokeColor=#17b978;fontColor=#ffffff;align=center;verticalAlign=top;spacingTop=6;rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="810" y="2210" width="240" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_edge_0" value="cod_roles_usu -&gt; cod_roles" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#17b978;strokeWidth=1.5;endArrow=classic;endFill=1;" edge="1" parent="1" source="tbl_0" target="tbl_1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_edge_1" value="cod_usuarios_pnv -&gt; cod_usuarios" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#17b978;strokeWidth=1.5;endArrow=classic;endFill=1;" edge="1" parent="1" source="tbl_3" target="tbl_0">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_edge_2" value="cod_personas_no_videntes_tco -&gt; cod_personas_no_videntes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#17b978;strokeWidth=1.5;endArrow=classic;endFill=1;" edge="1" parent="1" source="tbl_4" target="tbl_3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_edge_3" value="cod_personas_no_videntes_afi -&gt; cod_personas_no_videntes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#17b978;strokeWidth=1.5;endArrow=classic;endFill=1;" edge="1" parent="1" source="tbl_6" target="tbl_3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_edge_4" value="cod_tipos_afiliado_afi -&gt; cod_tipos_afiliado" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#17b978;strokeWidth=1.5;endArrow=classic;endFill=1;" edge="1" parent="1" source="tbl_6" target="tbl_5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_edge_5" value="cod_afiliaciones_abe -&gt; cod_afiliaciones" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#17b978;strokeWidth=1.5;endArrow=classic;endFill=1;" edge="1" parent="1" source="tbl_10" target="tbl_6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_edge_6" value="cod_beneficios_sociales_abe -&gt; cod_beneficios_sociales" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#17b978;strokeWidth=1.5;endArrow=classic;endFill=1;" edge="1" parent="1" source="tbl_10" target="tbl_9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_edge_7" value="cod_afiliaciones_tin -&gt; cod_afiliaciones" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#17b978;strokeWidth=1.5;endArrow=classic;endFill=1;" edge="1" parent="1" source="tbl_12" target="tbl_6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_edge_8" value="cod_instituciones_externas_tin -&gt; cod_instituciones_externas" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#17b978;strokeWidth=1.5;endArrow=classic;endFill=1;" edge="1" parent="1" source="tbl_12" target="tbl_11">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_edge_9" value="cod_afiliaciones_asa -&gt; cod_afiliaciones" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#17b978;strokeWidth=1.5;endArrow=classic;endFill=1;" edge="1" parent="1" source="tbl_13" target="tbl_6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_edge_10" value="cod_instituciones_externas_asa -&gt; cod_instituciones_externas" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#17b978;strokeWidth=1.5;endArrow=classic;endFill=1;" edge="1" parent="1" source="tbl_13" target="tbl_11">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_edge_11" value="cod_afiliaciones_afe -&gt; cod_afiliaciones" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#17b978;strokeWidth=1.5;endArrow=classic;endFill=1;" edge="1" parent="1" source="tbl_8" target="tbl_6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_edge_12" value="cod_federaciones_afe -&gt; cod_federaciones" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#17b978;strokeWidth=1.5;endArrow=classic;endFill=1;" edge="1" parent="1" source="tbl_8" target="tbl_7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_edge_13" value="cod_tipos_capacitacion_cap -&gt; cod_tipos_capacitacion" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#17b978;strokeWidth=1.5;endArrow=classic;endFill=1;" edge="1" parent="1" source="tbl_15" target="tbl_14">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_edge_14" value="cod_personas_no_videntes_pca -&gt; cod_personas_no_videntes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#17b978;strokeWidth=1.5;endArrow=classic;endFill=1;" edge="1" parent="1" source="tbl_16" target="tbl_3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_edge_15" value="cod_capacitaciones_pca -&gt; cod_capacitaciones" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#17b978;strokeWidth=1.5;endArrow=classic;endFill=1;" edge="1" parent="1" source="tbl_16" target="tbl_15">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_edge_16" value="cod_usuarios_rut_cre -&gt; cod_usuarios" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#17b978;strokeWidth=1.5;endArrow=classic;endFill=1;" edge="1" parent="1" source="tbl_18" target="tbl_0">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_edge_17" value="cod_rutas_ctr -&gt; cod_rutas" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#17b978;strokeWidth=1.5;endArrow=classic;endFill=1;" edge="1" parent="1" source="tbl_19" target="tbl_18">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_edge_18" value="cod_calles_tramos_cen -&gt; cod_calles_tramos" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#17b978;strokeWidth=1.5;endArrow=classic;endFill=1;" edge="1" parent="1" source="tbl_20" target="tbl_19">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_edge_19" value="cod_calles_tramos_obs -&gt; cod_calles_tramos" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#17b978;strokeWidth=1.5;endArrow=classic;endFill=1;" edge="1" parent="1" source="tbl_21" target="tbl_19">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_edge_20" value="cod_calles_tramos_eri -&gt; cod_calles_tramos" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#17b978;strokeWidth=1.5;endArrow=classic;endFill=1;" edge="1" parent="1" source="tbl_22" target="tbl_19">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_edge_21" value="cod_niveles_seguridad_eri -&gt; cod_niveles_seguridad" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#17b978;strokeWidth=1.5;endArrow=classic;endFill=1;" edge="1" parent="1" source="tbl_22" target="tbl_17">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_edge_22" value="cod_calles_tramos_zri -&gt; cod_calles_tramos" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#17b978;strokeWidth=1.5;endArrow=classic;endFill=1;" edge="1" parent="1" source="tbl_23" target="tbl_19">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_edge_23" value="cod_niveles_seguridad_zri -&gt; cod_niveles_seguridad" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#17b978;strokeWidth=1.5;endArrow=classic;endFill=1;" edge="1" parent="1" source="tbl_23" target="tbl_17">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_edge_24" value="cod_personas_no_videntes_rre -&gt; cod_personas_no_videntes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#17b978;strokeWidth=1.5;endArrow=classic;endFill=1;" edge="1" parent="1" source="tbl_24" target="tbl_3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_edge_25" value="cod_afiliaciones_rre -&gt; cod_afiliaciones" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#17b978;strokeWidth=1.5;endArrow=classic;endFill=1;" edge="1" parent="1" source="tbl_24" target="tbl_6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_edge_26" value="cod_rutas_rre -&gt; cod_rutas" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#17b978;strokeWidth=1.5;endArrow=classic;endFill=1;" edge="1" parent="1" source="tbl_24" target="tbl_18">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_edge_27" value="cod_recorridos_realizados_exu -&gt; cod_recorridos_realizados" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#17b978;strokeWidth=1.5;endArrow=classic;endFill=1;" edge="1" parent="1" source="tbl_25" target="tbl_24">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_edge_28" value="reportado_por -&gt; cod_usuarios" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#17b978;strokeWidth=1.5;endArrow=classic;endFill=1;" edge="1" parent="1" source="tbl_26" target="tbl_0">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_edge_29" value="validado_por -&gt; cod_usuarios" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#17b978;strokeWidth=1.5;endArrow=classic;endFill=1;" edge="1" parent="1" source="tbl_26" target="tbl_0">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="page3" name="Mapa Navegacional">
+    <mxGraphModel dx="1200" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1400" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="nav_0" value="Login" style="shape=mxgraph.basic.rect;fillColor=#f0b429;strokeColor=#1a3d16;fontColor=#222222;fontStyle=1;align=center;verticalAlign=middle;rounded=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="100" y="80" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="nav_1" value="Dashboard" style="shape=mxgraph.basic.rect;fillColor=#2d6a27;strokeColor=#1a3d16;fontColor=#ffffff;fontStyle=1;align=center;verticalAlign=middle;rounded=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="420" y="80" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="nav_2" value="CRUD Usuarios (Index)" style="shape=mxgraph.basic.rect;fillColor=#2d6a27;strokeColor=#1a3d16;fontColor=#ffffff;fontStyle=1;align=center;verticalAlign=middle;rounded=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="740" y="80" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="nav_3" value="CRUD Afiliados (Index)" style="shape=mxgraph.basic.rect;fillColor=#2d6a27;strokeColor=#1a3d16;fontColor=#ffffff;fontStyle=1;align=center;verticalAlign=middle;rounded=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="100" y="300" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="nav_4" value="Formulario Crear Afiliado" style="shape=mxgraph.basic.rect;fillColor=#2d6a27;strokeColor=#1a3d16;fontColor=#ffffff;fontStyle=1;align=center;verticalAlign=middle;rounded=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="420" y="300" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="nav_5" value="CRUD Tutores" style="shape=mxgraph.basic.rect;fillColor=#2d6a27;strokeColor=#1a3d16;fontColor=#ffffff;fontStyle=1;align=center;verticalAlign=middle;rounded=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="740" y="300" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="nav_6" value="CRUD Afiliaciones (Index)" style="shape=mxgraph.basic.rect;fillColor=#2d6a27;strokeColor=#1a3d16;fontColor=#ffffff;fontStyle=1;align=center;verticalAlign=middle;rounded=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="100" y="520" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="nav_7" value="CRUD Rutas (Index)" style="shape=mxgraph.basic.rect;fillColor=#2d6a27;strokeColor=#1a3d16;fontColor=#ffffff;fontStyle=1;align=center;verticalAlign=middle;rounded=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="420" y="520" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="nav_8" value="Mapa Trazado Peatonal (Leaflet)" style="shape=mxgraph.basic.rect;fillColor=#2d6a27;strokeColor=#1a3d16;fontColor=#ffffff;fontStyle=1;align=center;verticalAlign=middle;rounded=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="740" y="520" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="nav_9" value="CRUD Reporte Obstáculos" style="shape=mxgraph.basic.rect;fillColor=#2d6a27;strokeColor=#1a3d16;fontColor=#ffffff;fontStyle=1;align=center;verticalAlign=middle;rounded=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="100" y="740" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="nav_10" value="CRUD Capacitaciones" style="shape=mxgraph.basic.rect;fillColor=#2d6a27;strokeColor=#1a3d16;fontColor=#ffffff;fontStyle=1;align=center;verticalAlign=middle;rounded=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="420" y="740" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="nav_11" value="Asistente Voz (Accesible)" style="shape=mxgraph.basic.rect;fillColor=#2d6a27;strokeColor=#1a3d16;fontColor=#ffffff;fontStyle=1;align=center;verticalAlign=middle;rounded=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="740" y="740" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="nav_12" value="Cerrar Sesión" style="shape=mxgraph.basic.rect;fillColor=#f0b429;strokeColor=#1a3d16;fontColor=#222222;fontStyle=1;align=center;verticalAlign=middle;rounded=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="100" y="960" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="nav_edge_0" value="Autenticación exitosa" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;" edge="1" parent="1" source="nav_0" target="nav_1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="nav_edge_1" value="Gestionar usuarios" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;" edge="1" parent="1" source="nav_1" target="nav_2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="nav_edge_2" value="Gestionar afiliados" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;" edge="1" parent="1" source="nav_1" target="nav_3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="nav_edge_3" value="Clic Nuevo" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;" edge="1" parent="1" source="nav_3" target="nav_4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="nav_edge_4" value="Clic Ver Tutor" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;" edge="1" parent="1" source="nav_3" target="nav_5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="nav_edge_5" value="Gestionar afiliaciones" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;" edge="1" parent="1" source="nav_1" target="nav_6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="nav_edge_6" value="Gestionar rutas" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;" edge="1" parent="1" source="nav_1" target="nav_7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="nav_edge_7" value="Clic Diseñar" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;" edge="1" parent="1" source="nav_7" target="nav_8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="nav_edge_8" value="Gestionar obstáculos" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;" edge="1" parent="1" source="nav_1" target="nav_9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="nav_edge_9" value="Gestionar capacitaciones" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;" edge="1" parent="1" source="nav_1" target="nav_10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="nav_edge_10" value="Acceso Admin No Vidente" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2d6a27;strokeWidth=1.5;endArrow=block;" edge="1" parent="1" source="nav_1" target="nav_11">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="nav_any_edge_11_0" value="Clic Salir / Logout" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#dc2626;strokeWidth=1.5;endArrow=block;" edge="1" parent="1" source="nav_1" target="nav_12">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="nav_any_edge_11_1" value="Clic Salir / Logout" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#dc2626;strokeWidth=1.5;endArrow=block;" edge="1" parent="1" source="nav_3" target="nav_12">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="nav_any_edge_11_2" value="Clic Salir / Logout" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#dc2626;strokeWidth=1.5;endArrow=block;" edge="1" parent="1" source="nav_7" target="nav_12">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
