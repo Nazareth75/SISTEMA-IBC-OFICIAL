@@ -42,7 +42,7 @@ class ReporteObstaculoController extends Controller
             'longitud' => 'nullable|numeric',
             'foto' => 'nullable|image|max:5120',
             'nivel_riesgo' => 'required|string|in:BAJO,MEDIO,ALTO,CRITICO',
-            'metodo_deteccion' => 'nullable|string|in:MANUAL,VOLUNTARIO,BASTON,IA',
+            'metodo_deteccion' => 'nullable|string|in:MANUAL,BASTON,IA',
         ]);
 
         $prioridadMap = [
@@ -66,9 +66,10 @@ class ReporteObstaculoController extends Controller
             $fotoPath = $request->file('foto')->store('reportes_obstaculos', 'public');
         }
 
-        $metodoDeteccion = $request->input('metodo_deteccion');
-        if (!$metodoDeteccion) {
-            $metodoDeteccion = auth()->user()?->tieneRol('VOLUNTARIO') ? 'VOLUNTARIO' : 'MANUAL';
+        // Para esta fase, los reportes desde la web se registran siempre como MANUAL
+        $metodoDeteccion = $request->input('metodo_deteccion') ?: 'MANUAL';
+        if (!in_array($metodoDeteccion, ['MANUAL', 'BASTON', 'IA'])) {
+            $metodoDeteccion = 'MANUAL';
         }
 
         $reporte = ReporteObstaculo::create([

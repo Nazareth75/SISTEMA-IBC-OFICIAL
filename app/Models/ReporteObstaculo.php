@@ -10,7 +10,6 @@ class ReporteObstaculo extends Model
 
     const METODOS_DETECCION = [
         'MANUAL' => 'Manual (Web / App)',
-        'VOLUNTARIO' => 'Reporte Voluntario',
         'BASTON' => 'Bastón Inteligente (IoT)',
         'IA' => 'Reconocimiento IA',
     ];

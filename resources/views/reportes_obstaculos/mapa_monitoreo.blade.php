@@ -85,10 +85,9 @@
                     <label class="block text-xs font-bold text-gray-500 uppercase mb-3 tracking-wider">ORIGEN / MÉTODO DETECCIÓN</label>
                     <select id="detection-type" onchange="applyFilters()" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-xs font-bold uppercase focus:ring-[#006837] focus:border-[#006837]">
                         <option value="ALL">TODOS LOS MÉTODOS</option>
-                        <option value="MANUAL">REPORTE MANUAL (WEB)</option>
-                        <option value="VOLUNTARIO">REPORTE VOLUNTARIO</option>
-                        <option value="BASTON">BASTÓN INTELIGENTE (DEMO)</option>
-                        <option value="IA">RECONOCIMIENTO IA (DEMO)</option>
+                        <option value="MANUAL">MANUAL</option>
+                        <option value="BASTON">BASTÓN</option>
+                        <option value="IA">IA</option>
                     </select>
                 </div>
 
@@ -496,13 +495,11 @@
                         </div>
 
                         <div>
-                            <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">MÉTODO DE DETECCIÓN *</label>
-                            <select name="metodo_deteccion" required class="w-full border rounded px-3 py-2 text-xs font-bold uppercase focus:ring-[#006837]">
-                                <option value="MANUAL">REPORTE MANUAL (WEB)</option>
-                                <option value="VOLUNTARIO">REPORTE VOLUNTARIO (EN CAMPO)</option>
-                                <option value="BASTON">BASTÓN INTELIGENTE (DEMO)</option>
-                                <option value="IA">RECONOCIMIENTO IA (DEMO)</option>
-                            </select>
+                            <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">MÉTODO DE DETECCIÓN</label>
+                            <input type="hidden" name="metodo_deteccion" value="MANUAL">
+                            <div class="w-full bg-gray-100 border border-gray-200 rounded px-3 py-2 text-xs font-bold uppercase text-gray-700">
+                                MANUAL (REPORTE WEB)
+                            </div>
                         </div>
 
                         <div>
