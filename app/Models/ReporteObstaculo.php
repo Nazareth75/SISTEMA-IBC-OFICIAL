@@ -28,6 +28,7 @@ class ReporteObstaculo extends Model
         'estado',
         'reportado_por',
         'validado_por',
+        'cod_obstaculos_rpo',
         'fecha_reporte',
         'fecha_validacion',
         'fecha_resolucion',
@@ -48,5 +49,10 @@ class ReporteObstaculo extends Model
     public function validadoPor()
     {
         return $this->belongsTo(User::class, 'validado_por', 'cod_usuarios');
+    }
+
+    public function obstaculo()
+    {
+        return $this->belongsTo(Obstaculo::class, 'cod_obstaculos_rpo', 'cod_obstaculos');
     }
 }

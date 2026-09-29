@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Obstaculo extends Model
@@ -84,6 +85,11 @@ class Obstaculo extends Model
     public function reportadoPor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'cod_usuarios_obs', 'cod_usuarios');
+    }
+
+    public function reportes(): HasMany
+    {
+        return $this->hasMany(ReporteObstaculo::class, 'cod_obstaculos_rpo', 'cod_obstaculos');
     }
 
     // ─── Helpers ─────────────────────────────────────────────
