@@ -94,13 +94,92 @@ class ReporteObstaculoController extends Controller
 
     public function show($id)
     {
-        $reporteObstaculo = ReporteObstaculo::findOrFail($id);
+        $reporteObstaculo = ReporteObstaculo::with(['reportadoPor', 'validadoPor', 'obstaculo.tramo.ruta'])
+            ->findOrFail($id);
         
         if (!auth()->user()->puedeValidarObstaculos() && $reporteObstaculo->reportado_por !== auth()->id()) {
             abort(403, 'No tiene permiso para ver este reporte.');
         }
 
-        return view('reportes_obstaculos.show', compact('reporteObstaculo'));
+        $rutas = [];
+        if (auth()->user()->puedeValidarObstaculos() && $reporteObstaculo->estado === 'ACTIVO' && !$reporteObstaculo->cod_obstaculos_rpo) {
+            $rutas = \App\Models\Ruta::with(['tramos' => function($q) {
+                $q->whereNull('fbj_ctr')->orderBy('ord_ctr');
+            }])->whereNull('fbj_rut')->orderBy('nom_rut')->get();
+        }
+
+        return view('reportes_obstaculos.show', compact('reporteObstaculo', 'rutas'));
+    }
+
+    public function convertirEnObstaculo(Request $request, $id)
+    {
+        if (!auth()->user()->puedeValidarObstaculos() && !auth()->user()->puedeGestionarObstaculos()) {
+            abort(403, 'No tiene permiso para convertir reportes en obstáculos.');
+        }
+
+        $reporte = ReporteObstaculo::findOrFail($id);
+
+        if ($reporte->estado !== 'ACTIVO') {
+            return redirect()->back()->with('error', 'Solo se pueden vincular a rutas los reportes que se encuentren en estado ACTIVO.');
+        }
+
+        if ($reporte->cod_obstaculos_rpo !== null) {
+            return redirect()->back()->with('error', 'Este reporte ya se encuentra vinculado a un obstáculo existente.');
+        }
+
+        $request->validate([
+            'cod_rutas' => 'required|exists:rutas,cod_rutas',
+            'cod_calles_tramos' => 'required|exists:calles_tramos,cod_calles_tramos',
+            'tip_obs' => 'required|in:' . implode(',', array_keys(\App\Models\Obstaculo::TIPOS)),
+            'des_obs' => 'nullable|string|max:250',
+        ], [
+            'cod_rutas.required' => 'Debe seleccionar una ruta.',
+            'cod_calles_tramos.required' => 'Debe seleccionar un tramo perteneciente a la ruta.',
+            'tip_obs.required' => 'El tipo de obstáculo es obligatorio.',
+            'tip_obs.in' => 'El tipo de obstáculo seleccionado no es válido.',
+        ]);
+
+        $ruta = \App\Models\Ruta::findOrFail($request->cod_rutas);
+        $tramo = \App\Models\CalleTramo::where('cod_calles_tramos', $request->cod_calles_tramos)
+            ->where('cod_rutas_ctr', $ruta->cod_rutas)
+            ->whereNull('fbj_ctr')
+            ->first();
+
+        if (!$tramo) {
+            return redirect()->back()->with('error', 'El tramo seleccionado no pertenece a la ruta especificada.');
+        }
+
+        $autor = $reporte->reportadoPor;
+        $oriObs = 'TECNICO';
+        if ($autor) {
+            if ($autor->esVoluntario()) {
+                $oriObs = 'VOLUNTARIO';
+            } elseif (method_exists($autor, 'esAfiliado') && $autor->esAfiliado()) {
+                $oriObs = 'AFILIADO';
+            }
+        }
+
+        $descripcion = $request->input('des_obs') ?: $reporte->descripcion;
+        $descripcion = strtoupper(substr(trim($descripcion), 0, 250));
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($reporte, $tramo, $request, $oriObs, $descripcion) {
+            $obstaculo = \App\Models\Obstaculo::create([
+                'cod_calles_tramos_obs' => $tramo->cod_calles_tramos,
+                'tip_obs' => $request->tip_obs,
+                'des_obs' => $descripcion,
+                'est_obs' => 'ACTIVO',
+                'ori_obs' => $oriObs,
+                'cod_usuarios_obs' => auth()->id(),
+                'fot_obs' => $reporte->foto,
+            ]);
+
+            $reporte->update([
+                'cod_obstaculos_rpo' => $obstaculo->cod_obstaculos,
+            ]);
+        });
+
+        return redirect()->route('reportes-obstaculos.show', $reporte->id)
+            ->with('success', 'Obstáculo creado y vinculado correctamente al tramo de navegación.');
     }
 
     public function validar(Request $request, $id)

@@ -305,6 +305,9 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('reportes-obstaculos/{reporte}/resolver', [ReporteObstaculoController::class, 'resolver'])
             ->name('reportes-obstaculos.resolver')
             ->where('reporte', '[0-9]+');
+        Route::post('reportes-obstaculos/{reporte}/convertir-obstaculo', [ReporteObstaculoController::class, 'convertirEnObstaculo'])
+            ->name('reportes-obstaculos.convertir-obstaculo')
+            ->where('reporte', '[0-9]+');
     });
 
     Route::middleware(['role:SUPERADMINISTRADOR,ADMINISTRADOR,TECNICO,VOLUNTARIO'])->group(function () {
