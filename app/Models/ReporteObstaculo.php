@@ -8,6 +8,13 @@ class ReporteObstaculo extends Model
 {
     protected $table = 'reportes_obstaculos';
 
+    const METODOS_DETECCION = [
+        'MANUAL' => 'Manual (Web / App)',
+        'VOLUNTARIO' => 'Reporte Voluntario',
+        'BASTON' => 'Bastón Inteligente (IoT)',
+        'IA' => 'Reconocimiento IA',
+    ];
+
     protected $fillable = [
         'codigo',
         'tipo_obstaculo',
@@ -17,6 +24,7 @@ class ReporteObstaculo extends Model
         'longitud',
         'foto',
         'nivel_riesgo',
+        'metodo_deteccion',
         'prioridad',
         'estado',
         'reportado_por',

@@ -72,6 +72,7 @@
                 <h3 class="text-[24px] font-semibold text-[#1a1c1e]">¿Qué obstáculo encontraste?</h3>
                 <input type="hidden" name="tipo_obstaculo" id="tipo_obstaculo" value="{{ old('tipo_obstaculo') }}">
                 <input type="hidden" name="nivel_riesgo" id="nivel_riesgo" value="{{ old('nivel_riesgo') }}">
+                <input type="hidden" name="metodo_deteccion" id="metodo_deteccion" value="{{ old('metodo_deteccion', auth()->user()?->tieneRol('VOLUNTARIO') ? 'VOLUNTARIO' : 'MANUAL') }}">
                 
                 <div class="grid grid-cols-2 gap-4">
                     <!-- Bento Grid Layout -->

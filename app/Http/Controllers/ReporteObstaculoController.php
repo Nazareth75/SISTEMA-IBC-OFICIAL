@@ -42,6 +42,7 @@ class ReporteObstaculoController extends Controller
             'longitud' => 'nullable|numeric',
             'foto' => 'nullable|image|max:5120',
             'nivel_riesgo' => 'required|string|in:BAJO,MEDIO,ALTO,CRITICO',
+            'metodo_deteccion' => 'nullable|string|in:MANUAL,VOLUNTARIO,BASTON,IA',
         ]);
 
         $prioridadMap = [
@@ -65,6 +66,11 @@ class ReporteObstaculoController extends Controller
             $fotoPath = $request->file('foto')->store('reportes_obstaculos', 'public');
         }
 
+        $metodoDeteccion = $request->input('metodo_deteccion');
+        if (!$metodoDeteccion) {
+            $metodoDeteccion = auth()->user()?->tieneRol('VOLUNTARIO') ? 'VOLUNTARIO' : 'MANUAL';
+        }
+
         $reporte = ReporteObstaculo::create([
             'codigo' => $codigo,
             'tipo_obstaculo' => $request->tipo_obstaculo,
@@ -74,6 +80,7 @@ class ReporteObstaculoController extends Controller
             'longitud' => $request->longitud,
             'foto' => $fotoPath,
             'nivel_riesgo' => $request->nivel_riesgo,
+            'metodo_deteccion' => $metodoDeteccion,
             'prioridad' => $prioridadMap[$request->nivel_riesgo],
             'estado' => 'REPORTADO',
             'reportado_por' => auth()->id(),
@@ -182,6 +189,10 @@ class ReporteObstaculoController extends Controller
             ->whereIn('estado', ['REPORTADO', 'ACTIVO'])
             ->count();
 
-        return view('reportes_obstaculos.mapa_monitoreo', compact('reportes', 'alertasHoy', 'zonasCriticas'));
+        $sinUbicacionCount = ReporteObstaculo::where(function ($q) {
+            $q->whereNull('latitud')->orWhereNull('longitud');
+        })->count();
+
+        return view('reportes_obstaculos.mapa_monitoreo', compact('reportes', 'alertasHoy', 'zonasCriticas', 'sinUbicacionCount'));
     }
 }

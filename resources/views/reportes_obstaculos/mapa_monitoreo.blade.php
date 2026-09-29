@@ -37,7 +37,7 @@
                     <div class="pt-2 border-t border-gray-200 mt-2">
                         <div class="flex items-center gap-2">
                             <span class="w-6 h-0.5 border-t-2 border-dashed border-[#004d27] inline-block"></span>
-                            <span class="text-[10px] font-bold text-gray-500 uppercase">TRAYECTORIA GPS (BASTÓN INTELIGENTE)</span>
+                            <span class="text-[10px] font-bold text-gray-500 uppercase">TRAYECTORIA GPS (DEMO BASTÓN)</span>
                         </div>
                     </div>
                 </div>
@@ -80,15 +80,15 @@
                     </div>
                 </div>
 
-                {{-- Tipo de Detección Dropdown --}}
+                {{-- Tipo de Detección Dropdown (Campo real metodo_deteccion) --}}
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-3 tracking-wider">TIPO DE DETECCIÓN</label>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-3 tracking-wider">ORIGEN / MÉTODO DETECCIÓN</label>
                     <select id="detection-type" onchange="applyFilters()" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-xs font-bold uppercase focus:ring-[#006837] focus:border-[#006837]">
                         <option value="ALL">TODOS LOS MÉTODOS</option>
-                        <option value="SENSOR">SENSOR ULTRASÓNICO</option>
-                        <option value="GPS">GPS COORDENADAS</option>
-                        <option value="MANUAL">REPORTE MANUAL (APP)</option>
-                        <option value="IA">IA RECONOCIMIENTO</option>
+                        <option value="MANUAL">REPORTE MANUAL (WEB)</option>
+                        <option value="VOLUNTARIO">REPORTE VOLUNTARIO</option>
+                        <option value="BASTON">BASTÓN INTELIGENTE (DEMO)</option>
+                        <option value="IA">RECONOCIMIENTO IA (DEMO)</option>
                     </select>
                 </div>
 
@@ -125,12 +125,23 @@
                         </div>
                     </div>
                 </div>
+
+                {{-- Indicador visible para reportes sin GPS --}}
+                @if(isset($sinUbicacionCount) && $sinUbicacionCount > 0)
+                    <div class="bg-amber-50 p-3 rounded-xl border border-amber-200 text-xs font-bold text-amber-900 flex items-center justify-between shadow-sm">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-amber-600 text-base">location_off</span>
+                            <span>{{ $sinUbicacionCount }} REPORTES SIN GPS</span>
+                        </div>
+                        <a href="{{ route('reportes-obstaculos.index') }}" class="underline text-amber-900 hover:text-amber-700 text-[10px] uppercase font-bold">VER LISTA</a>
+                    </div>
+                @endif
             </div>
 
             <div class="mt-6 pt-6 border-t border-gray-200 shrink-0 flex flex-col gap-2">
                 <button type="button" onclick="toggleSmartCaneRoute()" id="btn-toggle-route" class="w-full py-3 bg-[#e8f7ef] text-[#006837] border-2 border-[#006837] rounded-lg font-bold text-xs uppercase shadow-sm hover:bg-[#cbece0] transition-colors flex items-center justify-center gap-2">
                     <span class="material-symbols-outlined text-[18px]">timeline</span>
-                    <span>TRAYECTORIA GPS (BASTÓN)</span>
+                    <span>TRAYECTORIA GPS (DEMO BASTÓN)</span>
                 </button>
                 <button type="button" onclick="startLocationReport()" class="w-full py-3.5 bg-red-600 text-white rounded-lg font-bold text-xs uppercase shadow-md hover:bg-red-700 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
                     <span class="material-symbols-outlined text-[18px]">add_alert</span>
@@ -248,20 +259,9 @@
                 });
         }
 
-        // Determinar tipo de detección según la descripción
+        // Obtener tipo de detección real desde el campo persistente metodo_deteccion
         function getDetectionType(reporte) {
-            const desc = (reporte.descripcion || '').toLowerCase();
-            const tipo = (reporte.tipo_obstaculo || '').toLowerCase();
-            if (desc.includes('sensor') || desc.includes('ultrasónico') || tipo.includes('sensor') || tipo.includes('bastón')) {
-                return 'SENSOR';
-            }
-            if (desc.includes('gps') || desc.includes('coordenada') || desc.includes('satélite')) {
-                return 'GPS';
-            }
-            if (desc.includes('ia') || desc.includes('reconocimiento') || desc.includes('cámara') || desc.includes('inteligencia')) {
-                return 'IA';
-            }
-            return 'MANUAL';
+            return (reporte.metodo_deteccion || 'MANUAL').toUpperCase();
         }
 
         // Crear Marcadores
@@ -342,6 +342,7 @@
                             
                             <div class="border-t border-gray-100 pt-2 space-y-1 text-[10px] text-gray-500">
                                 <div><strong class="text-gray-700">UBICACIÓN:</strong> ${reporte.direccion_referencia || 'COORDENADAS GPS'}</div>
+                                <div><strong class="text-gray-700">MÉTODO:</strong> <span class="font-bold text-[#006837]">${reporte.metodo_deteccion || 'MANUAL'}</span></div>
                                 <div><strong class="text-gray-700">RIESGO:</strong> <span class="font-bold" style="color: ${color}">${reporte.nivel_riesgo}</span></div>
                                 <div><strong class="text-gray-700">REPORTADO POR:</strong> ${reporte.reportado_por ? (reporte.reportado_por === {{ auth()->id() }} ? 'MÍ' : 'SISTEMA') : 'ANÓNIMO'}</div>
                                 <div><strong class="text-gray-700">FECHA:</strong> ${new Date(reporte.created_at).toLocaleDateString()} ${new Date(reporte.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
@@ -491,6 +492,16 @@
                                 <option value="COMERCIO INFORMAL">COMERCIO INFORMAL</option>
                                 <option value="ALERTA SOS (EMERGENCIA)">ALERTA SOS (EMERGENCIA)</option>
                                 <option value="OTRO">OTRO OBSTÁCULO</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">MÉTODO DE DETECCIÓN *</label>
+                            <select name="metodo_deteccion" required class="w-full border rounded px-3 py-2 text-xs font-bold uppercase focus:ring-[#006837]">
+                                <option value="MANUAL">REPORTE MANUAL (WEB)</option>
+                                <option value="VOLUNTARIO">REPORTE VOLUNTARIO (EN CAMPO)</option>
+                                <option value="BASTON">BASTÓN INTELIGENTE (DEMO)</option>
+                                <option value="IA">RECONOCIMIENTO IA (DEMO)</option>
                             </select>
                         </div>
 
