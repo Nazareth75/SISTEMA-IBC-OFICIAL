@@ -24,6 +24,7 @@
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @stack('styles')
     </head>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <body class="font-sans antialiased bg-[#f5f7f6] text-gray-900">
@@ -56,32 +57,36 @@
         <!-- Flash Messages Handler -->
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                // Manejar mensajes de éxito
-                const successMeta = document.querySelector('meta[name="flash-success"]');
-                if (successMeta) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: '¡Éxito!',
-                        text: successMeta.getAttribute('content'),
-                        confirmButtonText: 'OK',
-                        confirmButtonColor: '#10b981',
-                        timer: 3500,
-                        timerProgressBar: true,
-                    });
-                }
+                const esNoVidente = {{ auth()->check() && auth()->user()->tieneRol('ADMINISTRADOR_NO_VIDENTE') ? 'true' : 'false' }};
 
-                // Manejar mensajes de error
-                const errorMeta = document.querySelector('meta[name="flash-error"]');
-                if (errorMeta) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: '¡Error!',
-                        text: errorMeta.getAttribute('content'),
-                        confirmButtonText: 'OK',
-                        confirmButtonColor: '#ef4444',
-                        timer: 5000,
-                        timerProgressBar: true,
-                    });
+                if (!esNoVidente) {
+                    // Manejar mensajes de éxito
+                    const successMeta = document.querySelector('meta[name="flash-success"]');
+                    if (successMeta) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Éxito!',
+                            text: successMeta.getAttribute('content'),
+                            confirmButtonText: 'OK',
+                            confirmButtonColor: '#10b981',
+                            timer: 3500,
+                            timerProgressBar: true,
+                        });
+                    }
+
+                    // Manejar mensajes de error
+                    const errorMeta = document.querySelector('meta[name="flash-error"]');
+                    if (errorMeta) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: '¡Error!',
+                            text: errorMeta.getAttribute('content'),
+                            confirmButtonText: 'OK',
+                            confirmButtonColor: '#ef4444',
+                            timer: 5000,
+                            timerProgressBar: true,
+                        });
+                    }
                 }
 
                 // Manejar confirmaciones de eliminación
@@ -108,5 +113,7 @@
                 });
             });
         </script>
+        
+        <x-voice-assistant />
     </body>
 </html>

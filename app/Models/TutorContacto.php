@@ -26,6 +26,8 @@ class TutorContacto extends Model
         'tel_tco',
         'cor_tco',
         'etl_tco',
+        'doc_ci_tco',
+        'doc_legal_tco',
         'fbj_tco',
     ];
 

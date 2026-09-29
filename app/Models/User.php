@@ -63,6 +63,35 @@ class User extends Authenticatable
         return "{$this->nom_usu} {$this->ape_usu}";
     }
 
+    public function tieneRol(...$roles): bool
+    {
+        $rolUsuario = strtoupper($this->role?->nom_rol ?? '');
+        $rolesNormalizados = array_map(static fn ($rol) => strtoupper((string) $rol), $roles);
+
+        // Si el usuario tiene el rol buscado directamente, tiene acceso
+        if (in_array($rolUsuario, $rolesNormalizados, true)) {
+            return true;
+        }
+
+        // SUPERADMINISTRADOR, ADMINISTRADOR y ADMINISTRADOR_NO_VIDENTE son roles de administración con acceso total,
+        // pero ADMINISTRADOR/SUPERADMINISTRADOR no deben acceder a funciones exclusivas de ADMINISTRADOR_NO_VIDENTE
+        if (in_array($rolUsuario, ['SUPERADMINISTRADOR', 'ADMINISTRADOR', 'ADMINISTRADOR_NO_VIDENTE'], true)) {
+            if ($rolUsuario === 'ADMINISTRADOR_NO_VIDENTE') {
+                return true;
+            }
+            if (!in_array('ADMINISTRADOR_NO_VIDENTE', $rolesNormalizados, true)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function esSuperadministrador(): bool
+    {
+        return strtoupper($this->role?->nom_rol ?? '') === 'SUPERADMINISTRADOR';
+    }
+
     public function personasRegistradas(): HasMany
     {
         return $this->hasMany(PersonaNoVidente::class, 'cod_usuarios_pnv', 'cod_usuarios');
@@ -94,18 +123,38 @@ class User extends Authenticatable
 
     public function esAdministrador(): bool
     {
-        return strtoupper($this->role?->nom_rol ?? '') === 'ADMINISTRADOR';
+        return $this->tieneRol('ADMINISTRADOR');
     }
 
     public function esTecnico(): bool
     {
-        return strtoupper($this->role?->nom_rol ?? '') === 'TECNICO';
+        return $this->tieneRol('TECNICO');
     }
 
-    public function esTutor(): bool
+    public function esVoluntario(): bool
     {
-        $rol = strtoupper($this->role?->nom_rol ?? '');
-        return in_array($rol, ['TUTOR', 'VOLUNTARIO'], true);
+        return $this->tieneRol('VOLUNTARIO');
+    }
+
+
+    public function puedeGestionarUsuarios(): bool
+    {
+        return $this->tieneRol('SUPERADMINISTRADOR', 'ADMINISTRADOR');
+    }
+
+    public function puedeGestionarRutas(): bool
+    {
+        return $this->tieneRol('SUPERADMINISTRADOR', 'ADMINISTRADOR', 'TECNICO');
+    }
+
+    public function puedeValidarObstaculos(): bool
+    {
+        return $this->tieneRol('SUPERADMINISTRADOR', 'ADMINISTRADOR', 'TECNICO');
+    }
+
+    public function puedeReportarObstaculos(): bool
+    {
+        return $this->tieneRol('SUPERADMINISTRADOR', 'ADMINISTRADOR', 'TECNICO', 'VOLUNTARIO');
     }
 
     public function puedeCrearPersonaNoVidente(): bool

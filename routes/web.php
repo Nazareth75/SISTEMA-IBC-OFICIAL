@@ -21,6 +21,9 @@ use App\Http\Controllers\EvaluacionRiesgoController;
 use App\Http\Controllers\ZonaRiesgoController;
 use App\Http\Controllers\ObstaculoController;
 use App\Http\Controllers\NivelSeguridadController;
+use App\Http\Controllers\ReporteObstaculoController;
+use App\Http\Controllers\LogController;
+use App\Http\Controllers\BackupController;
 
 
 
@@ -30,203 +33,294 @@ Route::get('/', function () {
 
 
 
-Route::get('/dashboard', [DashboardController::class, 'index'])
-    ->middleware(['auth', 'verified'])
-    ->name('dashboard');
+Route::middleware(['auth'])->group(function () {
 
-Route::get('/api/dashboard/estadisticas', [DashboardController::class, 'estadisticas'])
-    ->middleware(['auth', 'verified'])
-    ->name('dashboard.estadisticas');
+    Route::get('/dashboard', function () {
+        $user = auth()->user();
 
-Route::middleware('auth')->group(function () {
+        if ($user->tieneRol('ADMINISTRADOR_NO_VIDENTE')) {
+            return view('dashboard.admin_no_vidente');
+        }
 
-    Route::post(
-        'capacitaciones/{capacitacion}/participaciones',
-        [ParticipacionCapacitacionController::class, 'store']
-    )->name('capacitaciones.participaciones.store');
+        if ($user->tieneRol('SUPERADMINISTRADOR', 'ADMINISTRADOR')) {
+            return view('dashboard.admin');
+        }
 
-    Route::put(
-        'capacitaciones/{capacitacion}/participaciones/{participacion}',
-        [ParticipacionCapacitacionController::class, 'update']
-    )->name('capacitaciones.participaciones.update');
+        if ($user->tieneRol('TECNICO')) {
+            $statsTecnico = [
+                'rutasValidar' => \App\Models\Ruta::whereIn('est_rut', ['BORRADOR', 'REVISION'])->count(),
+                'rutasHoy' => \App\Models\Ruta::whereIn('est_rut', ['BORRADOR', 'REVISION'])->whereDate('fcr_rut', today())->count(),
+                'reportesPendientes' => \App\Models\ReporteObstaculo::where('estado', 'REPORTADO')->count(),
+                'obstaculosCriticos' => \App\Models\ReporteObstaculo::where('nivel_riesgo', 'CRITICO')->whereIn('estado', ['REPORTADO', 'ACTIVO'])->count(),
+                'reportesCriticosList' => \App\Models\ReporteObstaculo::where('nivel_riesgo', 'CRITICO')
+                                                ->whereIn('estado', ['REPORTADO', 'ACTIVO'])
+                                                ->latest()
+                                                ->take(2)
+                                                ->get()
+            ];
+            return view('dashboard.tecnico', compact('statsTecnico'));
+        }
 
-    Route::delete(
-        'capacitaciones/{capacitacion}/participaciones/{participacion}',
-        [ParticipacionCapacitacionController::class, 'destroy']
-    )->name('capacitaciones.participaciones.destroy');
+        if ($user->tieneRol('VOLUNTARIO')) {
+            return view('dashboard.voluntario');
+        }
+
+        abort(403);
+    })
+        ->middleware(['auth'])
+        ->name('dashboard');
+
+    Route::get('/api/dashboard/estadisticas', [DashboardController::class, 'estadisticas'])
+        ->middleware(['verified'])
+        ->name('dashboard.estadisticas');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    Route::resource('personas-no-videntes', PersonaNoVidenteController::class)
-        ->parameters([
-            'personas-no-videntes' => 'personaNoVidente',
-        ]);
+    Route::middleware(['role:SUPERADMINISTRADOR,ADMINISTRADOR'])->group(function () {
+        // API Helpers para Asistente de Voz
+        Route::get('api/asistente/beneficios-activos', function () {
+            $beneficios = \App\Models\BeneficioSocial::where('est_bso', 'ACTIVO')
+                ->whereNull('fbj_bso')
+                ->get(['nom_bso', 'des_bso']);
+            return response()->json($beneficios);
+        })->name('api.asistente.beneficios-activos');
 
+        Route::get('api/asistente/afiliaciones-vencidas', function () {
+            $vencidas = \App\Models\Afiliacion::where(function($q) {
+                    $q->where('est_afi', 'VENCIDA')
+                      ->orWhere('fve_afi', '<', today());
+                })
+                ->whereNull('fbj_afi')
+                ->with('persona')
+                ->limit(10)
+                ->get();
 
-        Route::resource('personas-no-videntes.tutores', TutorContactoController::class)
-    ->except(['show'])
-    ->parameters([
-        'personas-no-videntes' => 'personaNoVidente',
-        'tutores' => 'tutore',
-    ]);
-
-        Route::resource('afiliaciones', AfiliacionController::class)
-    ->parameters([
-        'afiliaciones' => 'afiliacione',
-    ]);
-
-    Route::resource('beneficios', BeneficioController::class)
-        ->parameters([
-            'beneficios' => 'beneficio',
-        ]);
-
-    Route::patch('beneficios/{beneficio}/toggle', [BeneficioController::class, 'toggle'])
-        ->name('beneficios.toggle');
-
-    Route::resource('asignacion-beneficios', AsignacionBeneficioController::class)
-        ->parameters([
-            'asignacion-beneficios' => 'asignacionBeneficio',
-        ]);
-
-    Route::get('api/afiliados-buscar', [AsignacionBeneficioController::class, 'buscarAfiliados'])
-        ->name('afiliados.buscar');
-
-    // Ruta de debug para verificar afiliados activos
-    Route::get('api/afiliados-debug', function () {
-        $afiliados = \App\Models\Afiliacion::activas()->with('persona')->limit(10)->get();
-        return response()->json([
-            'total' => $afiliados->count(),
-            'afiliados' => $afiliados->map(function ($a) {
+            return response()->json($vencidas->map(function ($a) {
                 return [
                     'id' => $a->cod_afiliaciones,
-                    'nombre' => $a->persona?->nom_pnv,
-                    'apellido' => $a->persona?->ape_pnv,
-                    'ci' => $a->persona?->cii_pnv,
-                    'estado' => $a->est_afi,
+                    'nombre' => $a->persona ? "{$a->persona->nom_pnv} {$a->persona->ape_pnv}" : 'Sin nombre',
+                    'ci' => $a->persona ? $a->persona->cii_pnv : '',
+                    'fecha_vencimiento' => $a->fve_afi ? $a->fve_afi->format('Y-m-d') : 'Sin fecha',
                 ];
-            }),
-        ]);
-    })->name('afiliados.debug');
+            }));
+        })->name('api.asistente.afiliaciones-vencidas');
 
-    /**
-     * MÓDULO 5: Trámites en Instituciones Externas
-     */
+        Route::get('api/asistente/obstaculos-criticos', function () {
+            $criticos = \App\Models\ReporteObstaculo::where('nivel_riesgo', 'CRITICO')
+                ->whereIn('estado', ['REPORTADO', 'ACTIVO'])
+                ->limit(10)
+                ->get();
+            return response()->json($criticos);
+        })->name('api.asistente.obstaculos-criticos');
 
-    // Instituciones Externas
-    Route::resource('instituciones-externas', InstitucionExternaController::class)
-        ->parameters([
-            'instituciones-externas' => 'institucionExterna',
-        ]);
+        Route::post(
+            'capacitaciones/{capacitacion}/participaciones',
+            [ParticipacionCapacitacionController::class, 'store']
+        )->name('capacitaciones.participaciones.store');
 
-    Route::patch('instituciones-externas/{institucionExterna}/toggle', [InstitucionExternaController::class, 'toggle'])
-        ->name('instituciones-externas.toggle');
+        Route::put(
+            'capacitaciones/{capacitacion}/participaciones/{participacion}',
+            [ParticipacionCapacitacionController::class, 'update']
+        )->name('capacitaciones.participaciones.update');
 
-    // Trámites Instituciones
-    Route::resource('tramites-instituciones', TramiteInstitucionController::class)
-        ->parameters([
-            'tramites-instituciones' => 'tramiteInstitucion',
-        ]);
+        Route::delete(
+            'capacitaciones/{capacitacion}/participaciones/{participacion}',
+            [ParticipacionCapacitacionController::class, 'destroy']
+        )->name('capacitaciones.participaciones.destroy');
 
-    Route::get('api/afiliados-tramites', [TramiteInstitucionController::class, 'buscarAfiliados'])
-        ->name('afiliados.tramites');
+        Route::resource('personas-no-videntes', PersonaNoVidenteController::class)
+            ->parameters([
+                'personas-no-videntes' => 'personaNoVidente',
+            ]);
 
-    Route::post('tramites-instituciones/{tramiteInstitucion}/cambiar-estado', [TramiteInstitucionController::class, 'cambiarEstado'])
-        ->name('tramites-instituciones.cambiar-estado');
+        Route::get('personas-no-videntes/{personaNoVidente}/tutores/documento-base', [TutorContactoController::class, 'descargarDocumentoBase'])
+            ->name('personas-no-videntes.tutores.documento-base');
 
-    // Accesos Salud
-    Route::resource('accesos-salud', AccesoSaludController::class)
-        ->parameters([
-            'accesos-salud' => 'accesoSalud',
-        ]);
+        Route::resource('personas-no-videntes.tutores', TutorContactoController::class)
+            ->except(['show'])
+            ->parameters([
+                'personas-no-videntes' => 'personaNoVidente',
+                'tutores' => 'tutore',
+            ]);
 
-    Route::get('api/afiliados-accesos', [AccesoSaludController::class, 'buscarAfiliados'])
-        ->name('afiliados.accesos');
+        Route::resource('afiliaciones', AfiliacionController::class)
+            ->parameters([
+                'afiliaciones' => 'afiliacione',
+            ]);
 
-    // =====================================================
-    // MÓDULO 6 — Capacitaciones
-    // =====================================================
+        Route::resource('beneficios', BeneficioController::class)
+            ->parameters([
+                'beneficios' => 'beneficio',
+            ]);
 
-    Route::resource('tipos-capacitacion', TipoCapacitacionController::class)
-    ->parameters(['tipos-capacitacion' => 'tipoCapacitacion']);
+        Route::patch('beneficios/{beneficio}/toggle', [BeneficioController::class, 'toggle'])
+            ->name('beneficios.toggle');
 
-    Route::patch('tipos-capacitacion/{tipoCapacitacion}/toggle', [TipoCapacitacionController::class, 'toggle'])
-        ->name('tipos-capacitacion.toggle');
+        Route::resource('asignacion-beneficios', AsignacionBeneficioController::class)
+            ->parameters([
+                'asignacion-beneficios' => 'asignacionBeneficio',
+            ]);
 
-    Route::resource('capacitaciones', CapacitacionController::class)
-        ->parameters(['capacitaciones' => 'capacitacion']);
+        Route::get('api/afiliados-buscar', [AsignacionBeneficioController::class, 'buscarAfiliados'])
+            ->name('afiliados.buscar');
 
-    Route::post('capacitaciones/{capacitacion}/cambiar-estado', [CapacitacionController::class, 'cambiarEstado'])
-        ->name('capacitaciones.cambiar-estado');
+        Route::get('api/afiliados-debug', function () {
+            $afiliados = \App\Models\Afiliacion::activas()->with('persona')->limit(10)->get();
 
-    Route::get('api/personas-buscar', [ParticipacionCapacitacionController::class, 'buscarPersonas'])
-        ->name('personas.buscar');
+            return response()->json([
+                'total' => $afiliados->count(),
+                'afiliados' => $afiliados->map(function ($a) {
+                    return [
+                        'id' => $a->cod_afiliaciones,
+                        'nombre' => $a->persona?->nom_pnv,
+                        'apellido' => $a->persona?->ape_pnv,
+                        'ci' => $a->persona?->cii_pnv,
+                        'estado' => $a->est_afi,
+                    ];
+                }),
+            ]);
+        })->name('afiliados.debug');
 
-    // =====================================================
-    // MÓDULO 7 — Rutas Seguras
-    // =====================================================
+        Route::resource('instituciones-externas', InstitucionExternaController::class)
+            ->parameters([
+                'instituciones-externas' => 'institucionExterna',
+            ]);
 
-    Route::resource('rutas', RutaController::class)
-        ->parameters(['rutas' => 'ruta']);
+        Route::patch('instituciones-externas/{institucionExterna}/toggle', [InstitucionExternaController::class, 'toggle'])
+            ->name('instituciones-externas.toggle');
 
-    Route::post('api/rutas/estimar-trayecto', [RutaController::class, 'estimarTrayecto'])
-        ->name('rutas.estimar-trayecto');
+        Route::resource('tramites-instituciones', TramiteInstitucionController::class)
+            ->parameters([
+                'tramites-instituciones' => 'tramiteInstitucion',
+            ]);
 
-    Route::get('api/rutas/puntos-interes', [RutaController::class, 'buscarPuntosInteres'])
-        ->name('rutas.puntos-interes');
+        Route::get('api/afiliados-tramites', [TramiteInstitucionController::class, 'buscarAfiliados'])
+            ->name('afiliados.tramites');
 
-    Route::post('rutas/{ruta}/cambiar-estado', [RutaController::class, 'cambiarEstado'])
-        ->name('rutas.cambiar-estado');
+        Route::post('tramites-instituciones/{tramiteInstitucion}/cambiar-estado', [TramiteInstitucionController::class, 'cambiarEstado'])
+            ->name('tramites-instituciones.cambiar-estado');
 
-    // Tramos (nested bajo rutas)
-    Route::post('rutas/{ruta}/tramos', [TramoController::class, 'store'])
-        ->name('rutas.tramos.store');
-    Route::patch('rutas/{ruta}/tramos/reordenar', [TramoController::class, 'reordenar'])
-        ->name('rutas.tramos.reordenar');
-    Route::put('rutas/{ruta}/tramos/{tramo}', [TramoController::class, 'update'])
-        ->name('rutas.tramos.update');
-    Route::delete('rutas/{ruta}/tramos/{tramo}', [TramoController::class, 'destroy'])
-        ->name('rutas.tramos.destroy');
+        Route::resource('accesos-salud', AccesoSaludController::class)
+            ->parameters([
+                'accesos-salud' => 'accesoSalud',
+            ]);
 
-    // Condiciones de entorno (nested bajo tramos)
-    Route::post('tramos/{tramo}/condiciones', [CondicionEntornoController::class, 'store'])
-        ->name('tramos.condiciones.store');
-    Route::delete('tramos/{tramo}/condiciones/{condicion}', [CondicionEntornoController::class, 'destroy'])
-        ->name('tramos.condiciones.destroy');
+        Route::get('api/afiliados-accesos', [AccesoSaludController::class, 'buscarAfiliados'])
+            ->name('afiliados.accesos');
 
-    // Evaluaciones de riesgo (nested bajo tramos)
-    Route::post('tramos/{tramo}/evaluaciones', [EvaluacionRiesgoController::class, 'store'])
-        ->name('tramos.evaluaciones.store');
-    Route::delete('tramos/{tramo}/evaluaciones/{evaluacion}', [EvaluacionRiesgoController::class, 'destroy'])
-        ->name('tramos.evaluaciones.destroy');
+        Route::resource('tipos-capacitacion', TipoCapacitacionController::class)
+            ->parameters(['tipos-capacitacion' => 'tipoCapacitacion']);
 
-    // Zonas de riesgo (nested bajo tramos)
-    Route::post('tramos/{tramo}/zonas', [ZonaRiesgoController::class, 'store'])
-        ->name('tramos.zonas.store');
-    Route::delete('tramos/{tramo}/zonas/{zona}', [ZonaRiesgoController::class, 'destroy'])
-        ->name('tramos.zonas.destroy');
+        Route::patch('tipos-capacitacion/{tipoCapacitacion}/toggle', [TipoCapacitacionController::class, 'toggle'])
+            ->name('tipos-capacitacion.toggle');
 
-    // Obstáculos — reporte y flujo de validación técnico
-    Route::get('obstaculos', [ObstaculoController::class, 'index'])
-        ->name('obstaculos.index');
-    Route::post('tramos/{tramo}/obstaculos', [ObstaculoController::class, 'store'])
-        ->name('tramos.obstaculos.store');
-    Route::patch('obstaculos/{obstaculo}/confirmar', [ObstaculoController::class, 'confirmar'])
-        ->name('obstaculos.confirmar');
-    Route::patch('obstaculos/{obstaculo}/resolver', [ObstaculoController::class, 'resolver'])
-        ->name('obstaculos.resolver');
-    Route::delete('obstaculos/{obstaculo}', [ObstaculoController::class, 'rechazar'])
-        ->name('obstaculos.rechazar');
+        Route::resource('capacitaciones', CapacitacionController::class)
+            ->parameters(['capacitaciones' => 'capacitacion']);
 
-    // Niveles de seguridad — catálogo (Pantalla 5)
-    Route::get('niveles-seguridad', [NivelSeguridadController::class, 'index'])
-        ->name('niveles-seguridad.index');
-    Route::get('niveles-seguridad/{nivelSeguridad}/edit', [NivelSeguridadController::class, 'edit'])
-        ->name('niveles-seguridad.edit');
-    Route::put('niveles-seguridad/{nivelSeguridad}', [NivelSeguridadController::class, 'update'])
-        ->name('niveles-seguridad.update');
+        Route::post('capacitaciones/{capacitacion}/cambiar-estado', [CapacitacionController::class, 'cambiarEstado'])
+            ->name('capacitaciones.cambiar-estado');
+
+        Route::get('api/personas-buscar', [ParticipacionCapacitacionController::class, 'buscarPersonas'])
+            ->name('personas.buscar');
+
+        Route::get('niveles-seguridad', [NivelSeguridadController::class, 'index'])
+            ->name('niveles-seguridad.index');
+        Route::get('niveles-seguridad/{nivelSeguridad}/edit', [NivelSeguridadController::class, 'edit'])
+            ->name('niveles-seguridad.edit');
+        Route::put('niveles-seguridad/{nivelSeguridad}', [NivelSeguridadController::class, 'update'])
+            ->name('niveles-seguridad.update');
+
+        // Logs del sistema
+        Route::get('admin/logs', [LogController::class, 'index'])->name('admin.logs.index');
+        Route::get('admin/logs/descargar', [LogController::class, 'download'])->name('admin.logs.download');
+        Route::post('admin/logs/limpiar', [LogController::class, 'clear'])->name('admin.logs.clear');
+
+        // Copias de seguridad (Backups)
+        Route::get('admin/backups', [BackupController::class, 'index'])->name('admin.backups.index');
+        Route::post('admin/backups/crear', [BackupController::class, 'store'])->name('admin.backups.store');
+        Route::get('admin/backups/descargar/{filename}', [BackupController::class, 'download'])->name('admin.backups.download');
+        Route::post('admin/backups/restaurar/{filename}', [BackupController::class, 'restore'])->name('admin.backups.restore');
+        Route::delete('admin/backups/eliminar/{filename}', [BackupController::class, 'destroy'])->name('admin.backups.destroy');
     });
+
+    Route::middleware(['role:SUPERADMINISTRADOR,ADMINISTRADOR,TECNICO'])->group(function () {
+        Route::resource('rutas', RutaController::class)
+            ->parameters(['rutas' => 'ruta']);
+
+        Route::post('api/rutas/estimar-trayecto', [RutaController::class, 'estimarTrayecto'])
+            ->name('rutas.estimar-trayecto');
+
+        Route::get('api/rutas/puntos-interes', [RutaController::class, 'buscarPuntosInteres'])
+            ->name('rutas.puntos-interes');
+
+        Route::post('rutas/{ruta}/cambiar-estado', [RutaController::class, 'cambiarEstado'])
+            ->name('rutas.cambiar-estado');
+
+        Route::post('rutas/{ruta}/tramos', [TramoController::class, 'store'])
+            ->name('rutas.tramos.store');
+        Route::patch('rutas/{ruta}/tramos/reordenar', [TramoController::class, 'reordenar'])
+            ->name('rutas.tramos.reordenar');
+        Route::put('rutas/{ruta}/tramos/{tramo}', [TramoController::class, 'update'])
+            ->name('rutas.tramos.update');
+        Route::delete('rutas/{ruta}/tramos/{tramo}', [TramoController::class, 'destroy'])
+            ->name('rutas.tramos.destroy');
+
+        Route::post('tramos/{tramo}/condiciones', [CondicionEntornoController::class, 'store'])
+            ->name('tramos.condiciones.store');
+        Route::delete('tramos/{tramo}/condiciones/{condicion}', [CondicionEntornoController::class, 'destroy'])
+            ->name('tramos.condiciones.destroy');
+
+        Route::post('tramos/{tramo}/evaluaciones', [EvaluacionRiesgoController::class, 'store'])
+            ->name('tramos.evaluaciones.store');
+        Route::delete('tramos/{tramo}/evaluaciones/{evaluacion}', [EvaluacionRiesgoController::class, 'destroy'])
+            ->name('tramos.evaluaciones.destroy');
+
+        Route::post('tramos/{tramo}/zonas', [ZonaRiesgoController::class, 'store'])
+            ->name('tramos.zonas.store');
+        Route::delete('tramos/{tramo}/zonas/{zona}', [ZonaRiesgoController::class, 'destroy'])
+            ->name('tramos.zonas.destroy');
+
+        Route::get('obstaculos', [ObstaculoController::class, 'index'])
+            ->name('obstaculos.index');
+        Route::patch('obstaculos/{obstaculo}/confirmar', [ObstaculoController::class, 'confirmar'])
+            ->name('obstaculos.confirmar');
+        Route::patch('obstaculos/{obstaculo}/resolver', [ObstaculoController::class, 'resolver'])
+            ->name('obstaculos.resolver');
+        Route::delete('obstaculos/{obstaculo}', [ObstaculoController::class, 'rechazar'])
+            ->name('obstaculos.rechazar');
+
+        Route::get('reportes-obstaculos', [ReporteObstaculoController::class, 'index'])
+            ->name('reportes-obstaculos.index');
+        Route::get('reportes-obstaculos/{reporte}', [ReporteObstaculoController::class, 'show'])
+            ->name('reportes-obstaculos.show')
+            ->where('reporte', '[0-9]+');
+        Route::patch('reportes-obstaculos/{reporte}/validar', [ReporteObstaculoController::class, 'validar'])
+            ->name('reportes-obstaculos.validar')
+            ->where('reporte', '[0-9]+');
+        Route::patch('reportes-obstaculos/{reporte}/descartar', [ReporteObstaculoController::class, 'descartar'])
+            ->name('reportes-obstaculos.descartar')
+            ->where('reporte', '[0-9]+');
+        Route::patch('reportes-obstaculos/{reporte}/resolver', [ReporteObstaculoController::class, 'resolver'])
+            ->name('reportes-obstaculos.resolver')
+            ->where('reporte', '[0-9]+');
+    });
+
+    Route::middleware(['role:SUPERADMINISTRADOR,ADMINISTRADOR,TECNICO,VOLUNTARIO'])->group(function () {
+        Route::post('tramos/{tramo}/obstaculos', [ObstaculoController::class, 'store'])
+            ->name('tramos.obstaculos.store');
+
+        Route::get('reportes-obstaculos/create', [ReporteObstaculoController::class, 'create'])
+            ->name('reportes-obstaculos.create');
+        Route::post('reportes-obstaculos', [ReporteObstaculoController::class, 'store'])
+            ->name('reportes-obstaculos.store');
+        Route::get('mis-reportes-obstaculos', [ReporteObstaculoController::class, 'misReportes'])
+            ->name('reportes-obstaculos.mis-reportes');
+        Route::get('mapa-monitoreo', [ReporteObstaculoController::class, 'mapaMonitoreo'])
+            ->name('reportes-obstaculos.mapa-monitoreo');
+    });
+});
 
 
 require __DIR__.'/auth.php';
