@@ -396,14 +396,15 @@
                                         PERFIL DE RIESGO DEL TRAMO
                                     </h4>
                                     @php
-                                        $badgeCompletitud = match($perfilRiesgo['completitud_datos']) {
+                                        $badgeCobertura = match($perfilRiesgo['cobertura_datos']) {
                                             'COMPLETO' => 'bg-emerald-100 text-emerald-800 border-emerald-300',
                                             'PARCIAL'  => 'bg-amber-100 text-amber-800 border-amber-300',
                                             default    => 'bg-slate-200 text-slate-700 border-slate-300',
                                         };
                                     @endphp
-                                    <span class="text-[11px] font-mono font-bold px-2 py-0.5 rounded border {{ $badgeCompletitud }}">
-                                        COMPLETITUD: {{ $perfilRiesgo['completitud_datos'] }}
+                                    <span class="text-[11px] font-mono font-bold px-2 py-0.5 rounded border {{ $badgeCobertura }}"
+                                        title="Disponibilidad de registros en las fuentes consultadas. 'COMPLETO' no implica seguridad ni certificación del tramo.">
+                                        COBERTURA DE DATOS: {{ $perfilRiesgo['cobertura_datos'] }}
                                     </span>
                                 </div>
 
@@ -446,7 +447,7 @@
 
                                     {{-- OBSTÁCULOS --}}
                                     <div class="bg-white p-2.5 rounded border border-slate-200 shadow-sm">
-                                        <p class="text-[10px] text-slate-500 font-semibold uppercase">OBSTÁCULOS E INCIDENCIAS</p>
+                                        <p class="text-[10px] text-slate-500 font-semibold uppercase">OBSTÁCULOS VIGENTES</p>
                                         <p class="font-bold text-slate-800 mt-1 uppercase">
                                             {{ $perfilRiesgo['obstaculos_activos_count'] }} ACTIVOS · {{ $perfilRiesgo['obstaculos_reportados_count'] }} REP.
                                         </p>
@@ -461,7 +462,7 @@
                                     </div>
                                 </div>
                                 <p class="text-[10px] text-slate-500 italic mt-2.5">
-                                    * Nota técnica: Los indicadores se representan individualmente en escala [0.00 - 1.00]. La ausencia de datos devuelve N/A sin asumir 0.00% de riesgo (Fase 3A).
+                                    * Nota técnica: COBERTURA DE DATOS indica únicamente disponibilidad de información registrada en las 4 fuentes. 'COMPLETO' no implica certificación ni seguridad total del tramo (Fase 3A).
                                 </p>
                             </div>
 

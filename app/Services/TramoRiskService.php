@@ -6,9 +6,23 @@ use App\Models\CalleTramo;
 
 class TramoRiskService
 {
-    public const COMPLETITUD_SIN_DATOS = 'SIN_DATOS';
-    public const COMPLETITUD_PARCIAL   = 'PARCIAL';
-    public const COMPLETITUD_COMPLETO  = 'COMPLETO';
+    /**
+     * Constantes de Cobertura de Datos.
+     * SIN_DATOS = ninguna de las 4 fuentes posee registros.
+     * PARCIAL   = existen registros en algunas fuentes.
+     * COMPLETO  = existen registros en las 4 fuentes consideradas.
+     * 
+     * NOTA IMPORTANTE: COMPLETO NO significa "tramo totalmente seguro" ni "inspección exhaustiva".
+     * Expresa únicamente la disponibilidad de registros cargados en las fuentes consultadas.
+     */
+    public const COBERTURA_SIN_DATOS = 'SIN_DATOS';
+    public const COBERTURA_PARCIAL   = 'PARCIAL';
+    public const COBERTURA_COMPLETO  = 'COMPLETO';
+
+    // Alias mantenidos por compatibilidad técnica interna
+    public const COMPLETITUD_SIN_DATOS = self::COBERTURA_SIN_DATOS;
+    public const COMPLETITUD_PARCIAL   = self::COBERTURA_PARCIAL;
+    public const COMPLETITUD_COMPLETO  = self::COBERTURA_COMPLETO;
 
     /**
      * Mapa de normalización para condiciones del entorno.
@@ -21,6 +35,16 @@ class TramoRiskService
         'REGULAR' => 0.50,
         'MALO'    => 1.00,
     ];
+
+    /**
+     * Estados de obstáculos considerados vigentes (afectan perfil actual).
+     */
+    public const ESTADOS_OBSTACULO_VIGENTES = ['ACTIVO', 'REPORTADO'];
+
+    /**
+     * Estados de reportes considerados vigentes (afectan prioridad máxima actual).
+     */
+    public const ESTADOS_REPORTE_VIGENTES = ['REPORTADO', 'ACTIVO'];
 
     /**
      * Calcula y devuelve el perfil cuantitativo normalizado de riesgo de un tramo.
@@ -112,23 +136,33 @@ class TramoRiskService
             }
         }
 
-        // 4. OBSTÁCULOS Y REPORTES
-        $obstaculos = $tramo->obstaculos()
-            ->with('reportes')
+        // 4. OBSTÁCULOS Y REPORTES VIGENTES
+        // Considerar únicamente obstáculos en estados ACTIVO y REPORTADO.
+        // Excluye obstáculos en estado RESUELTO o con soft delete (fbj_obs).
+        $obstaculosVigentes = $tramo->obstaculos()
+            ->with(['reportes' => function ($q) {
+                $q->whereIn('estado', self::ESTADOS_REPORTE_VIGENTES);
+            }])
             ->whereNull('fbj_obs')
+            ->whereIn('est_obs', self::ESTADOS_OBSTACULO_VIGENTES)
             ->get();
 
-        $obstaculosActivosCount    = $obstaculos->where('est_obs', 'ACTIVO')->count();
-        $obstaculosReportadosCount = $obstaculos->where('est_obs', 'REPORTADO')->count();
-        $tiposObstaculos           = $obstaculos->pluck('tip_obs')->unique()->values()->all();
+        $obstaculosActivosCount    = $obstaculosVigentes->where('est_obs', 'ACTIVO')->count();
+        $obstaculosReportadosCount = $obstaculosVigentes->where('est_obs', 'REPORTADO')->count();
+        $tiposObstaculos           = $obstaculosVigentes->pluck('tip_obs')->unique()->values()->all();
 
         $tieneReportesAsociados = false;
         $prioridadMaxima        = null;
 
-        foreach ($obstaculos as $obs) {
-            if ($obs->reportes->isNotEmpty()) {
+        foreach ($obstaculosVigentes as $obs) {
+            // Filtrar reportes asociados en estado REPORTADO o ACTIVO (excluye DESCARTADO y RESUELTO)
+            $reportesVigentes = $obs->reportes->filter(
+                fn ($r) => in_array($r->estado, self::ESTADOS_REPORTE_VIGENTES)
+            );
+
+            if ($reportesVigentes->isNotEmpty()) {
                 $tieneReportesAsociados = true;
-                foreach ($obs->reportes as $rep) {
+                foreach ($reportesVigentes as $rep) {
                     if ($rep->prioridad !== null && $rep->prioridad >= 1 && $rep->prioridad <= 4) {
                         $prio = (int) $rep->prioridad;
                         if ($prioridadMaxima === null || $prio > $prioridadMaxima) {
@@ -144,8 +178,7 @@ class TramoRiskService
             $prioridadNormalizada = round($prioridadMaxima / 4, 2);
         }
 
-        // 5. COMPLETITUD DE INFORMACIÓN
-        // Criterio: Se evalúan 4 dimensiones (Evaluación, Condiciones, Zonas registradas, Obstáculos registrados)
+        // 5. COBERTURA DE DATOS (4 Dimensiones)
         $dimensionesConDatos = 0;
         $totalDimensiones    = 4;
 
@@ -158,16 +191,16 @@ class TramoRiskService
         if ($tramo->zonas()->whereNull('fbj_zri')->exists()) {
             $dimensionesConDatos++;
         }
-        if ($obstaculos->isNotEmpty()) {
+        if ($obstaculosVigentes->isNotEmpty()) {
             $dimensionesConDatos++;
         }
 
         if ($dimensionesConDatos === 0) {
-            $completitud = self::COMPLETITUD_SIN_DATOS;
+            $cobertura = self::COBERTURA_SIN_DATOS;
         } elseif ($dimensionesConDatos === $totalDimensiones) {
-            $completitud = self::COMPLETITUD_COMPLETO;
+            $cobertura = self::COBERTURA_COMPLETO;
         } else {
-            $completitud = self::COMPLETITUD_PARCIAL;
+            $cobertura = self::COBERTURA_PARCIAL;
         }
 
         return [
@@ -195,7 +228,8 @@ class TramoRiskService
             'prioridad_maxima'           => $prioridadMaxima,
             'prioridad_normalizada'      => $prioridadNormalizada,
 
-            'completitud_datos'          => $completitud,
+            'cobertura_datos'            => $cobertura,
+            'completitud_datos'          => $cobertura, // alias de compatibilidad técnica
         ];
     }
 

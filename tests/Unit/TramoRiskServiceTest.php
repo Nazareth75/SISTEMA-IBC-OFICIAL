@@ -10,9 +10,9 @@ use App\Models\EvaluacionRiesgo;
 use App\Models\CondicionEntorno;
 use App\Models\ZonaRiesgo;
 use App\Models\Obstaculo;
+use App\Models\ReporteObstaculo;
 use App\Services\TramoRiskService;
 use App\Services\RutaEstimacionService;
-use Illuminate\Support\Facades\DB;
 
 class TramoRiskServiceTest extends TestCase
 {
@@ -43,6 +43,12 @@ class TramoRiskServiceTest extends TestCase
      */
     private function limpiarTramo(CalleTramo $tramo): void
     {
+        // Limpiar reportes vinculados a obstáculos del tramo
+        $obsIds = Obstaculo::where('cod_calles_tramos_obs', $tramo->getKey())->pluck('cod_obstaculos');
+        if ($obsIds->isNotEmpty()) {
+            ReporteObstaculo::whereIn('cod_obstaculos_rpo', $obsIds)->delete();
+        }
+
         EvaluacionRiesgo::where('cod_calles_tramos_eri', $tramo->getKey())->forceDelete();
         CondicionEntorno::where('cod_calles_tramos_cen', $tramo->getKey())->forceDelete();
         ZonaRiesgo::where('cod_calles_tramos_zri', $tramo->getKey())->forceDelete();
@@ -81,6 +87,7 @@ class TramoRiskServiceTest extends TestCase
             $this->assertEquals(0, $perfil['obstaculos_reportados_count']);
             $this->assertNull($perfil['prioridad_maxima']);
             $this->assertNull($perfil['prioridad_normalizada']);
+            $this->assertEquals('SIN_DATOS', $perfil['cobertura_datos']);
             $this->assertEquals('SIN_DATOS', $perfil['completitud_datos']);
         } finally {
             $this->limpiarTramo($tramo);
@@ -267,6 +274,7 @@ class TramoRiskServiceTest extends TestCase
             $this->assertEquals(1, $perfil['obstaculos_reportados_count']);
             $this->assertContains('POSTE', $perfil['tipos_obstaculos']);
             $this->assertContains('OBRA', $perfil['tipos_obstaculos']);
+            $this->assertNotContains('BACHE', $perfil['tipos_obstaculos']);
         } finally {
             $this->limpiarTramo($tramo);
         }
@@ -319,6 +327,116 @@ class TramoRiskServiceTest extends TestCase
             $this->assertEquals('EN REVISIÓN', $ruta->est_rut);
         } finally {
             $ruta->forceDelete();
+        }
+    }
+
+    /**
+     * Caso I: Obstáculo RESUELTO -> no cuenta como obstáculo vigente.
+     */
+    public function test_caso_i_obstaculo_resuelto_no_es_vigente()
+    {
+        $ruta = $this->crearRutaPrueba();
+        $tramo = CalleTramo::create([
+            'cod_rutas_ctr' => $ruta->getKey(),
+            'nom_ctr'       => 'TRAMO OBSTACULO RESUELTO TEST',
+            'tip_ctr'       => 'ACERA',
+        ]);
+
+        try {
+            Obstaculo::create([
+                'cod_calles_tramos_obs' => $tramo->getKey(),
+                'tip_obs'               => 'ESCALÓN',
+                'des_obs'               => 'ESCALÓN REPARADO',
+                'est_obs'               => 'RESUELTO',
+            ]);
+
+            $perfil = $this->service->obtenerPerfil($tramo);
+
+            $this->assertEquals(0, $perfil['obstaculos_activos_count']);
+            $this->assertEquals(0, $perfil['obstaculos_reportados_count']);
+            $this->assertEmpty($perfil['tipos_obstaculos']);
+        } finally {
+            $this->limpiarTramo($tramo);
+        }
+    }
+
+    /**
+     * Caso J: Reporte DESCARTADO asociado -> no modifica prioridad vigente.
+     */
+    public function test_caso_j_reporte_descartado_no_modifica_prioridad()
+    {
+        $ruta = $this->crearRutaPrueba();
+        $tramo = CalleTramo::create([
+            'cod_rutas_ctr' => $ruta->getKey(),
+            'nom_ctr'       => 'TRAMO REPORTE DESCARTADO TEST',
+            'tip_ctr'       => 'ACERA',
+        ]);
+
+        try {
+            $obs = Obstaculo::create([
+                'cod_calles_tramos_obs' => $tramo->getKey(),
+                'tip_obs'               => 'POSTE',
+                'des_obs'               => 'POSTE LUZ',
+                'est_obs'               => 'ACTIVO',
+            ]);
+
+            ReporteObstaculo::create([
+                'codigo'             => 'OBS-TEST-' . rand(1000, 9999),
+                'tipo_obstaculo'     => 'POSTE',
+                'descripcion'        => 'Reporte descartado de alta prioridad',
+                'nivel_riesgo'       => 'CRITICO',
+                'prioridad'          => 4,
+                'estado'             => 'DESCARTADO',
+                'cod_obstaculos_rpo' => $obs->getKey(),
+            ]);
+
+            $perfil = $this->service->obtenerPerfil($tramo);
+
+            $this->assertFalse($perfil['tiene_reportes_asociados']);
+            $this->assertNull($perfil['prioridad_maxima']);
+            $this->assertNull($perfil['prioridad_normalizada']);
+        } finally {
+            $this->limpiarTramo($tramo);
+        }
+    }
+
+    /**
+     * Caso K: Reporte RESUELTO asociado -> no modifica prioridad vigente.
+     */
+    public function test_caso_k_reporte_resuelto_no_modifica_prioridad()
+    {
+        $ruta = $this->crearRutaPrueba();
+        $tramo = CalleTramo::create([
+            'cod_rutas_ctr' => $ruta->getKey(),
+            'nom_ctr'       => 'TRAMO REPORTE RESUELTO TEST',
+            'tip_ctr'       => 'ACERA',
+        ]);
+
+        try {
+            $obs = Obstaculo::create([
+                'cod_calles_tramos_obs' => $tramo->getKey(),
+                'tip_obs'               => 'BACHE',
+                'des_obs'               => 'BACHE TAPADO',
+                'est_obs'               => 'ACTIVO',
+            ]);
+
+            ReporteObstaculo::create([
+                'codigo'             => 'OBS-TEST-' . rand(1000, 9999),
+                'tipo_obstaculo'     => 'BACHE',
+                'descripcion'        => 'Reporte resuelto anteriormente',
+                'nivel_riesgo'       => 'ALTO',
+                'prioridad'          => 3,
+                'estado'             => 'RESUELTO',
+                'cod_obstaculos_rpo' => $obs->getKey(),
+            ]);
+
+            $perfil = $this->service->obtenerPerfil($tramo);
+
+            $this->assertFalse($perfil['tiene_reportes_asociados']);
+            $this->assertNull($perfil['prioridad_maxima']);
+            $this->assertNull($perfil['prioridad_normalizada']);
+        } finally {
+            $this->limpiarTramo($tramo);
         }
     }
 }
