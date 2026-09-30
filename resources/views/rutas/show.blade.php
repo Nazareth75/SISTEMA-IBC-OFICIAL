@@ -387,6 +387,85 @@
                                 @endif
                             </div>
 
+                            {{-- ── PERFIL DE RIESGO DEL TRAMO ── --}}
+                            @php $perfilRiesgo = $tramo->perfilRiesgo(); @endphp
+                            <div class="md:col-span-2 bg-slate-50 border border-slate-200 rounded-lg p-4 mt-2">
+                                <div class="flex items-center justify-between border-b border-slate-200 pb-2 mb-3">
+                                    <h4 class="text-xs font-bold text-slate-800 uppercase flex items-center gap-1.5">
+                                        <i class="fas fa-chart-bar text-slate-600"></i>
+                                        PERFIL DE RIESGO DEL TRAMO
+                                    </h4>
+                                    @php
+                                        $badgeCobertura = match($perfilRiesgo['cobertura_datos']) {
+                                            'COMPLETO' => 'bg-emerald-100 text-emerald-800 border-emerald-300',
+                                            'PARCIAL'  => 'bg-amber-100 text-amber-800 border-amber-300',
+                                            default    => 'bg-slate-200 text-slate-700 border-slate-300',
+                                        };
+                                    @endphp
+                                    <span class="text-[11px] font-mono font-bold px-2 py-0.5 rounded border {{ $badgeCobertura }}"
+                                        title="Disponibilidad de registros en las fuentes consultadas. 'COMPLETO' no implica seguridad ni certificación del tramo.">
+                                        COBERTURA DE DATOS: {{ $perfilRiesgo['cobertura_datos'] }}
+                                    </span>
+                                </div>
+
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                                    {{-- EVALUACIÓN TÉCNICA --}}
+                                    <div class="bg-white p-2.5 rounded border border-slate-200 shadow-sm">
+                                        <p class="text-[10px] text-slate-500 font-semibold uppercase">EVALUACIÓN TÉCNICA</p>
+                                        @if($perfilRiesgo['estado_evaluacion'] === 'NO_EVALUADO')
+                                            <p class="font-bold text-slate-500 mt-1 uppercase">NO EVALUADO</p>
+                                            <p class="text-[10px] text-slate-400">Riesgo eval: <span class="font-mono">N/A</span></p>
+                                        @else
+                                            <p class="font-bold text-emerald-700 mt-1 uppercase">{{ $perfilRiesgo['nivel_seguridad_nombre'] }}</p>
+                                            <p class="text-[10px] text-slate-600">Riesgo eval: <span class="font-mono font-bold">{{ number_format($perfilRiesgo['riesgo_evaluacion'], 2) }}</span></p>
+                                        @endif
+                                    </div>
+
+                                    {{-- CONDICIONES --}}
+                                    <div class="bg-white p-2.5 rounded border border-slate-200 shadow-sm">
+                                        <p class="text-[10px] text-slate-500 font-semibold uppercase">CONDICIONES DEL ENTORNO</p>
+                                        @if($perfilRiesgo['riesgo_condiciones'] === null)
+                                            <p class="font-bold text-slate-500 mt-1 uppercase">0 REGISTRADAS</p>
+                                            <p class="text-[10px] text-slate-400">Promedio: <span class="font-mono">N/A</span></p>
+                                        @else
+                                            <p class="font-bold text-slate-800 mt-1 uppercase">{{ $perfilRiesgo['condiciones_count'] }} REGISTRADAS</p>
+                                            <p class="text-[10px] text-slate-600">Promedio riesg: <span class="font-mono font-bold">{{ number_format($perfilRiesgo['riesgo_condiciones'], 2) }}</span></p>
+                                        @endif
+                                    </div>
+
+                                    {{-- ZONAS ACTIVAS --}}
+                                    <div class="bg-white p-2.5 rounded border border-slate-200 shadow-sm">
+                                        <p class="text-[10px] text-slate-500 font-semibold uppercase">ZONAS DE RIESGO</p>
+                                        @if($perfilRiesgo['riesgo_zonas_max'] === null)
+                                            <p class="font-bold text-slate-500 mt-1 uppercase">0 ACTIVAS</p>
+                                            <p class="text-[10px] text-slate-400">Riesgo máx: <span class="font-mono">N/A</span></p>
+                                        @else
+                                            <p class="font-bold text-amber-700 mt-1 uppercase">{{ $perfilRiesgo['zonas_activas_count'] }} ACTIVAS</p>
+                                            <p class="text-[10px] text-slate-600">Riesgo máx: <span class="font-mono font-bold">{{ number_format($perfilRiesgo['riesgo_zonas_max'], 2) }}</span></p>
+                                        @endif
+                                    </div>
+
+                                    {{-- OBSTÁCULOS --}}
+                                    <div class="bg-white p-2.5 rounded border border-slate-200 shadow-sm">
+                                        <p class="text-[10px] text-slate-500 font-semibold uppercase">OBSTÁCULOS VIGENTES</p>
+                                        <p class="font-bold text-slate-800 mt-1 uppercase">
+                                            {{ $perfilRiesgo['obstaculos_activos_count'] }} ACTIVOS · {{ $perfilRiesgo['obstaculos_reportados_count'] }} REP.
+                                        </p>
+                                        <p class="text-[10px] text-slate-600">
+                                            Prio. máx: 
+                                            @if($perfilRiesgo['prioridad_maxima'] !== null)
+                                                <span class="font-mono font-bold">{{ $perfilRiesgo['prioridad_maxima'] }}/4 (Norm: {{ number_format($perfilRiesgo['prioridad_normalizada'], 2) }})</span>
+                                            @else
+                                                <span class="font-mono text-slate-400">N/A</span>
+                                            @endif
+                                        </p>
+                                    </div>
+                                </div>
+                                <p class="text-[10px] text-slate-500 italic mt-2.5">
+                                    * Nota técnica: COBERTURA DE DATOS indica únicamente disponibilidad de información registrada en las 4 fuentes. 'COMPLETO' no implica certificación ni seguridad total del tramo (Fase 3A).
+                                </p>
+                            </div>
+
                         </div>
                     </div>
                 @empty

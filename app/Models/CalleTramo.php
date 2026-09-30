@@ -91,4 +91,10 @@ class CalleTramo extends Model
             ->whereIn('est_obs', ['REPORTADO', 'ACTIVO'])
             ->count();
     }
+
+    public function perfilRiesgo(): array
+    {
+        return app(\App\Services\TramoRiskService::class)->obtenerPerfil($this);
+    }
 }
+
