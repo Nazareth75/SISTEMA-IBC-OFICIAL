@@ -19,7 +19,11 @@ class CondicionEntornoController extends Controller
             $ruta = $tramo->rutas()->where('rutas.cod_rutas', $codRutas)->first();
             abort_unless($ruta, 404, 'EL TRAMO NO PERTENECE A LA RUTA ESPECIFICADA.');
         } else {
-            $ruta = $tramo->rutas()->first() ?? $tramo->ruta;
+            $rutas = $tramo->rutas;
+            if ($rutas->count() > 1) {
+                abort(422, 'CONTEXTO AMBIGUO: EL TRAMO PERTENECE A MÚLTIPLES RUTAS Y NO SE ESPECIFICÓ EL PARÁMETRO cod_rutas.');
+            }
+            $ruta = $rutas->first();
             abort_unless($ruta, 404, 'EL TRAMO NO TIENE RUTAS ASOCIADAS.');
         }
 

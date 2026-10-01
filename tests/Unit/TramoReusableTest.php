@@ -448,4 +448,78 @@ class TramoReusableTest extends TestCase
         $this->assertContains('uq_ruta_tramo', $indexNames);
         $this->assertContains('uq_ruta_orden', $indexNames);
     }
+
+    /**
+     * Caso T: Desvincular tramo (detach) y volver a asociar Ruta A + Tramo X + orden 2 debe ejecutarse correctamente.
+     */
+    public function test_caso_t_desvinculacion_y_reasociacion_exitosa(): void
+    {
+        $rutaA = Ruta::create(['ide_rut' => 'RUT-T-A', 'nom_rut' => 'RUTA TA', 'ori_rut' => 'OTA', 'dst_rut' => 'DTA', 'est_rut' => 'BORRADOR', 'cod_usuarios_rut_cre' => 1]);
+        $tramoX = CalleTramo::create(['nom_ctr' => 'TRAMO T', 'tip_ctr' => 'ACERA', 'lon_ctr' => 100]);
+
+        // 1. Asociar Ruta A + Tramo X + orden 2
+        $rutaA->tramos()->attach($tramoX->getKey(), ['ord_rct' => 2]);
+        $this->assertCount(1, $rutaA->fresh()->tramos);
+        $this->assertEquals(2, $rutaA->tramos->first()->pivot->ord_rct);
+
+        // 2. Desvincular (detach physical delete)
+        $rutaA->tramos()->detach($tramoX->getKey());
+        $this->assertCount(0, $rutaA->fresh()->tramos);
+
+        // 3. Volver a asociar Ruta A + Tramo X + orden 2
+        $rutaA->tramos()->attach($tramoX->getKey(), ['ord_rct' => 2]);
+        $this->assertCount(1, $rutaA->fresh()->tramos);
+        $this->assertEquals(2, $rutaA->tramos->first()->pivot->ord_rct);
+    }
+
+    /**
+     * Caso U: Tramo pertenece a dos rutas y la petición omite cod_rutas → Debe rechazarse por contexto ambiguo (422).
+     */
+    public function test_caso_u_tramo_compartido_sin_cod_rutas_es_rechazado_por_ambiguedad(): void
+    {
+        $user = User::first() ?? User::factory()->create();
+        $this->actingAs($user);
+
+        $rutaA = Ruta::create(['ide_rut' => 'RUT-U-A', 'nom_rut' => 'RUTA UA', 'ori_rut' => 'OUA', 'dst_rut' => 'DUA', 'est_rut' => 'BORRADOR', 'cod_usuarios_rut_cre' => $user->getKey()]);
+        $rutaB = Ruta::create(['ide_rut' => 'RUT-U-B', 'nom_rut' => 'RUTA UB', 'ori_rut' => 'OUB', 'dst_rut' => 'DUB', 'est_rut' => 'BORRADOR', 'cod_usuarios_rut_cre' => $user->getKey()]);
+        $tramoX = CalleTramo::create(['nom_ctr' => 'TRAMO U COMPARTIDO', 'tip_ctr' => 'ACERA', 'lon_ctr' => 100]);
+
+        $rutaA->tramos()->attach($tramoX->getKey(), ['ord_rct' => 1]);
+        $rutaB->tramos()->attach($tramoX->getKey(), ['ord_rct' => 1]);
+
+        $nivel = \App\Models\NivelSeguridad::first();
+
+        // Omitir cod_rutas en la petición
+        $response = $this->post(route('tramos.evaluaciones.store', $tramoX), [
+            'cod_niveles_seguridad_eri' => $nivel->getKey(),
+            'fee_eri' => date('Y-m-d'),
+        ]);
+
+        $response->assertStatus(422);
+    }
+
+    /**
+     * Caso V: Tramo pertenece a una sola ruta y la petición omite cod_rutas → Fallback legacy funciona.
+     */
+    public function test_caso_v_tramo_unica_ruta_sin_cod_rutas_utiliza_fallback(): void
+    {
+        $user = User::first() ?? User::factory()->create();
+        $this->actingAs($user);
+
+        $rutaV = Ruta::create(['ide_rut' => 'RUT-V-1', 'nom_rut' => 'RUTA V1', 'ori_rut' => 'OV', 'dst_rut' => 'DV', 'est_rut' => 'BORRADOR', 'cod_usuarios_rut_cre' => $user->getKey()]);
+        $tramoY = CalleTramo::create(['nom_ctr' => 'TRAMO V ÚNICO', 'tip_ctr' => 'ACERA', 'lon_ctr' => 100]);
+
+        $rutaV->tramos()->attach($tramoY->getKey(), ['ord_rct' => 1]);
+
+        $nivel = \App\Models\NivelSeguridad::first();
+
+        // Omitir cod_rutas en la petición
+        $response = $this->post(route('tramos.evaluaciones.store', $tramoY), [
+            'cod_niveles_seguridad_eri' => $nivel->getKey(),
+            'fee_eri' => date('Y-m-d'),
+        ]);
+
+        $response->assertRedirect(route('rutas.show', $rutaV));
+    }
 }
+

@@ -54,7 +54,12 @@ class ObstaculoController extends Controller
             return $ruta;
         }
 
-        $ruta = $tramo->rutas()->first() ?? $tramo->ruta;
+        $rutas = $tramo->rutas;
+        if ($rutas->count() > 1) {
+            abort(422, 'CONTEXTO AMBIGUO: EL TRAMO PERTENECE A MÚLTIPLES RUTAS Y NO SE ESPECIFICÓ EL PARÁMETRO cod_rutas.');
+        }
+
+        $ruta = $rutas->first();
         abort_unless($ruta, 404, 'EL TRAMO NO TIENE RUTAS ASOCIADAS.');
         return $ruta;
     }
