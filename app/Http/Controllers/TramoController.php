@@ -17,7 +17,16 @@ class TramoController extends Controller
         abort_unless(
             in_array($ruta->est_rut, ['BORRADOR', 'DESACTUALIZADA']),
             403,
-            'SOLO SE PUEDEN MODIFICAR TRAMOS EN RUTAS CON ESTADO BORRADOR O DESACTUALIZADA.'
+            'SOLO SE PUEDEN MODIFICAR ESTRUCTURALMENTE TRAMOS EN RUTAS CON ESTADO BORRADOR O DESACTUALIZADA.'
+        );
+    }
+
+    private function verificarLevantamientoPermitido(Ruta $ruta): void
+    {
+        abort_unless(
+            in_array($ruta->est_rut, ['BORRADOR', 'EN REVISIÓN', 'DESACTUALIZADA']),
+            403,
+            'SOLO SE PUEDEN MODIFICAR TRAMOS EN RUTAS EN BORRADOR, EN REVISIÓN O DESACTUALIZADA.'
         );
     }
 
@@ -90,7 +99,7 @@ class TramoController extends Controller
     public function update(Request $request, Ruta $ruta, CalleTramo $tramo): RedirectResponse
     {
         abort_unless(Auth::user()?->puedeEditarRuta(), 403);
-        $this->verificarEditable($ruta);
+        $this->verificarLevantamientoPermitido($ruta);
         $this->verificarPertenencia($ruta, $tramo);
 
         $data = $request->validate([
@@ -117,6 +126,8 @@ class TramoController extends Controller
             if (empty($data['lon_ctr'])) {
                 $data['lon_ctr'] = CalleTramo::calcularLongitudGeodesica($geoArray);
             }
+        } else {
+            unset($data['geo_ctr']);
         }
 
         $data['nom_ctr'] = strtoupper(trim($data['nom_ctr']));
@@ -129,7 +140,7 @@ class TramoController extends Controller
             ]);
         }
 
-        return redirect()->route('rutas.edit', $ruta)
+        return redirect()->back()
             ->with('success', 'TRAMO ACTUALIZADO CORRECTAMENTE.');
     }
 
