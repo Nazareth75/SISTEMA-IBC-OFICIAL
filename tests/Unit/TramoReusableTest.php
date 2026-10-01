@@ -380,4 +380,72 @@ class TramoReusableTest extends TestCase
 
         $this->assertEquals(24.51, $longitudMetros);
     }
+
+    /**
+     * Caso Q: Tramo X pertenece a RUT-A y RUT-B. Crear evaluación desde contexto RUT-B vuelve a RUT-B.
+     */
+    public function test_caso_q_evaluacion_desde_contexto_rut_b_vuelve_a_rut_b(): void
+    {
+        $user = User::first() ?? User::factory()->create();
+        $this->actingAs($user);
+
+        $rutaA = Ruta::create(['ide_rut' => 'RUT-Q-A', 'nom_rut' => 'RUTA QA', 'ori_rut' => 'OA', 'dst_rut' => 'DA', 'est_rut' => 'BORRADOR', 'cod_usuarios_rut_cre' => $user->getKey()]);
+        $rutaB = Ruta::create(['ide_rut' => 'RUT-Q-B', 'nom_rut' => 'RUTA QB', 'ori_rut' => 'OB', 'dst_rut' => 'DB', 'est_rut' => 'BORRADOR', 'cod_usuarios_rut_cre' => $user->getKey()]);
+
+        $tramoX = CalleTramo::create(['nom_ctr' => 'TRAMO X', 'tip_ctr' => 'ACERA', 'lon_ctr' => 100]);
+
+        $rutaA->tramos()->attach($tramoX->getKey(), ['ord_rct' => 1]);
+        $rutaB->tramos()->attach($tramoX->getKey(), ['ord_rct' => 1]);
+
+        $nivel = \App\Models\NivelSeguridad::first();
+
+        $response = $this->post(route('tramos.evaluaciones.store', $tramoX), [
+            'cod_rutas' => $rutaB->getKey(),
+            'cod_niveles_seguridad_eri' => $nivel->getKey(),
+            'fee_eri' => date('Y-m-d'),
+            'met_eri' => 'INSPECCIÓN EN CAMPO',
+        ]);
+
+        $response->assertRedirect(route('rutas.show', $rutaB));
+    }
+
+    /**
+     * Caso R: Tramo X no pertenece a RUT-C. Intentar utilizar RUT-C como contexto es rechazado con 404.
+     */
+    public function test_caso_r_contexto_de_ruta_no_asociada_es_rechazado(): void
+    {
+        $user = User::first() ?? User::factory()->create();
+        $this->actingAs($user);
+
+        $rutaC = Ruta::create(['ide_rut' => 'RUT-R-C', 'nom_rut' => 'RUTA RC', 'ori_rut' => 'OC', 'dst_rut' => 'DC', 'est_rut' => 'BORRADOR', 'cod_usuarios_rut_cre' => $user->getKey()]);
+        $tramoX = CalleTramo::create(['nom_ctr' => 'TRAMO X NO ASOCIADO', 'tip_ctr' => 'ACERA', 'lon_ctr' => 100]);
+
+        $nivel = \App\Models\NivelSeguridad::first();
+
+        $response = $this->post(route('tramos.evaluaciones.store', $tramoX), [
+            'cod_rutas' => $rutaC->getKey(),
+            'cod_niveles_seguridad_eri' => $nivel->getKey(),
+            'fee_eri' => date('Y-m-d'),
+        ]);
+
+        $response->assertStatus(404);
+    }
+
+    /**
+     * Caso S: Instalación y ejecución de migraciones en testing deja presentes los índices únicos uq_ruta_tramo y uq_ruta_orden.
+     */
+    public function test_caso_s_indices_unicos_presentes_en_esquema_testing(): void
+    {
+        $indexes = DB::select("
+            SELECT INDEX_NAME 
+            FROM INFORMATION_SCHEMA.STATISTICS 
+            WHERE TABLE_SCHEMA = DATABASE() 
+              AND TABLE_NAME = 'ruta_calles_tramos'
+        ");
+
+        $indexNames = array_column($indexes, 'INDEX_NAME');
+
+        $this->assertContains('uq_ruta_tramo', $indexNames);
+        $this->assertContains('uq_ruta_orden', $indexNames);
+    }
 }

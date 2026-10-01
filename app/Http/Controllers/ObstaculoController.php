@@ -45,11 +45,26 @@ class ObstaculoController extends Controller
         ]);
     }
 
+    private function resolverRutaContextual(Request $request, CalleTramo $tramo): \App\Models\Ruta
+    {
+        $codRutas = $request->input('cod_rutas') ?: $request->query('cod_rutas');
+        if ($codRutas) {
+            $ruta = $tramo->rutas()->where('rutas.cod_rutas', $codRutas)->first();
+            abort_unless($ruta, 404, 'EL TRAMO NO PERTENECE A LA RUTA ESPECIFICADA.');
+            return $ruta;
+        }
+
+        $ruta = $tramo->rutas()->first() ?? $tramo->ruta;
+        abort_unless($ruta, 404, 'EL TRAMO NO TIENE RUTAS ASOCIADAS.');
+        return $ruta;
+    }
+
     // ─── Reportar obstáculo (desde detalle de ruta) ───────────
 
     public function store(Request $request, CalleTramo $tramo): RedirectResponse
     {
         abort_unless(Auth::user()?->puedeGestionarObstaculos(), 403);
+        $rutaContexto = $this->resolverRutaContextual($request, $tramo);
 
         $data = $request->validate([
             'tip_obs' => 'required|in:' . implode(',', array_keys(Obstaculo::TIPOS)),
@@ -79,7 +94,7 @@ class ObstaculoController extends Controller
         // RN-05 se aplica automáticamente en Obstaculo::boot() → created
         Obstaculo::create($data);
 
-        return redirect()->route('rutas.show', $tramo->ruta)
+        return redirect()->route('rutas.show', $rutaContexto)
             ->with('success', 'OBSTÁCULO REPORTADO CORRECTAMENTE. SI LA RUTA ESTABA PUBLICADA, PASÓ A DESACTUALIZADA.');
     }
 

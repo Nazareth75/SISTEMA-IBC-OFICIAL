@@ -49,6 +49,15 @@ class CalleTramo extends Model
 
     // ─── Accessors de compatibilidad con Pivot ─────────────────
 
+    /**
+     * Accesor de compatibilidad legacy.
+     * @deprecated No utilizar para nuevas reglas ni para identificar la ruta en contextos N:M.
+     */
+    public function getRutaAttribute(): ?Ruta
+    {
+        return $this->rutas()->first() ?? $this->getRelationValue('ruta');
+    }
+
     public function getOrdCtrAttribute(): ?int
     {
         if (isset($this->pivot->ord_rct)) {

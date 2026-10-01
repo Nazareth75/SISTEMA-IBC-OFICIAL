@@ -28,9 +28,6 @@ return new class extends Migration {
                     ->references('cod_calles_tramos')
                     ->on('calles_tramos')
                     ->onDelete('cascade');
-
-                $table->unique(['cod_rutas_rct', 'cod_calles_tramos_rct'], 'uq_ruta_tramo');
-                $table->unique(['cod_rutas_rct', 'ord_rct'], 'uq_ruta_orden');
             });
         }
 

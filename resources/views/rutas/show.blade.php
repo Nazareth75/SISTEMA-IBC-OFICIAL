@@ -223,6 +223,7 @@
                                         @if($editable)
                                         <form action="{{ route('tramos.condiciones.destroy', [$tramo, $c]) }}" method="POST" class="ml-2 shrink-0">
                                             @csrf @method('DELETE')
+                                            <input type="hidden" name="cod_rutas" value="{{ $ruta->getKey() }}">
                                             <button type="submit" class="text-red-400 hover:text-red-600" title="ELIMINAR CONDICIÓN">
                                                 <i class="fas fa-times"></i>
                                             </button>
@@ -237,6 +238,7 @@
                                     action="{{ route('tramos.condiciones.store', $tramo) }}" method="POST"
                                     class="mt-2 bg-green-50 rounded p-3 space-y-2">
                                     @csrf
+                                    <input type="hidden" name="cod_rutas" value="{{ $ruta->getKey() }}">
                                     <select name="tip_cen" required class="w-full border rounded px-2 py-1 text-xs uppercase focus:outline-none focus:ring-1 focus:ring-green-600">
                                         <option value="">TIPO *</option>
                                         @foreach(\App\Models\CondicionEntorno::TIPOS as $v => $l)
@@ -284,6 +286,7 @@
                                         @if(Auth::user()->puedeEditarRuta())
                                         <form action="{{ route('tramos.evaluaciones.destroy', [$tramo, $ev]) }}" method="POST" class="ml-2 shrink-0">
                                             @csrf @method('DELETE')
+                                            <input type="hidden" name="cod_rutas" value="{{ $ruta->getKey() }}">
                                             <button type="submit" class="text-red-400 hover:text-red-600"><i class="fas fa-times"></i></button>
                                         </form>
                                         @endif
@@ -296,6 +299,7 @@
                                     action="{{ route('tramos.evaluaciones.store', $tramo) }}" method="POST"
                                     class="mt-2 bg-green-50 rounded p-3 space-y-2">
                                     @csrf
+                                    <input type="hidden" name="cod_rutas" value="{{ $ruta->getKey() }}">
                                     <select name="cod_niveles_seguridad_eri" required class="w-full border rounded px-2 py-1 text-xs uppercase focus:outline-none">
                                         <option value="">NIVEL DE SEGURIDAD *</option>
                                         @foreach(\App\Models\NivelSeguridad::orderBy('niv_nse')->get() as $ns)
@@ -366,6 +370,7 @@
                                     enctype="multipart/form-data"
                                     class="mt-2 bg-yellow-50 rounded p-3 space-y-2">
                                     @csrf
+                                    <input type="hidden" name="cod_rutas" value="{{ $ruta->getKey() }}">
                                     <div class="grid grid-cols-2 gap-2">
                                         <select name="tip_obs" required class="border rounded px-2 py-1 text-xs uppercase focus:outline-none">
                                             <option value="">TIPO *</option>
