@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+
 class Ruta extends Model
 {
     use SoftDeletes;
@@ -82,11 +84,13 @@ class Ruta extends Model
         return $this->belongsTo(User::class, 'cod_usuarios_rut_apr', 'cod_usuarios');
     }
 
-    public function tramos(): HasMany
+    public function tramos(): BelongsToMany
     {
-        return $this->hasMany(CalleTramo::class, 'cod_rutas_ctr', 'cod_rutas')
-            ->whereNull('fbj_ctr')
-            ->orderBy('ord_ctr');
+        return $this->belongsToMany(CalleTramo::class, 'ruta_calles_tramos', 'cod_rutas_rct', 'cod_calles_tramos_rct')
+            ->withPivot(['cod_ruta_calles_tramos', 'ord_rct'])
+            ->whereNull('calles_tramos.fbj_ctr')
+            ->whereNull('ruta_calles_tramos.fbj_rct')
+            ->orderBy('ruta_calles_tramos.ord_rct');
     }
 
     // ─── Scopes ───────────────────────────────────────────────

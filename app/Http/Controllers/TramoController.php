@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class TramoController extends Controller
 {
@@ -22,7 +23,11 @@ class TramoController extends Controller
 
     private function verificarPertenencia(Ruta $ruta, CalleTramo $tramo): void
     {
-        abort_unless($tramo->cod_rutas_ctr === $ruta->getKey(), 404);
+        $pertenece = $ruta->tramos()->where('calles_tramos.cod_calles_tramos', $tramo->getKey())->exists();
+        if (!$pertenece && $tramo->cod_rutas_ctr === $ruta->getKey()) {
+            $pertenece = true;
+        }
+        abort_unless($pertenece, 404);
     }
 
     // ─── Crear tramo ──────────────────────────────────────────
@@ -37,6 +42,7 @@ class TramoController extends Controller
             'tip_ctr' => 'required|in:' . implode(',', array_keys(CalleTramo::TIPOS)),
             'ord_ctr' => 'nullable|integer|min:1|max:999',
             'lon_ctr' => 'nullable|numeric|min:0|max:99999.99',
+            'geo_ctr' => 'nullable',
         ], [
             'nom_ctr.required' => 'EL NOMBRE DEL TRAMO ES OBLIGATORIO.',
             'nom_ctr.max'      => 'EL NOMBRE NO PUEDE EXCEDER 150 CARACTERES.',
@@ -46,15 +52,34 @@ class TramoController extends Controller
             'lon_ctr.numeric'  => 'LA LONGITUD DEBE SER UN NÚMERO VÁLIDO.',
         ]);
 
+        if (!empty($data['geo_ctr'])) {
+            $geoArray = is_string($data['geo_ctr']) ? json_decode($data['geo_ctr'], true) : $data['geo_ctr'];
+            if (!CalleTramo::esGeoValido($geoArray)) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'LA GEOMETRÍA DEL TRAMO NO ES VÁLIDA (REQUIERE MÍNIMO 2 COORDENADAS VÁLIDAS).');
+            }
+            $data['geo_ctr'] = $geoArray;
+            if (empty($data['lon_ctr'])) {
+                $data['lon_ctr'] = CalleTramo::calcularLongitudGeodesica($geoArray);
+            }
+        }
+
         $data['nom_ctr']       = strtoupper(trim($data['nom_ctr']));
         $data['cod_rutas_ctr'] = $ruta->getKey();
 
-        // Asignar el siguiente orden si no se especificó
-        if (empty($data['ord_ctr'])) {
-            $data['ord_ctr'] = ($ruta->tramos()->max('ord_ctr') ?? 0) + 1;
-        }
+        $maxOrd = DB::table('ruta_calles_tramos')
+            ->where('cod_rutas_rct', $ruta->getKey())
+            ->whereNull('fbj_rct')
+            ->max('ord_rct');
 
-        CalleTramo::create($data);
+        $ordRct = !empty($data['ord_ctr']) ? (int) $data['ord_ctr'] : (($maxOrd ?? 0) + 1);
+
+        $tramo = CalleTramo::create($data);
+
+        $ruta->tramos()->attach($tramo->getKey(), [
+            'ord_rct' => $ordRct,
+        ]);
 
         return redirect()->route('rutas.edit', $ruta)
             ->with('success', 'TRAMO AGREGADO CORRECTAMENTE.');
@@ -72,6 +97,7 @@ class TramoController extends Controller
             'nom_ctr' => 'required|string|max:150',
             'tip_ctr' => 'required|in:' . implode(',', array_keys(CalleTramo::TIPOS)),
             'lon_ctr' => 'nullable|numeric|min:0|max:99999.99',
+            'geo_ctr' => 'nullable',
         ], [
             'nom_ctr.required' => 'EL NOMBRE DEL TRAMO ES OBLIGATORIO.',
             'nom_ctr.max'      => 'EL NOMBRE NO PUEDE EXCEDER 150 CARACTERES.',
@@ -80,9 +106,28 @@ class TramoController extends Controller
             'lon_ctr.numeric'  => 'LA LONGITUD DEBE SER UN NÚMERO VÁLIDO.',
         ]);
 
+        if (!empty($data['geo_ctr'])) {
+            $geoArray = is_string($data['geo_ctr']) ? json_decode($data['geo_ctr'], true) : $data['geo_ctr'];
+            if (!CalleTramo::esGeoValido($geoArray)) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'LA GEOMETRÍA DEL TRAMO NO ES VÁLIDA (REQUIERE MÍNIMO 2 COORDENADAS VÁLIDAS).');
+            }
+            $data['geo_ctr'] = $geoArray;
+            if (empty($data['lon_ctr'])) {
+                $data['lon_ctr'] = CalleTramo::calcularLongitudGeodesica($geoArray);
+            }
+        }
+
         $data['nom_ctr'] = strtoupper(trim($data['nom_ctr']));
 
         $tramo->update($data);
+
+        if ($request->has('ord_ctr')) {
+            $ruta->tramos()->updateExistingPivot($tramo->getKey(), [
+                'ord_rct' => (int) $request->input('ord_ctr'),
+            ]);
+        }
 
         return redirect()->route('rutas.edit', $ruta)
             ->with('success', 'TRAMO ACTUALIZADO CORRECTAMENTE.');
@@ -101,7 +146,11 @@ class TramoController extends Controller
                 ->with('error', 'NO SE PUEDE ELIMINAR UN TRAMO CON CONDICIONES O EVALUACIONES REGISTRADAS. ELIMÍNELAS PRIMERO.');
         }
 
-        $tramo->delete();
+        $ruta->tramos()->detach($tramo->getKey());
+
+        if ($tramo->rutas()->count() === 0) {
+            $tramo->delete();
+        }
 
         return redirect()->route('rutas.edit', $ruta)
             ->with('success', 'TRAMO ELIMINADO CORRECTAMENTE.');
@@ -120,10 +169,7 @@ class TramoController extends Controller
         ]);
 
         foreach ($request->input('orden') as $posicion => $tramoId) {
-            CalleTramo::where('cod_calles_tramos', $tramoId)
-                ->where('cod_rutas_ctr', $ruta->getKey())
-                ->whereNull('fbj_ctr')
-                ->update(['ord_ctr' => $posicion + 1]);
+            $ruta->tramos()->updateExistingPivot($tramoId, ['ord_rct' => $posicion + 1]);
         }
 
         return response()->json(['ok' => true, 'mensaje' => 'ORDEN ACTUALIZADO CORRECTAMENTE.']);

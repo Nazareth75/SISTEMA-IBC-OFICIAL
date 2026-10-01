@@ -140,10 +140,13 @@ class ReporteObstaculoController extends Controller
         ]);
 
         $ruta = \App\Models\Ruta::findOrFail($request->cod_rutas);
-        $tramo = \App\Models\CalleTramo::where('cod_calles_tramos', $request->cod_calles_tramos)
-            ->where('cod_rutas_ctr', $ruta->cod_rutas)
-            ->whereNull('fbj_ctr')
-            ->first();
+        $tramo = $ruta->tramos()->where('calles_tramos.cod_calles_tramos', $request->cod_calles_tramos)->first();
+        if (!$tramo) {
+            $tramo = \App\Models\CalleTramo::where('cod_calles_tramos', $request->cod_calles_tramos)
+                ->where('cod_rutas_ctr', $ruta->cod_rutas)
+                ->whereNull('fbj_ctr')
+                ->first();
+        }
 
         if (!$tramo) {
             return redirect()->back()->with('error', 'El tramo seleccionado no pertenece a la ruta especificada.');
