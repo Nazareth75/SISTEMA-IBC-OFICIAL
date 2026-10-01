@@ -8,17 +8,32 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
+use App\Models\Ruta;
+
 class CondicionEntornoController extends Controller
 {
-    private function verificarContexto(CalleTramo $tramo): void
+    private function resolverRutaContextual(Request $request, CalleTramo $tramo): Ruta
     {
-        $ruta = $tramo->ruta;
-        abort_if(!$ruta, 404);
+        $codRutas = $request->input('cod_rutas') ?: $request->query('cod_rutas');
+        if ($codRutas) {
+            $ruta = $tramo->rutas()->where('rutas.cod_rutas', $codRutas)->first();
+            abort_unless($ruta, 404, 'EL TRAMO NO PERTENECE A LA RUTA ESPECIFICADA.');
+        } else {
+            $rutas = $tramo->rutas;
+            if ($rutas->count() > 1) {
+                abort(422, 'CONTEXTO AMBIGUO: EL TRAMO PERTENECE A MÚLTIPLES RUTAS Y NO SE ESPECIFICÓ EL PARÁMETRO cod_rutas.');
+            }
+            $ruta = $rutas->first();
+            abort_unless($ruta, 404, 'EL TRAMO NO TIENE RUTAS ASOCIADAS.');
+        }
+
         abort_unless(
             in_array($ruta->est_rut, ['BORRADOR', 'DESACTUALIZADA']),
             403,
             'SOLO SE PUEDEN MODIFICAR CONDICIONES EN RUTAS CON ESTADO BORRADOR O DESACTUALIZADA.'
         );
+
+        return $ruta;
     }
 
     // ─── Registrar condición ──────────────────────────────────
@@ -26,7 +41,7 @@ class CondicionEntornoController extends Controller
     public function store(Request $request, CalleTramo $tramo): RedirectResponse
     {
         abort_unless(Auth::user()?->puedeEditarRuta(), 403);
-        $this->verificarContexto($tramo);
+        $rutaContexto = $this->resolverRutaContextual($request, $tramo);
 
         $data = $request->validate([
             'tip_cen' => 'required|in:' . implode(',', array_keys(CondicionEntorno::TIPOS)),
@@ -46,21 +61,21 @@ class CondicionEntornoController extends Controller
 
         CondicionEntorno::create($data);
 
-        return redirect()->route('rutas.show', $tramo->ruta)
+        return redirect()->route('rutas.show', $rutaContexto)
             ->with('success', 'CONDICIÓN DE ENTORNO REGISTRADA CORRECTAMENTE.');
     }
 
     // ─── Eliminar condición ───────────────────────────────────
 
-    public function destroy(CalleTramo $tramo, CondicionEntorno $condicion): RedirectResponse
+    public function destroy(Request $request, CalleTramo $tramo, CondicionEntorno $condicion): RedirectResponse
     {
         abort_unless(Auth::user()?->puedeEditarRuta(), 403);
-        $this->verificarContexto($tramo);
+        $rutaContexto = $this->resolverRutaContextual($request, $tramo);
         abort_unless($condicion->cod_calles_tramos_cen === $tramo->getKey(), 404);
 
         $condicion->delete();
 
-        return redirect()->route('rutas.show', $tramo->ruta)
+        return redirect()->route('rutas.show', $rutaContexto)
             ->with('success', 'CONDICIÓN DE ENTORNO ELIMINADA CORRECTAMENTE.');
     }
 }

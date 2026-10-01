@@ -60,17 +60,30 @@ class Obstaculo extends Model
         'fbj_obs' => 'datetime',
     ];
 
-    // ─── RN-05: desactualizar ruta al reportar obstáculo ─────
+    // ─── RN-05: desactualizar rutas al reportar obstáculo ────
 
     protected static function boot(): void
     {
         parent::boot();
 
         static::created(function (Obstaculo $obstaculo) {
-            $ruta = $obstaculo->tramo?->ruta;
+            $tramo = $obstaculo->tramo;
+            if (!$tramo) {
+                return;
+            }
 
-            if ($ruta && $ruta->est_rut === 'PUBLICADA') {
-                $ruta->desactualizar();
+            // Obtener todas las rutas asociadas a través de la pivote
+            $rutas = $tramo->rutas;
+
+            // Soporte fallback por si existe relación legacy
+            if ($rutas->isEmpty() && $tramo->ruta) {
+                $rutas = collect([$tramo->ruta]);
+            }
+
+            foreach ($rutas as $ruta) {
+                if ($ruta->est_rut === 'PUBLICADA') {
+                    $ruta->desactualizar();
+                }
             }
         });
     }

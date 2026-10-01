@@ -9,13 +9,35 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 
+use App\Models\Ruta;
+
 class EvaluacionRiesgoController extends Controller
 {
+    private function resolverRutaContextual(Request $request, CalleTramo $tramo): Ruta
+    {
+        $codRutas = $request->input('cod_rutas') ?: $request->query('cod_rutas');
+        if ($codRutas) {
+            $ruta = $tramo->rutas()->where('rutas.cod_rutas', $codRutas)->first();
+            abort_unless($ruta, 404, 'EL TRAMO NO PERTENECE A LA RUTA ESPECIFICADA.');
+            return $ruta;
+        }
+
+        $rutas = $tramo->rutas;
+        if ($rutas->count() > 1) {
+            abort(422, 'CONTEXTO AMBIGUO: EL TRAMO PERTENECE A MÚLTIPLES RUTAS Y NO SE ESPECIFICÓ EL PARÁMETRO cod_rutas.');
+        }
+
+        $ruta = $rutas->first();
+        abort_unless($ruta, 404, 'EL TRAMO NO TIENE RUTAS ASOCIADAS.');
+        return $ruta;
+    }
+
     // ─── Registrar evaluación ─────────────────────────────────
 
     public function store(Request $request, CalleTramo $tramo): RedirectResponse
     {
         abort_unless(Auth::user()?->puedeEditarRuta(), 403);
+        $rutaContexto = $this->resolverRutaContextual($request, $tramo);
 
         $data = $request->validate([
             'cod_niveles_seguridad_eri' => [
@@ -40,20 +62,21 @@ class EvaluacionRiesgoController extends Controller
 
         EvaluacionRiesgo::create($data);
 
-        return redirect()->route('rutas.show', $tramo->ruta)
+        return redirect()->route('rutas.show', $rutaContexto)
             ->with('success', 'EVALUACIÓN DE RIESGO REGISTRADA CORRECTAMENTE.');
     }
 
     // ─── Eliminar evaluación ──────────────────────────────────
 
-    public function destroy(CalleTramo $tramo, EvaluacionRiesgo $evaluacion): RedirectResponse
+    public function destroy(Request $request, CalleTramo $tramo, EvaluacionRiesgo $evaluacion): RedirectResponse
     {
         abort_unless(Auth::user()?->puedeEditarRuta(), 403);
+        $rutaContexto = $this->resolverRutaContextual($request, $tramo);
         abort_unless($evaluacion->cod_calles_tramos_eri === $tramo->getKey(), 404);
 
         $evaluacion->delete();
 
-        return redirect()->route('rutas.show', $tramo->ruta)
+        return redirect()->route('rutas.show', $rutaContexto)
             ->with('success', 'EVALUACIÓN DE RIESGO ELIMINADA CORRECTAMENTE.');
     }
 }
