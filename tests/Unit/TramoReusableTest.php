@@ -684,5 +684,114 @@ class TramoReusableTest extends TestCase
             $this->assertLessThanOrEqual(5, $nivel->niv_nse);
         }
     }
+
+    /**
+     * Caso H: Modificar tip_ctr preserva exactamente geo_ctr, ruta y orden.
+     */
+    public function test_caso_h_modificar_tip_ctr_preserva_geo_ctr_ruta_y_orden(): void
+    {
+        $user = User::first() ?? User::factory()->create();
+        $this->actingAs($user);
+
+        $geoOriginal = [
+            ['lat' => -16.502975, 'lng' => -68.136334],
+            ['lat' => -16.502910, 'lng' => -68.136307],
+        ];
+
+        $ruta = Ruta::create(['ide_rut' => 'RUT-H-1', 'nom_rut' => 'RUTA H', 'ori_rut' => 'OH', 'dst_rut' => 'DH', 'est_rut' => 'EN REVISIÓN', 'cod_usuarios_rut_cre' => $user->getKey()]);
+        $tramo = CalleTramo::create(['nom_ctr' => 'TRAMO H', 'tip_ctr' => 'OTRO', 'geo_ctr' => $geoOriginal, 'lon_ctr' => 100]);
+        $ruta->tramos()->attach($tramo->getKey(), ['ord_rct' => 2]);
+
+        $response = $this->put(route('rutas.tramos.update', [$ruta, $tramo]), [
+            'nom_ctr' => $tramo->nom_ctr,
+            'tip_ctr' => 'ACERA',
+            'lon_ctr' => $tramo->lon_ctr,
+        ]);
+
+        $response->assertSessionHasNoErrors();
+
+        $tramoActualizado = $tramo->fresh();
+        $this->assertEquals('ACERA', $tramoActualizado->tip_ctr);
+        $this->assertEquals($geoOriginal, $tramoActualizado->geo_ctr);
+
+        $pivot = $ruta->fresh()->tramos->first()->pivot;
+        $this->assertEquals(2, $pivot->ord_rct);
+    }
+
+    /**
+     * Caso I: Ruta en EN REVISIÓN rechaza creación de un nuevo tramo (acción estructural).
+     */
+    public function test_caso_i_ruta_en_revision_rechaza_creacion_de_nuevo_tramo(): void
+    {
+        $user = User::first() ?? User::factory()->create();
+        $this->actingAs($user);
+
+        $ruta = Ruta::create(['ide_rut' => 'RUT-I-1', 'nom_rut' => 'RUTA I', 'ori_rut' => 'OI', 'dst_rut' => 'DI', 'est_rut' => 'EN REVISIÓN', 'cod_usuarios_rut_cre' => $user->getKey()]);
+
+        $response = $this->post(route('rutas.tramos.store', $ruta), [
+            'nom_ctr' => 'NUEVO TRAMO ESTRUCTURAL',
+            'tip_ctr' => 'ACERA',
+        ]);
+
+        $response->assertStatus(403);
+    }
+
+    /**
+     * Caso J: Ruta en EN REVISIÓN rechaza eliminación de un tramo (acción estructural).
+     */
+    public function test_caso_j_ruta_en_revision_rechaza_eliminacion_de_tramo(): void
+    {
+        $user = User::first() ?? User::factory()->create();
+        $this->actingAs($user);
+
+        $ruta = Ruta::create(['ide_rut' => 'RUT-J-1', 'nom_rut' => 'RUTA J', 'ori_rut' => 'OJ', 'dst_rut' => 'DJ', 'est_rut' => 'EN REVISIÓN', 'cod_usuarios_rut_cre' => $user->getKey()]);
+        $tramo = CalleTramo::create(['nom_ctr' => 'TRAMO J', 'tip_ctr' => 'ACERA', 'lon_ctr' => 100]);
+        $ruta->tramos()->attach($tramo->getKey(), ['ord_rct' => 1]);
+
+        $response = $this->delete(route('rutas.tramos.destroy', [$ruta, $tramo]));
+
+        $response->assertStatus(403);
+    }
+
+    /**
+     * Caso K: Ruta en EN REVISIÓN rechaza reordenamiento de tramos (acción estructural).
+     */
+    public function test_caso_k_ruta_en_revision_rechaza_reordenamiento_de_tramos(): void
+    {
+        $user = User::first() ?? User::factory()->create();
+        $this->actingAs($user);
+
+        $ruta = Ruta::create(['ide_rut' => 'RUT-K-1', 'nom_rut' => 'RUTA K', 'ori_rut' => 'OK', 'dst_rut' => 'DK', 'est_rut' => 'EN REVISIÓN', 'cod_usuarios_rut_cre' => $user->getKey()]);
+        $tramo1 = CalleTramo::create(['nom_ctr' => 'TRAMO K1', 'tip_ctr' => 'ACERA', 'lon_ctr' => 100]);
+        $tramo2 = CalleTramo::create(['nom_ctr' => 'TRAMO K2', 'tip_ctr' => 'ACERA', 'lon_ctr' => 100]);
+        $ruta->tramos()->attach($tramo1->getKey(), ['ord_rct' => 1]);
+        $ruta->tramos()->attach($tramo2->getKey(), ['ord_rct' => 2]);
+
+        $response = $this->patchJson(route('rutas.tramos.reordenar', $ruta), [
+            'orden' => [$tramo2->getKey(), $tramo1->getKey()],
+        ]);
+
+        $response->assertStatus(403);
+    }
+
+    /**
+     * Caso L: Usuario sin autorización/rol no puede realizar acciones de levantamiento.
+     */
+    public function test_caso_l_usuario_sin_autorizacion_es_rechazado(): void
+    {
+        // Sin autenticación (Guest)
+        $ruta = Ruta::create(['ide_rut' => 'RUT-L-1', 'nom_rut' => 'RUTA L', 'ori_rut' => 'OL', 'dst_rut' => 'DL', 'est_rut' => 'EN REVISIÓN', 'cod_usuarios_rut_cre' => 1]);
+        $tramo = CalleTramo::create(['nom_ctr' => 'TRAMO L', 'tip_ctr' => 'OTRO', 'lon_ctr' => 100]);
+        $ruta->tramos()->attach($tramo->getKey(), ['ord_rct' => 1]);
+
+        $response = $this->post(route('tramos.condiciones.store', $tramo), [
+            'cod_rutas' => $ruta->getKey(),
+            'tip_cen'   => 'PAVIMENTO',
+            'des_cen'   => 'PRUEBA NO AUTORIZADA',
+            'niv_cen'   => 'REGULAR',
+        ]);
+
+        $this->assertTrue($response->isRedirection() || $response->status() === 403);
+    }
 }
 

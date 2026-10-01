@@ -126,6 +126,8 @@ class TramoController extends Controller
             if (empty($data['lon_ctr'])) {
                 $data['lon_ctr'] = CalleTramo::calcularLongitudGeodesica($geoArray);
             }
+        } else {
+            unset($data['geo_ctr']);
         }
 
         $data['nom_ctr'] = strtoupper(trim($data['nom_ctr']));
