@@ -28,6 +28,9 @@ return new class extends Migration {
                     ->references('cod_calles_tramos')
                     ->on('calles_tramos')
                     ->onDelete('cascade');
+
+                $table->unique(['cod_rutas_rct', 'cod_calles_tramos_rct'], 'uq_ruta_tramo');
+                $table->unique(['cod_rutas_rct', 'ord_rct'], 'uq_ruta_orden');
             });
         }
 
@@ -38,17 +41,24 @@ return new class extends Migration {
                 ->get();
 
             foreach ($tramosExistentes as $t) {
-                // Verificar que no se haya insertado previamente
                 $existe = DB::table('ruta_calles_tramos')
                     ->where('cod_rutas_rct', $t->cod_rutas_ctr)
                     ->where('cod_calles_tramos_rct', $t->cod_calles_tramos)
                     ->exists();
 
                 if (!$existe) {
+                    // Evitar duplicar orden si ya existe
+                    $ordExistente = DB::table('ruta_calles_tramos')
+                        ->where('cod_rutas_rct', $t->cod_rutas_ctr)
+                        ->where('ord_rct', $t->ord_ctr ?? 1)
+                        ->exists();
+
+                    $ordenFinal = $ordExistente ? (DB::table('ruta_calles_tramos')->where('cod_rutas_rct', $t->cod_rutas_ctr)->max('ord_rct') + 1) : ($t->ord_ctr ?? 1);
+
                     DB::table('ruta_calles_tramos')->insert([
                         'cod_rutas_rct' => $t->cod_rutas_ctr,
                         'cod_calles_tramos_rct' => $t->cod_calles_tramos,
-                        'ord_rct' => $t->ord_ctr ?? 1,
+                        'ord_rct' => $ordenFinal,
                         'fcr_rct' => $t->fcr_ctr ?? now(),
                         'fmo_rct' => $t->fmo_ctr ?? now(),
                     ]);
@@ -74,13 +84,37 @@ return new class extends Migration {
 
     public function down(): void
     {
+        // Protección contra pérdida de datos en rollback: si existen tramos compartidos entre múltiples rutas
+        $tramosCompartidos = DB::table('ruta_calles_tramos')
+            ->select('cod_calles_tramos_rct')
+            ->whereNull('fbj_rct')
+            ->groupBy('cod_calles_tramos_rct')
+            ->havingRaw('COUNT(DISTINCT cod_rutas_rct) > 1')
+            ->count();
+
+        if ($tramosCompartidos > 0) {
+            throw new \RuntimeException(
+                "ROLLBACK CANCELADO: Existen tramos geográficos asociados a múltiples rutas en relación N:M. " .
+                "Revertir la migración provocaría pérdida silenciosa e irreparable de asociaciones entre rutas y tramos. " .
+                "Desvincule manualmente los tramos compartidos antes de ejecutar el rollback."
+            );
+        }
+
+        // Restaurar asociaciones únicas legacy a calles_tramos
+        $asociaciones = DB::table('ruta_calles_tramos')->whereNull('fbj_rct')->get();
+        foreach ($asociaciones as $assoc) {
+            DB::table('calles_tramos')
+                ->where('cod_calles_tramos', $assoc->cod_calles_tramos_rct)
+                ->update([
+                    'cod_rutas_ctr' => $assoc->cod_rutas_rct,
+                    'ord_ctr'       => $assoc->ord_rct,
+                ]);
+        }
+
         Schema::table('calles_tramos', function (Blueprint $table) {
             if (Schema::hasColumn('calles_tramos', 'geo_ctr')) {
                 $table->dropColumn('geo_ctr');
             }
-            $table->unsignedBigInteger('cod_rutas_ctr')->nullable(false)->change();
-            $table->integer('ord_ctr')->nullable(false)->change();
-            $table->foreign('cod_rutas_ctr')->references('cod_rutas')->on('rutas');
         });
 
         Schema::dropIfExists('ruta_calles_tramos');

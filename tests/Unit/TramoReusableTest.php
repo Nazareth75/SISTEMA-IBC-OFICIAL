@@ -285,4 +285,99 @@ class TramoReusableTest extends TestCase
         $this->assertCount(1, $ruta->fresh()->tramos);
         $this->assertEquals(5, $ruta->tramos->first()->pivot->ord_rct);
     }
+
+    /**
+     * Caso K: Mismo ord_rct en una misma ruta es rechazado por la restricción de integridad única.
+     */
+    public function test_caso_k_mismo_ord_rct_en_ruta_es_rechazado(): void
+    {
+        $ruta = Ruta::create([
+            'ide_rut' => 'RUT-TEST-K',
+            'nom_rut' => 'RUTA K',
+            'ori_rut' => 'OK',
+            'dst_rut' => 'DK',
+            'est_rut' => 'BORRADOR',
+            'cod_usuarios_rut_cre' => 1,
+        ]);
+
+        $tramo1 = CalleTramo::create(['nom_ctr' => 'TRAMO K1', 'tip_ctr' => 'ACERA', 'lon_ctr' => 100]);
+        $tramo2 = CalleTramo::create(['nom_ctr' => 'TRAMO K2', 'tip_ctr' => 'ACERA', 'lon_ctr' => 100]);
+
+        $ruta->tramos()->attach($tramo1->getKey(), ['ord_rct' => 1]);
+
+        $this->expectException(\Illuminate\Database\QueryException::class);
+        $ruta->tramos()->attach($tramo2->getKey(), ['ord_rct' => 1]);
+    }
+
+    /**
+     * Caso L: Mismo tramo asociado dos veces a la misma ruta es rechazado por restricción de unicidad.
+     */
+    public function test_caso_l_mismo_tramo_asociado_dos_veces_a_misma_ruta_es_rechazado(): void
+    {
+        $ruta = Ruta::create([
+            'ide_rut' => 'RUT-TEST-L',
+            'nom_rut' => 'RUTA L',
+            'ori_rut' => 'OL',
+            'dst_rut' => 'DL',
+            'est_rut' => 'BORRADOR',
+            'cod_usuarios_rut_cre' => 1,
+        ]);
+
+        $tramo = CalleTramo::create(['nom_ctr' => 'TRAMO L', 'tip_ctr' => 'ACERA', 'lon_ctr' => 100]);
+
+        $ruta->tramos()->attach($tramo->getKey(), ['ord_rct' => 1]);
+
+        $this->expectException(\Illuminate\Database\QueryException::class);
+        $ruta->tramos()->attach($tramo->getKey(), ['ord_rct' => 2]);
+    }
+
+    /**
+     * Caso M: geo_ctr con un solo punto es rechazado.
+     */
+    public function test_caso_m_un_solo_punto_geo_ctr_es_rechazado(): void
+    {
+        $geoUnPunto = [['lat' => -16.5, 'lng' => -68.1]];
+        $this->assertFalse(CalleTramo::esGeoValido($geoUnPunto));
+    }
+
+    /**
+     * Caso N: Latitud fuera del rango [-90, 90] es rechazada.
+     */
+    public function test_caso_n_latitud_fuera_de_rango_es_rechazada(): void
+    {
+        $geoLatInvalida = [
+            ['lat' => -16.5, 'lng' => -68.1],
+            ['lat' => 95.5, 'lng' => -68.1],
+        ];
+        $this->assertFalse(CalleTramo::esGeoValido($geoLatInvalida));
+    }
+
+    /**
+     * Caso O: Longitud fuera del rango [-180, 180] es rechazada.
+     */
+    public function test_caso_o_longitud_fuera_de_rango_es_rechazada(): void
+    {
+        $geoLngInvalida = [
+            ['lat' => -16.5, 'lng' => -68.1],
+            ['lat' => -16.6, 'lng' => 190.2],
+        ];
+        $this->assertFalse(CalleTramo::esGeoValido($geoLngInvalida));
+    }
+
+    /**
+     * Caso P: Polilínea válida es aceptada y su longitud geodésica es calculada correctamente.
+     */
+    public function test_caso_p_polilinea_valida_es_aceptada_y_calculada(): void
+    {
+        $geoPolilineaValida = [
+            ['lat' => -16.502975, 'lng' => -68.136334],
+            ['lat' => -16.502910, 'lng' => -68.136307],
+            ['lat' => -16.502800, 'lng' => -68.136200],
+        ];
+
+        $this->assertTrue(CalleTramo::esGeoValido($geoPolilineaValida));
+        $longitudMetros = CalleTramo::calcularLongitudGeodesica($geoPolilineaValida);
+
+        $this->assertEquals(24.51, $longitudMetros);
+    }
 }
