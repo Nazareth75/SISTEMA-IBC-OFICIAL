@@ -29,6 +29,13 @@ class EvaluacionRiesgoController extends Controller
 
         $ruta = $rutas->first();
         abort_unless($ruta, 404, 'EL TRAMO NO TIENE RUTAS ASOCIADAS.');
+
+        abort_unless(
+            in_array($ruta->est_rut, ['BORRADOR', 'EN REVISIÓN', 'DESACTUALIZADA']),
+            403,
+            'SOLO SE PUEDEN REGISTRAR EVALUACIONES EN RUTAS CON ESTADO BORRADOR, EN REVISIÓN O DESACTUALIZADA.'
+        );
+
         return $ruta;
     }
 

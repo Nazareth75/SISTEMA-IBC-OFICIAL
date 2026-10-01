@@ -28,9 +28,9 @@ class CondicionEntornoController extends Controller
         }
 
         abort_unless(
-            in_array($ruta->est_rut, ['BORRADOR', 'DESACTUALIZADA']),
+            in_array($ruta->est_rut, ['BORRADOR', 'EN REVISIÓN', 'DESACTUALIZADA']),
             403,
-            'SOLO SE PUEDEN MODIFICAR CONDICIONES EN RUTAS CON ESTADO BORRADOR O DESACTUALIZADA.'
+            'SOLO SE PUEDEN MODIFICAR CONDICIONES EN RUTAS CON ESTADO BORRADOR, EN REVISIÓN O DESACTUALIZADA.'
         );
 
         return $ruta;

@@ -22,7 +22,10 @@
         </div>
     </x-slot>
 
-    @php $editable = in_array($ruta->est_rut, ['BORRADOR','DESACTUALIZADA']) && Auth::user()->puedeEditarRuta(); @endphp
+    @php 
+        $editable = in_array($ruta->est_rut, ['BORRADOR','DESACTUALIZADA']) && Auth::user()->puedeEditarRuta();
+        $levantamientoPermitido = in_array($ruta->est_rut, ['BORRADOR','EN REVISIÓN','DESACTUALIZADA']) && Auth::user()->puedeEditarRuta();
+    @endphp
 
     {{-- Formulario oculto para cambio de estado --}}
     <form id="form-cambio-estado" method="POST" class="hidden">
@@ -181,10 +184,26 @@
                                     style="background-color:#2d6a27">{{ $tramo->ord_ctr }}</span>
                                 <div>
                                     <p class="font-bold uppercase text-gray-800 text-sm">{{ $tramo->nom_ctr }}</p>
-                                    <p class="text-xs text-gray-500 uppercase">
-                                        {{ $tramo->tip_ctr }}
+                                    <div class="flex items-center gap-2 text-xs text-gray-500 uppercase mt-0.5" @click.stop>
+                                        @if($levantamientoPermitido)
+                                            <form action="{{ route('rutas.tramos.update', [$ruta, $tramo]) }}" method="POST" class="inline-flex items-center gap-1">
+                                                @csrf @method('PUT')
+                                                <input type="hidden" name="nom_ctr" value="{{ $tramo->nom_ctr }}">
+                                                <input type="hidden" name="lon_ctr" value="{{ $tramo->lon_ctr }}">
+                                                <span class="text-gray-400 font-semibold">TIPO:</span>
+                                                <select name="tip_ctr" onchange="this.form.submit()"
+                                                    title="CAMBIAR TIPO DE TRAMO PROVISIONAL"
+                                                    class="text-xs font-bold uppercase border border-gray-300 rounded px-1.5 py-0.5 bg-white text-gray-800 focus:outline-none focus:ring-1 focus:ring-green-600">
+                                                    @foreach(\App\Models\CalleTramo::TIPOS as $val => $label)
+                                                        <option value="{{ $val }}" @selected($tramo->tip_ctr === $val)>{{ $val }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </form>
+                                        @else
+                                            <span>{{ $tramo->tip_ctr }}</span>
+                                        @endif
                                         @if($tramo->lon_ctr) · {{ number_format($tramo->lon_ctr,1) }} M @endif
-                                    </p>
+                                    </div>
                                 </div>
                             </div>
                             <div class="flex items-center gap-2">
@@ -206,7 +225,7 @@
                                     <h4 class="text-xs font-bold text-gray-600 uppercase">
                                         <i class="fas fa-clipboard-list mr-1"></i> CONDICIONES ({{ $tramo->condiciones->count() }})
                                     </h4>
-                                    @if($editable)
+                                    @if($levantamientoPermitido)
                                         <button @click="agregando = !agregando" type="button"
                                             class="text-xs text-green-700 hover:underline uppercase font-semibold">
                                             <i class="fas fa-plus"></i> AGREGAR
@@ -220,7 +239,7 @@
                                             <span class="font-semibold uppercase">{{ $c->tip_cen }}:</span>
                                             <span class="text-gray-600 uppercase ml-1">{{ $c->des_cen }}</span>
                                         </div>
-                                        @if($editable)
+                                        @if($levantamientoPermitido)
                                         <form action="{{ route('tramos.condiciones.destroy', [$tramo, $c]) }}" method="POST" class="ml-2 shrink-0">
                                             @csrf @method('DELETE')
                                             <input type="hidden" name="cod_rutas" value="{{ $ruta->getKey() }}">
@@ -233,7 +252,7 @@
                                 @empty
                                     <p class="text-xs text-gray-400 uppercase italic">SIN CONDICIONES REGISTRADAS</p>
                                 @endforelse
-                                @if($editable)
+                                @if($levantamientoPermitido)
                                 <form x-show="agregando" x-cloak
                                     action="{{ route('tramos.condiciones.store', $tramo) }}" method="POST"
                                     class="mt-2 bg-green-50 rounded p-3 space-y-2">

@@ -521,5 +521,168 @@ class TramoReusableTest extends TestCase
 
         $response->assertRedirect(route('rutas.show', $rutaV));
     }
+
+    /**
+     * Etapa 3B - Test A: Ruta en estado EN REVISIÓN permite registrar condición de entorno.
+     */
+    public function test_etapa_3b_a_ruta_en_revision_permite_registrar_condicion(): void
+    {
+        $user = User::first() ?? User::factory()->create();
+        $this->actingAs($user);
+
+        $ruta = Ruta::create(['ide_rut' => 'RUT-3B-A', 'nom_rut' => 'RUTA EN REVISION A', 'ori_rut' => 'OA', 'dst_rut' => 'DA', 'est_rut' => 'EN REVISIÓN', 'cod_usuarios_rut_cre' => $user->getKey()]);
+        $tramo = CalleTramo::create(['nom_ctr' => 'TRAMO 3B A', 'tip_ctr' => 'OTRO', 'lon_ctr' => 100]);
+        $ruta->tramos()->attach($tramo->getKey(), ['ord_rct' => 1]);
+
+        $response = $this->post(route('tramos.condiciones.store', $tramo), [
+            'cod_rutas' => $ruta->getKey(),
+            'tip_cen'   => 'PAVIMENTO',
+            'des_cen'   => 'ADOQUÍN REGULAR EN TRAMO',
+            'niv_cen'   => 'REGULAR',
+        ]);
+
+        $response->assertRedirect(route('rutas.show', $ruta));
+        $this->assertCount(1, $tramo->fresh()->condiciones);
+    }
+
+    /**
+     * Etapa 3B - Test B: Ruta en estado EN REVISIÓN permite registrar evaluación de riesgo.
+     */
+    public function test_etapa_3b_b_ruta_en_revision_permite_registrar_evaluacion(): void
+    {
+        $user = User::first() ?? User::factory()->create();
+        $this->actingAs($user);
+
+        $ruta = Ruta::create(['ide_rut' => 'RUT-3B-B', 'nom_rut' => 'RUTA EN REVISION B', 'ori_rut' => 'OB', 'dst_rut' => 'DB', 'est_rut' => 'EN REVISIÓN', 'cod_usuarios_rut_cre' => $user->getKey()]);
+        $tramo = CalleTramo::create(['nom_ctr' => 'TRAMO 3B B', 'tip_ctr' => 'OTRO', 'lon_ctr' => 100]);
+        $ruta->tramos()->attach($tramo->getKey(), ['ord_rct' => 1]);
+
+        $nivel = \App\Models\NivelSeguridad::first();
+
+        $response = $this->post(route('tramos.evaluaciones.store', $tramo), [
+            'cod_rutas'                 => $ruta->getKey(),
+            'cod_niveles_seguridad_eri' => $nivel->getKey(),
+            'fee_eri'                   => date('Y-m-d'),
+            'met_eri'                   => 'INSPECCIÓN EN CAMPO',
+        ]);
+
+        $response->assertRedirect(route('rutas.show', $ruta));
+        $this->assertCount(1, $tramo->fresh()->evaluaciones);
+    }
+
+    /**
+     * Etapa 3B - Test C: Ruta en estado EN REVISIÓN permite registrar obstáculo.
+     */
+    public function test_etapa_3b_c_ruta_en_revision_permite_registrar_obstaculo(): void
+    {
+        $user = User::first() ?? User::factory()->create();
+        $this->actingAs($user);
+
+        $ruta = Ruta::create(['ide_rut' => 'RUT-3B-C', 'nom_rut' => 'RUTA EN REVISION C', 'ori_rut' => 'OC', 'dst_rut' => 'DC', 'est_rut' => 'EN REVISIÓN', 'cod_usuarios_rut_cre' => $user->getKey()]);
+        $tramo = CalleTramo::create(['nom_ctr' => 'TRAMO 3B C', 'tip_ctr' => 'OTRO', 'lon_ctr' => 100]);
+        $ruta->tramos()->attach($tramo->getKey(), ['ord_rct' => 1]);
+
+        $response = $this->post(route('tramos.obstaculos.store', $tramo), [
+            'cod_rutas' => $ruta->getKey(),
+            'tip_obs'   => 'BACHE',
+            'des_obs'   => 'BACHE EN LA ACERA DEL TRAMO',
+        ]);
+
+        $response->assertRedirect(route('rutas.show', $ruta));
+        $this->assertCount(1, $tramo->fresh()->obstaculos);
+    }
+
+    /**
+     * Etapa 3B - Test D: Ruta en estado EN REVISIÓN permite actualizar tip_ctr.
+     */
+    public function test_etapa_3b_d_ruta_en_revision_permite_actualizar_tip_ctr(): void
+    {
+        $user = User::first() ?? User::factory()->create();
+        $this->actingAs($user);
+
+        $ruta = Ruta::create(['ide_rut' => 'RUT-3B-D', 'nom_rut' => 'RUTA EN REVISION D', 'ori_rut' => 'OD', 'dst_rut' => 'DD', 'est_rut' => 'EN REVISIÓN', 'cod_usuarios_rut_cre' => $user->getKey()]);
+        $tramo = CalleTramo::create(['nom_ctr' => 'TRAMO 3B D', 'tip_ctr' => 'OTRO', 'lon_ctr' => 100]);
+        $ruta->tramos()->attach($tramo->getKey(), ['ord_rct' => 1]);
+
+        $response = $this->put(route('rutas.tramos.update', [$ruta, $tramo]), [
+            'nom_ctr' => $tramo->nom_ctr,
+            'tip_ctr' => 'ACERA',
+            'lon_ctr' => $tramo->lon_ctr,
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $this->assertEquals('ACERA', $tramo->fresh()->tip_ctr);
+    }
+
+    /**
+     * Etapa 3B - Test E: Acción mantiene contexto de la ruta correcta enviada en cod_rutas.
+     */
+    public function test_etapa_3b_e_accion_mantiene_contexto_de_ruta_correcta(): void
+    {
+        $user = User::first() ?? User::factory()->create();
+        $this->actingAs($user);
+
+        $rutaA = Ruta::create(['ide_rut' => 'RUT-3B-E1', 'nom_rut' => 'RUTA E1', 'ori_rut' => 'OE1', 'dst_rut' => 'DE1', 'est_rut' => 'EN REVISIÓN', 'cod_usuarios_rut_cre' => $user->getKey()]);
+        $rutaB = Ruta::create(['ide_rut' => 'RUT-3B-E2', 'nom_rut' => 'RUTA E2', 'ori_rut' => 'OE2', 'dst_rut' => 'DE2', 'est_rut' => 'EN REVISIÓN', 'cod_usuarios_rut_cre' => $user->getKey()]);
+
+        $tramoCompartido = CalleTramo::create(['nom_ctr' => 'TRAMO E COMPARTIDO', 'tip_ctr' => 'OTRO', 'lon_ctr' => 100]);
+
+        $rutaA->tramos()->attach($tramoCompartido->getKey(), ['ord_rct' => 1]);
+        $rutaB->tramos()->attach($tramoCompartido->getKey(), ['ord_rct' => 1]);
+
+        // Guardar condición con cod_rutas = rutaB
+        $response = $this->post(route('tramos.condiciones.store', $tramoCompartido), [
+            'cod_rutas' => $rutaB->getKey(),
+            'tip_cen'   => 'ILUMINACIÓN',
+            'des_cen'   => 'LUMINARIA DEFICIENTE',
+            'niv_cen'   => 'MALO',
+        ]);
+
+        $response->assertRedirect(route('rutas.show', $rutaB));
+    }
+
+    /**
+     * Etapa 3B - Test F: Catálogo de obstáculos enviado por formulario es aceptado por backend y BD.
+     */
+    public function test_etapa_3b_f_catalogo_obstaculos_es_aceptado_por_backend_y_bd(): void
+    {
+        $user = User::first() ?? User::factory()->create();
+        $this->actingAs($user);
+
+        $ruta = Ruta::create(['ide_rut' => 'RUT-3B-F', 'nom_rut' => 'RUTA F', 'ori_rut' => 'OF', 'dst_rut' => 'DF', 'est_rut' => 'BORRADOR', 'cod_usuarios_rut_cre' => $user->getKey()]);
+        $tramo = CalleTramo::create(['nom_ctr' => 'TRAMO F', 'tip_ctr' => 'ACERA', 'lon_ctr' => 100]);
+        $ruta->tramos()->attach($tramo->getKey(), ['ord_rct' => 1]);
+
+        $tiposCatalogo = array_keys(\App\Models\Obstaculo::TIPOS);
+
+        foreach ($tiposCatalogo as $tipo) {
+            $response = $this->post(route('tramos.obstaculos.store', $tramo), [
+                'cod_rutas' => $ruta->getKey(),
+                'tip_obs'   => $tipo,
+                'des_obs'   => "REPORTE DE PRUEBA FORMA {$tipo}",
+            ]);
+
+            $response->assertSessionHasNoErrors();
+        }
+
+        $this->assertCount(count($tiposCatalogo), $tramo->fresh()->obstaculos);
+    }
+
+    /**
+     * Etapa 3B - Test G: Nivel de evaluación utilizado existe realmente en la tabla niveles_seguridad.
+     */
+    public function test_etapa_3b_g_nivel_evaluacion_existe_en_niveles_seguridad(): void
+    {
+        $nivelesDB = \App\Models\NivelSeguridad::all();
+
+        $this->assertGreaterThan(0, $nivelesDB->count());
+
+        foreach ($nivelesDB as $nivel) {
+            $this->assertNotNull($nivel->cod_niveles_seguridad);
+            $this->assertNotEmpty($nivel->nom_nse);
+            $this->assertGreaterThanOrEqual(1, $nivel->niv_nse);
+            $this->assertLessThanOrEqual(5, $nivel->niv_nse);
+        }
+    }
 }
 
