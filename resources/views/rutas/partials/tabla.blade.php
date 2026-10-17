@@ -30,12 +30,16 @@
                     <th class="px-4 py-3 text-left text-xs font-bold text-white uppercase hidden md:table-cell">ORIGEN → DESTINO</th>
                     <th class="px-4 py-3 text-center text-xs font-bold text-white uppercase">ESTADO</th>
                     <th class="px-4 py-3 text-center text-xs font-bold text-white uppercase hidden lg:table-cell">TRAMOS</th>
+                    <th class="px-4 py-3 text-center text-xs font-bold text-white uppercase hidden sm:table-cell">ESTADO ACO</th>
                     <th class="px-4 py-3 text-center text-xs font-bold text-white uppercase">ACCIONES</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
                 @foreach($rutas as $ruta)
-                    @php $color = \App\Models\Ruta::COLORES_ESTADO[$ruta->est_rut] ?? 'bg-gray-100 text-gray-800'; @endphp
+                    @php
+                        $color = \App\Models\Ruta::COLORES_ESTADO[$ruta->est_rut] ?? 'bg-gray-100 text-gray-800';
+                        $analisisAcoFila = isset($constructorAco) ? $constructorAco->analizar($ruta) : $ruta->analisisAco();
+                    @endphp
                     <tr class="hover:bg-gray-50">
                         <td class="px-4 py-3 font-mono font-bold text-gray-700">{{ $ruta->ide_rut }}</td>
                         <td class="px-4 py-3 font-semibold text-gray-800 uppercase">{{ $ruta->nom_rut }}</td>
@@ -51,6 +55,13 @@
                         </td>
                         <td class="px-4 py-3 text-center text-gray-600 hidden lg:table-cell">
                             {{ $ruta->tramos->count() }}
+                        </td>
+                        <td class="px-4 py-3 text-center hidden sm:table-cell">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border {{ $analisisAcoFila->colorBadge }}"
+                                title="{{ implode(' | ', $analisisAcoFila->motivosBloqueo) ?: 'Ruta lista para optimización bioinspirada ACO.' }}">
+                                <i class="{{ $analisisAcoFila->iconoFa }} text-[11px]"></i>
+                                <span>{{ $analisisAcoFila->etiquetaCorta }}</span>
+                            </span>
                         </td>
                         <td class="px-4 py-3">
                             <div class="flex items-center justify-center gap-1 flex-wrap">

@@ -114,6 +114,16 @@
                                             <input type="number" name="lon_ctr" value="{{ $tramo->lon_ctr }}" step="0.01" min="0"
                                                 class="w-full border rounded px-2 py-1 text-sm focus:ring-1 focus:ring-green-600 focus:outline-none">
                                         </div>
+                                        <div class="md:col-span-3 mt-1" x-data="{ verGeoEdit: false }">
+                                            <button type="button" @click="verGeoEdit = !verGeoEdit" class="text-xs text-yellow-800 hover:underline font-semibold flex items-center gap-1">
+                                                <i class="fas" :class="verGeoEdit ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                                                <span x-text="verGeoEdit ? 'OCULTAR COORDENADAS GEO' : 'MODIFICAR COORDENADAS GEO_CTR (JSON)'"></span>
+                                            </button>
+                                            <div x-show="verGeoEdit" x-cloak class="mt-1">
+                                                <textarea name="geo_ctr" rows="2" placeholder='[{"lat": ..., "lng": ...}]'
+                                                    class="w-full font-mono text-xs border rounded p-1.5 focus:outline-none">{{ $tramo->geo_ctr ? json_encode($tramo->geo_ctr) : '' }}</textarea>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div class="mt-3 flex gap-2 justify-end">
                                         <button @click="editando = false" type="button"
@@ -159,8 +169,25 @@
                             <div>
                                 <input type="number" name="lon_ctr" step="0.01" min="0"
                                     placeholder="LONGITUD (M)"
-                                    title="LONGITUD DEL TRAMO EN METROS — OPCIONAL"
+                                    title="LONGITUD DEL TRAMO EN METROS — OPCIONAL SI TIENE GEOMETRÍA"
                                     class="w-full border rounded px-3 py-2 text-sm focus:ring-2 focus:ring-green-600 focus:outline-none">
+                            </div>
+                            <div class="md:col-span-4" x-data="{ verGeo: false }">
+                                <button type="button" @click="verGeo = !verGeo" class="text-xs text-green-700 hover:underline font-semibold flex items-center gap-1">
+                                    <i class="fas" :class="verGeo ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                                    <span x-text="verGeo ? 'OCULTAR GEOMETRÍA DEL TRAMO (COORDENADAS GPS)' : '+ DEFINIR GEOMETRÍA DEL TRAMO (OPCIONAL)'"></span>
+                                </button>
+                                <div x-show="verGeo" x-cloak class="mt-2 bg-white p-3 rounded border border-gray-200">
+                                    <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">
+                                        COORDENADAS GEO_CTR (JSON CON MÍNIMO 2 PUNTOS: [{"lat": -16.5, "lng": -68.1}, ...])
+                                    </label>
+                                    <textarea name="geo_ctr" rows="2"
+                                        placeholder='[{"lat": -16.5029, "lng": -68.1363}, {"lat": -16.4992, "lng": -68.1333}]'
+                                        class="w-full font-mono text-xs border rounded p-2 focus:ring-2 focus:ring-green-600 focus:outline-none"></textarea>
+                                    <p class="text-[10px] text-gray-500 mt-1">
+                                        * Si define la geometría, la longitud en metros se calculará automáticamente mediante la distancia geodésica entre coordenadas.
+                                    </p>
+                                </div>
                             </div>
                         </div>
                         <div class="mt-3 flex justify-end">
