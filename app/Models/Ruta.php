@@ -229,4 +229,12 @@ class Ruta extends Model
     {
         return self::TRANSICIONES[$this->est_rut] ?? [];
     }
+
+    /**
+     * Obtiene el diagnóstico de preparación de la ruta para optimización ACO.
+     */
+    public function analisisAco(): \App\Services\Aco\AnalisisAcoRuta
+    {
+        return app(\App\Services\Aco\ConstructorGrafoRuta::class)->analizar($this);
+    }
 }

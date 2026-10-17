@@ -6,6 +6,7 @@ use App\Http\Requests\StoreRutaRequest;
 use App\Http\Requests\UpdateRutaRequest;
 use App\Models\NivelSeguridad;
 use App\Models\Ruta;
+use App\Services\Aco\ConstructorGrafoRuta;
 use App\Services\RutaEstimacionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -17,13 +18,13 @@ class RutaController extends Controller
 {
     // ─── Listado ──────────────────────────────────────────────
 
-    public function index(Request $request): View
+    public function index(Request $request, ConstructorGrafoRuta $constructorAco): View
     {
         $buscar = trim((string) $request->get('buscar', ''));
         $estado = trim((string) $request->get('estado', ''));
 
         $rutas = Ruta::activas()
-            ->with(['creador', 'aprobador'])
+            ->with(['creador', 'aprobador', 'tramos'])
             ->buscador($buscar)
             ->when($estado !== '', fn ($q) => $q->porEstado($estado))
             ->orderByDesc('cod_rutas')
@@ -31,9 +32,10 @@ class RutaController extends Controller
             ->withQueryString();
 
         return view('rutas.index', [
-            'rutas'   => $rutas,
-            'filtros' => compact('buscar', 'estado'),
-            'estados' => array_keys(Ruta::ESTADOS),
+            'rutas'          => $rutas,
+            'filtros'        => compact('buscar', 'estado'),
+            'estados'        => array_keys(Ruta::ESTADOS),
+            'constructorAco' => $constructorAco,
         ]);
     }
 
@@ -76,7 +78,7 @@ class RutaController extends Controller
 
     // ─── Detalle ──────────────────────────────────────────────
 
-    public function show(Ruta $ruta, RutaEstimacionService $estimador): View
+    public function show(Ruta $ruta, RutaEstimacionService $estimador, ConstructorGrafoRuta $constructorAco): View
     {
         $ruta->load([
             'creador',
@@ -97,7 +99,9 @@ class RutaController extends Controller
             $trayectoDetalle = $estimador->estimar((string) $ruta->ori_rut, (string) $ruta->dst_rut);
         }
 
-        return view('rutas.show', compact('ruta', 'nivelGeneral', 'transiciones', 'puedePublicarse', 'trayectoDetalle'));
+        $analisisAco = $constructorAco->analizar($ruta);
+
+        return view('rutas.show', compact('ruta', 'nivelGeneral', 'transiciones', 'puedePublicarse', 'trayectoDetalle', 'analisisAco'));
     }
 
     // ─── Editar ───────────────────────────────────────────────

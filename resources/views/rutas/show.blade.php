@@ -165,6 +165,9 @@
                 @endif
             </div>
 
+            {{-- ── 4. SECCIÓN ACO (Algoritmo de Colonia de Hormigas) ─────────── --}}
+            @include('rutas.partials.seccion_aco')
+
             {{-- ── TRAMOS ──────────────────────────────────────────── --}}
             <div>
                 <h3 class="font-bold text-gray-700 uppercase mb-3">
@@ -570,9 +573,28 @@
         if (e) Swal.fire({ toast:true, position:'top-end', icon:'error', title: e.content, showConfirmButton:false, timer:4000, timerProgressBar:true });
 
         const trayectoDetalle = @json($trayectoDetalle);
+        const tramosDetalle = @json($analisisAco->tramosDetalle ?? []);
         const mapContainer = document.getElementById('mapa-detalle-ruta');
 
-        if (!mapContainer || !trayectoDetalle || !Array.isArray(trayectoDetalle.trayecto_coords) || trayectoDetalle.trayecto_coords.length < 2) {
+        window.tramosLayers = {};
+        window.destacarTramoEnMapa = function(tramoId) {
+            const layer = window.tramosLayers[tramoId];
+            if (layer && window.leafletMap) {
+                window.leafletMap.fitBounds(layer.getBounds(), { padding: [50, 50] });
+                layer.openPopup();
+                layer.setStyle({ weight: 9, opacity: 1.0 });
+                setTimeout(() => {
+                    layer.setStyle({ weight: 5, opacity: 0.85 });
+                }, 2500);
+
+                const mapEl = document.getElementById('mapa-detalle-ruta');
+                if (mapEl) {
+                    mapEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        };
+
+        if (!mapContainer || (!trayectoDetalle?.trayecto_coords?.length && !tramosDetalle.length)) {
             return;
         }
 
@@ -604,38 +626,90 @@
 
         initLeafletAssets().then(() => {
             const map = window.L.map(mapContainer, { zoomControl: true }).setView([-16.5, -68.15], 13);
+            window.leafletMap = map;
 
             window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
                 attribution: '&copy; OPENSTREETMAP CONTRIBUTORS',
             }).addTo(map);
 
-            const puntos = trayectoDetalle.trayecto_coords
-                .filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lng))
-                .map((p) => [p.lat, p.lng]);
+            let allBounds = window.L.latLngBounds([]);
 
-            if (puntos.length < 2) {
-                return;
+            // 1. Dibujar trayectoria general base registrada
+            if (trayectoDetalle && Array.isArray(trayectoDetalle.trayecto_coords) && trayectoDetalle.trayecto_coords.length >= 2) {
+                const puntosBase = trayectoDetalle.trayecto_coords
+                    .filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lng))
+                    .map((p) => [p.lat, p.lng]);
+
+                if (puntosBase.length >= 2) {
+                    const line = window.L.polyline(puntosBase, {
+                        color: '#94a3b8',
+                        weight: 4,
+                        opacity: 0.6,
+                        dashArray: '6, 6'
+                    }).addTo(map);
+
+                    line.bindPopup('<div class="p-1 text-xs font-bold uppercase text-slate-700">TRAYECTORIA REGISTRADA</div><div class="text-[10px] text-slate-500">Trazo vial global de referencia.</div>');
+                    allBounds.extend(line.getBounds());
+                }
             }
 
-            const line = window.L.polyline(puntos, {
-                color: '#2d6a27',
-                weight: 5,
-                opacity: 0.9,
-            }).addTo(map);
+            // 2. Dibujar tramos físicos registrados
+            const paletaColores = ['#15803d', '#0284c7', '#7c3aed', '#d97706', '#dc2626', '#0d9488'];
+            tramosDetalle.forEach((t, idx) => {
+                if (Array.isArray(t.geo) && t.geo.length >= 2) {
+                    const puntosTramo = t.geo
+                        .filter(p => Number.isFinite(p.lat) && Number.isFinite(p.lng))
+                        .map(p => [p.lat, p.lng]);
 
-            const origen = trayectoDetalle.origen_coords;
-            const destino = trayectoDetalle.destino_coords;
+                    if (puntosTramo.length >= 2) {
+                        const colorTramo = paletaColores[idx % paletaColores.length];
+                        const polyTramo = window.L.polyline(puntosTramo, {
+                            color: colorTramo,
+                            weight: 5,
+                            opacity: 0.85
+                        }).addTo(map);
+
+                        const popupHtml = `
+                            <div class="p-1 text-xs">
+                                <p class="font-bold text-slate-900 uppercase">[TRAMO ${t.orden ?? (idx + 1)}] ${t.nombre}</p>
+                                <p class="text-[11px] text-slate-600 uppercase mt-0.5">Tipo: <strong>${t.tipo}</strong> · Longitud: <strong>${Number(t.longitud).toFixed(1)} M</strong></p>
+                                <p class="text-[11px] font-mono text-emerald-800 mt-1">Conexión: <strong>${t.nodo_inicial} → ${t.nodo_final}</strong></p>
+                                <p class="text-[10px] text-slate-500 mt-1">Cobertura de riesgo: <strong>${t.cobertura_datos}</strong></p>
+                            </div>
+                        `;
+                        polyTramo.bindPopup(popupHtml);
+                        window.tramosLayers[t.id] = polyTramo;
+
+                        polyTramo.on('mouseover', function() {
+                            this.setStyle({ weight: 8, opacity: 1.0 });
+                        });
+                        polyTramo.on('mouseout', function() {
+                            this.setStyle({ weight: 5, opacity: 0.85 });
+                        });
+
+                        allBounds.extend(polyTramo.getBounds());
+                    }
+                }
+            });
+
+            // 3. Marcadores de origen y destino
+            const origen = trayectoDetalle?.origen_coords;
+            const destino = trayectoDetalle?.destino_coords;
 
             if (origen && Number.isFinite(origen.lat) && Number.isFinite(origen.lng)) {
-                window.L.marker([origen.lat, origen.lng]).addTo(map).bindPopup('ORIGEN');
+                window.L.marker([origen.lat, origen.lng]).addTo(map).bindPopup('<strong class="text-xs uppercase">ORIGEN DE LA RUTA</strong>');
+                allBounds.extend([origen.lat, origen.lng]);
             }
 
             if (destino && Number.isFinite(destino.lat) && Number.isFinite(destino.lng)) {
-                window.L.marker([destino.lat, destino.lng]).addTo(map).bindPopup('DESTINO');
+                window.L.marker([destino.lat, destino.lng]).addTo(map).bindPopup('<strong class="text-xs uppercase">DESTINO DE LA RUTA</strong>');
+                allBounds.extend([destino.lat, destino.lng]);
             }
 
-            map.fitBounds(line.getBounds(), { padding: [30, 30] });
+            if (allBounds.isValid()) {
+                map.fitBounds(allBounds, { padding: [30, 30] });
+            }
             setTimeout(() => map.invalidateSize(), 120);
         }).catch(() => {
             // No interrumpir la vista de detalle si falla la carga del mapa.
