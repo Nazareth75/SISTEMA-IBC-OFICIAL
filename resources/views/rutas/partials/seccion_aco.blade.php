@@ -221,11 +221,23 @@
                 {{-- Botón de Ejecución / Bloqueo --}}
                 <div>
                     @if($analisisAco->esOptimizable)
-                        <button type="button"
-                            class="w-full py-2.5 px-4 rounded text-xs font-bold uppercase text-white shadow flex items-center justify-center gap-2 hover:opacity-95 transition"
-                            style="background-color:#2d6a27">
-                            <i class="fas fa-play"></i> EJECUTAR SIMULACIÓN ACO
+                        <div class="bg-emerald-50 border border-emerald-200 rounded p-2.5 mb-3 text-xs text-emerald-800">
+                            <p class="font-bold uppercase text-[11px] flex items-center gap-1.5 text-emerald-900">
+                                <i class="fas fa-check-circle text-emerald-600"></i>
+                                Estructura preparada para ACO
+                            </p>
+                            <p class="text-[10px] text-emerald-700 mt-1 leading-relaxed">
+                                Ejecución ACO pendiente de integración del modelo de riesgo (Fase 5B).
+                            </p>
+                        </div>
+                        <button type="button" disabled
+                            class="w-full py-2.5 px-4 rounded text-xs font-bold uppercase bg-slate-200 text-slate-500 cursor-not-allowed flex items-center justify-center gap-2 border border-slate-300"
+                            title="Ejecución ACO pendiente de integración del modelo de riesgo">
+                            <i class="fas fa-clock"></i> EJECUCIÓN ACO PENDIENTE (FASE 5B)
                         </button>
+                        <p class="text-[10px] text-slate-400 text-center uppercase font-semibold mt-2">
+                            Topología lista · Modelo de riesgo en proceso de integración
+                        </p>
                     @else
                         <button type="button" disabled
                             class="w-full py-2.5 px-4 rounded text-xs font-bold uppercase bg-slate-300 text-slate-500 cursor-not-allowed flex items-center justify-center gap-2 border border-slate-300"

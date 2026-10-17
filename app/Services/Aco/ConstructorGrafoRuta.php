@@ -20,13 +20,12 @@ use App\Services\TramoRiskService;
 class ConstructorGrafoRuta
 {
     /**
-     * Tolerancia geográfica en metros para agrupar puntos extremos en un mismo nodo topológico.
+     * Tolerancia provisional de asociación topológica en metros para agrupar puntos extremos en un mismo nodo topológico.
      *
-     * Justificación técnica:
-     * En entornos urbanos peatonales, las capturas GPS en esquinas e intersecciones presentan
-     * una dispersión típica de 3 a 8 metros. Un radio de 8.0 m corresponde al ancho estándar de
-     * calzada o cruce peatonal en Bolivia, garantizando que segmentos concurrentes en la misma
-     * esquina se unan al mismo nodo sin fusionar esquinas distintas de manzanas adyacentes.
+     * Nota técnica:
+     * Corresponde a una tolerancia provisional de asociación topológica (8.0 m),
+     * parametrizable y pendiente de validación con datos de campo.
+     * En entornos urbanos peatonales permite enlazar segmentos concurrentes en esquinas sin fusionar esquinas distintas.
      */
     public const TOLERANCIA_METROS = 8.0;
 
