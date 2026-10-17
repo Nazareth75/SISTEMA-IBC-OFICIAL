@@ -14,16 +14,20 @@ use InvalidArgumentException;
  * MÉTRICAS EVALUADAS (M1 - M8):
  * - M1: Costo de la mejor solución (C_ACO). Menor es mejor.
  * - M2: Brecha relativa respecto al óptimo determinista (Gap%):
- *       Gap(%) = [(C_ACO - C_ref) / C_ref] * 100 (con protección si C_ref = 0).
+ *       Gap(%) = [(C_ACO - C_ref) / C_ref] * 100.
+ *       CONTRATO MATEMÁTICO: Si C_ref <= 0, la división es indefinida y retorna null (N/A).
  * - M3: Tiempo de ejecución computacional (ms >= 0.0).
  * - M4: Convergencia (bestFoundIteration y convergenceIteration).
  * - M5: Tasa de éxito: TE(%) = (ejecuciones_exitosas / ejecuciones_totales) * 100.
  * - M6: Estabilidad: Media, desviación estándar muestral y Coeficiente de Variación:
- *       CV(%) = (desviación / media) * 100 (con protección si media = 0).
+ *       CV(%) = (desviación / media) * 100.
+ *       CONTRATO MATEMÁTICO: Si media <= 0, el CV es indefinido y retorna null (N/A).
  * - M7: Reducción de riesgo respecto a la ruta más corta:
- *       RR(%) = [(R_corta - R_ACO) / R_corta] * 100 (con protección si R_corta = 0).
+ *       RR(%) = [(R_corta - R_ACO) / R_corta] * 100.
+ *       CONTRATO MATEMÁTICO: Si R_corta <= 0, retorna null (N/A).
  * - M8: Incremento de distancia respecto a la ruta más corta:
- *       ID(%) = [(D_ACO - D_corta) / D_corta] * 100 (con protección si D_corta = 0).
+ *       ID(%) = [(D_ACO - D_corta) / D_corta] * 100.
+ *       CONTRATO MATEMÁTICO: Si D_corta <= 0, retorna null (N/A).
  */
 class AcoExperimentService
 {
@@ -110,7 +114,10 @@ class AcoExperimentService
                 $bestFoundIters[] = $res->bestFoundIteration;
 
                 // Métrica M2: Brecha respecto a la referencia determinista
-                $gaps[] = self::calculateGap($res->totalCost, $refCost);
+                $gap = self::calculateGap($res->totalCost, $refCost);
+                if ($gap !== null) {
+                    $gaps[] = $gap;
+                }
             }
         }
 
@@ -126,14 +133,14 @@ class AcoExperimentService
                 'worstCost' => 0.0,
                 'meanCost' => 0.0,
                 'stdDev' => 0.0,
-                'cvPercent' => 0.0,
+                'cvPercent' => null,
                 'avgExecutionTimeMs' => 0.0,
                 'avgBestFoundIteration' => 0.0,
                 'avgConvergenceIteration' => 0.0,
                 'refCost' => $refCost,
-                'avgGapPercent' => 0.0,
-                'bestGapPercent' => 0.0,
-                'worstGapPercent' => 0.0,
+                'avgGapPercent' => null,
+                'bestGapPercent' => null,
+                'worstGapPercent' => null,
                 'refResult' => $refResult,
                 'results' => $results,
             ];
@@ -151,18 +158,18 @@ class AcoExperimentService
         }
         $stdDev = count($costs) > 1 ? sqrt($varianceSum / (count($costs) - 1)) : 0.0;
 
-        // Coeficiente de variación (M6): Protegido contra división por cero
-        $cvPercent = $meanCost > 0.0 ? ($stdDev / $meanCost) * 100.0 : 0.0;
+        // Coeficiente de variación (M6): Si meanCost <= 0, retorna null (indefinido)
+        $cvPercent = self::calculateCoefficientOfVariation($stdDev, $meanCost);
 
         // Métricas de tiempo y convergencia (M3 y M4)
         $avgTime = array_sum($times) / count($times);
         $avgBestFound = array_sum($bestFoundIters) / count($bestFoundIters);
         $avgConvergence = array_sum($convergences) / count($convergences);
 
-        // Métricas de brecha (M2)
-        $avgGap = count($gaps) > 0 ? (array_sum($gaps) / count($gaps)) : 0.0;
-        $bestGap = count($gaps) > 0 ? min($gaps) : 0.0;
-        $worstGap = count($gaps) > 0 ? max($gaps) : 0.0;
+        // Métricas de brecha (M2): Si refCost <= 0 o no hay gaps calculables, retorna null
+        $avgGap = count($gaps) > 0 ? (array_sum($gaps) / count($gaps)) : null;
+        $bestGap = count($gaps) > 0 ? min($gaps) : null;
+        $worstGap = count($gaps) > 0 ? max($gaps) : null;
 
         return [
             'runsCount' => $runsCount,
@@ -191,25 +198,45 @@ class AcoExperimentService
      * Fórmula:
      * Gap(%) = [(C_ACO - C_ref) / C_ref] * 100
      *
-     * Protección contra división por cero:
-     * Si C_ref es 0.0:
-     * - Si C_ACO es 0.0, Gap es 0.0%.
-     * - Si C_ACO > 0.0, retorna 0.0% de forma segura sin producir NaN ni división por cero.
+     * Rigor matemático:
+     * Si C_ref <= 0.0, la métrica no está definida formalmente (denominador nulo),
+     * por lo que retorna estrictamente null (N/A) en lugar de un cero artificial.
      *
      * @param float $acoCost Costo obtenido por ACO.
      * @param float $refCost Costo determinista de referencia.
-     * @return float Gap porcentual (>= 0.0 en condiciones óptimas).
+     * @return float|null Gap porcentual (>= 0.0) o null si C_ref <= 0.
      */
-    public static function calculateGap(float $acoCost, float $refCost): float
+    public static function calculateGap(float $acoCost, float $refCost): ?float
     {
         if ($refCost <= 0.0) {
-            return 0.0;
+            return null;
         }
 
         $gap = (($acoCost - $refCost) / $refCost) * 100.0;
 
-        // Si por imprecisión de punto flotante acoCost es infinitesimalmente menor a refCost, acotar a 0.0
         return max(0.0, $gap);
+    }
+
+    /**
+     * Calcula la métrica M6: Coeficiente de Variación porcentual (CV%).
+     *
+     * Fórmula:
+     * CV(%) = (stdDev / meanCost) * 100
+     *
+     * Rigor matemático:
+     * Si meanCost <= 0.0, el CV es indefinido y retorna null (N/A).
+     *
+     * @param float $stdDev   Desviación estándar muestral.
+     * @param float $meanCost Costo medio de las soluciones.
+     * @return float|null Coeficiente de variación (%) o null si media <= 0.
+     */
+    public static function calculateCoefficientOfVariation(float $stdDev, float $meanCost): ?float
+    {
+        if ($meanCost <= 0.0) {
+            return null;
+        }
+
+        return ($stdDev / $meanCost) * 100.0;
     }
 
     /**
@@ -218,17 +245,17 @@ class AcoExperimentService
      * Fórmula:
      * RR(%) = [(R_corta - R_ACO) / R_corta] * 100
      *
-     * Mide cuánto riesgo se ahorra al transitar la ruta seleccionada por ACO en comparación
-     * con la ruta más directa (menor distancia) que podría contener mayor exposición a peligros.
+     * Rigor matemático:
+     * Si R_corta <= 0.0, el denominador es cero y retorna null (N/A).
      *
      * @param float $shortestPathRisk Riesgo total de la ruta de mínima distancia.
      * @param float $acoRisk          Riesgo total de la ruta seleccionada por ACO.
-     * @return float Porcentaje de reducción de riesgo.
+     * @return float|null Porcentaje de reducción de riesgo o null si R_corta <= 0.
      */
-    public static function calculateRiskReduction(float $shortestPathRisk, float $acoRisk): float
+    public static function calculateRiskReduction(float $shortestPathRisk, float $acoRisk): ?float
     {
         if ($shortestPathRisk <= 0.0) {
-            return 0.0;
+            return null;
         }
 
         return (($shortestPathRisk - $acoRisk) / $shortestPathRisk) * 100.0;
@@ -240,17 +267,17 @@ class AcoExperimentService
      * Fórmula:
      * ID(%) = [(D_ACO - D_corta) / D_corta] * 100
      *
-     * Mide el costo adicional en metros (desvío) que el peatón asume voluntariamente
-     * a cambio de navegar por vías significativamente más seguras.
+     * Rigor matemático:
+     * Si D_corta <= 0.0, el denominador es cero y retorna null (N/A).
      *
      * @param float $shortestPathDistance Distancia en metros de la ruta más corta.
      * @param float $acoDistance          Distancia en metros de la ruta elegida por ACO.
-     * @return float Porcentaje de incremento de distancia.
+     * @return float|null Porcentaje de incremento de distancia o null si D_corta <= 0.
      */
-    public static function calculateDistanceIncrease(float $shortestPathDistance, float $acoDistance): float
+    public static function calculateDistanceIncrease(float $shortestPathDistance, float $acoDistance): ?float
     {
         if ($shortestPathDistance <= 0.0) {
-            return 0.0;
+            return null;
         }
 
         return (($acoDistance - $shortestPathDistance) / $shortestPathDistance) * 100.0;

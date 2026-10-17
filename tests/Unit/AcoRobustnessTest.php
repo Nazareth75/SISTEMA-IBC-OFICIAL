@@ -200,21 +200,13 @@ class AcoRobustnessTest extends TestCase
         new CostCalculator(INF, 0.5);
     }
 
-    public function test_normalizer_division_by_zero_protection_when_max_equals_min(): void
-    {
-        $calc = new CostCalculator(0.5, 0.5);
-        // Cuando maxDistance == minDistance == 100.0
-        $norm = $calc->calculateNormalizedDistance(100.0, 100.0, 100.0);
-        $this->assertEquals(0.0, $norm);
-        $this->assertFalse(is_nan($norm));
-        $this->assertFalse(is_infinite($norm));
-    }
-
     public function test_normalizer_division_by_zero_protection_when_max_is_zero(): void
     {
         $calc = new CostCalculator(0.5, 0.5);
-        $norm = $calc->calculateNormalizedDistance(0.0, 0.0, 0.0);
+        $norm = $calc->calculateNormalizedDistance(100.0, 0.0);
         $this->assertEquals(0.0, $norm);
+        $this->assertFalse(is_nan($norm));
+        $this->assertFalse(is_infinite($norm));
     }
 
     // ==========================================
@@ -309,29 +301,31 @@ class AcoRobustnessTest extends TestCase
     // 5. PROTECCIÓN CONTRA DIVISIÓN POR CERO EN MÉTRICAS
     // ==========================================
 
-    public function test_gap_calculation_protected_against_zero_ref_cost(): void
+    public function test_gap_calculation_returns_null_when_ref_cost_is_zero(): void
     {
         $gap1 = AcoExperimentService::calculateGap(0.0, 0.0);
-        $this->assertEquals(0.0, $gap1);
-        $this->assertFalse(is_nan($gap1));
+        $this->assertNull($gap1, "Gap con C_ref=0 debe ser null (indefinido)");
 
         $gap2 = AcoExperimentService::calculateGap(1.5, 0.0);
-        $this->assertEquals(0.0, $gap2);
-        $this->assertFalse(is_nan($gap2));
+        $this->assertNull($gap2, "Gap con C_ref=0 debe ser null (indefinido)");
     }
 
-    public function test_risk_reduction_protected_against_zero_shortest_risk(): void
+    public function test_coefficient_of_variation_returns_null_when_mean_is_zero(): void
+    {
+        $cv = AcoExperimentService::calculateCoefficientOfVariation(0.0, 0.0);
+        $this->assertNull($cv, "CV con media=0 debe ser null (indefinido)");
+    }
+
+    public function test_risk_reduction_returns_null_when_shortest_risk_is_zero(): void
     {
         $rr = AcoExperimentService::calculateRiskReduction(0.0, 0.0);
-        $this->assertEquals(0.0, $rr);
-        $this->assertFalse(is_nan($rr));
+        $this->assertNull($rr, "Reducción de riesgo con R_corta=0 debe ser null (indefinido)");
     }
 
-    public function test_distance_increase_protected_against_zero_shortest_distance(): void
+    public function test_distance_increase_returns_null_when_shortest_distance_is_zero(): void
     {
         $id = AcoExperimentService::calculateDistanceIncrease(0.0, 0.0);
-        $this->assertEquals(0.0, $id);
-        $this->assertFalse(is_nan($id));
+        $this->assertNull($id, "Incremento de distancia con D_corta=0 debe ser null (indefinido)");
     }
 
     public function test_experiment_service_rejects_zero_or_negative_runs_count(): void

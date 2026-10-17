@@ -37,7 +37,12 @@ class AcoResult
     public float $totalDistance;
 
     /**
-     * Nivel de riesgo total acumulado del trayecto (suma de los riesgos intrínsecos de las aristas).
+     * Nivel de riesgo total acumulado del trayecto.
+     *
+     * AVISO METODOLÓGICO:
+     * La suma simple de riesgos de aristas constituye una agregación experimental temporal
+     * para evaluación sintética en esta fase, y NO la definición definitiva del riesgo
+     * integral de rutas del sistema IBC (la cual se articulará formalmente al conectar TramoRiskService).
      */
     public float $totalRisk;
 
@@ -72,7 +77,7 @@ class AcoResult
      * @param string[] $path                 Lista secuencial de nodos.
      * @param float    $totalCost            Costo canónico total (M1).
      * @param float    $totalDistance        Distancia física total en metros.
-     * @param float    $totalRisk            Riesgo total acumulado.
+     * @param float    $totalRisk            Riesgo total acumulado (agregación experimental temporal).
      * @param float    $executionTimeMs      Tiempo de ejecución en ms (M3).
      * @param int      $bestFoundIteration   Iteración del hallazgo óptimo.
      * @param int      $convergenceIteration Iteración de convergencia (M4).

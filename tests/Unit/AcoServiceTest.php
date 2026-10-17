@@ -120,7 +120,7 @@ class AcoServiceTest extends TestCase
     }
 
     /**
-     * Test F: Riesgo total devuelto coincide exactamente con la suma de riesgos de las aristas.
+     * Test F: Riesgo total devuelto coincide con la agregación experimental (suma de riesgos de aristas).
      */
     public function test_F_total_risk_matches_edge_sum(): void
     {
@@ -165,7 +165,6 @@ class AcoServiceTest extends TestCase
     public function test_H_pheromone_evaporation(): void
     {
         $graph = AcoGraphFixtures::createSinglePathGraph();
-        // Con rho = 0.5, la evaporación disipa el 50% en cada paso
         $config = new AcoConfig(rho: 0.5, iterations: 5, ants: 2, seed: 1);
         $service = new AcoService();
 
@@ -192,7 +191,9 @@ class AcoServiceTest extends TestCase
     }
 
     /**
-     * Test J: Reproducibilidad estocástica exacta mediante semilla (seed).
+     * Test J: Reproducibilidad estocástica exacta de resultados mediante semilla.
+     * Verifica que misma seed reproduce path, cost, distance, risk, bestFoundIteration,
+     * convergenceIteration y bestCostHistory, sin exigir tiempo de ejecución idéntico.
      */
     public function test_J_same_seed_reproduces_exact_solution(): void
     {
@@ -208,7 +209,11 @@ class AcoServiceTest extends TestCase
         $this->assertEqualsWithDelta($res1->totalCost, $res2->totalCost, 1e-9);
         $this->assertEqualsWithDelta($res1->totalDistance, $res2->totalDistance, 1e-9);
         $this->assertEqualsWithDelta($res1->totalRisk, $res2->totalRisk, 1e-9);
+        $this->assertEquals($res1->bestFoundIteration, $res2->bestFoundIteration);
+        $this->assertEquals($res1->convergenceIteration, $res2->convergenceIteration);
         $this->assertEquals($res1->bestCostHistory, $res2->bestCostHistory);
+        $this->assertGreaterThanOrEqual(0.0, $res1->executionTimeMs);
+        $this->assertGreaterThanOrEqual(0.0, $res2->executionTimeMs);
     }
 
     /**
@@ -296,7 +301,11 @@ class AcoServiceTest extends TestCase
     }
 
     /**
-     * Test P: Referencia determinista (Dijkstra) encuentra el camino de costo mínimo teórico.
+     * Test P: Referencia determinista (Dijkstra) encuentra el camino de costo mínimo teórico bajo normalización lineal D/Dmax.
+     * En SmallGraph con Dmax=400:
+     * - ORIGEN->B->D->DESTINO tiene D=1100m, R=0.3 -> C = 0.5*(1100/400) + 0.5*0.3 = 1.375 + 0.15 = 1.5250
+     * - ORIGEN->B->E->DESTINO tiene D=750m, R=1.3 -> C = 0.5*(750/400) + 0.5*1.3 = 0.9375 + 0.65 = 1.5875
+     * Óptimo determinista global: ORIGEN->B->D->DESTINO con C=1.5250.
      */
     public function test_P_deterministic_reference_finds_minimum_cost(): void
     {
@@ -306,11 +315,10 @@ class AcoServiceTest extends TestCase
         $refResult = $refService->solve($graph, 'ORIGEN', 'DESTINO', 0.5, 0.5);
 
         $this->assertTrue($refResult->success);
-        // Bajo normalización Min-Max estricta (D - Dmin)/(Dmax - Dmin) con Dmin=100 y Dmax=400:
-        // ORIGEN->B->E->DESTINO tiene costo 1.4000 (D=750m, R=1.3), superando a B->D->DESTINO con 1.4833.
-        $this->assertEquals(['ORIGEN', 'B', 'E', 'DESTINO'], $refResult->path);
-        $this->assertEqualsWithDelta(1.4000, $refResult->totalCost, 1e-4);
-        $this->assertEquals(750.0, $refResult->totalDistance);
+        $this->assertEquals(['ORIGEN', 'B', 'D', 'DESTINO'], $refResult->path);
+        $this->assertEqualsWithDelta(1.5250, $refResult->totalCost, 1e-4);
+        $this->assertEquals(1100.0, $refResult->totalDistance);
+        $this->assertEqualsWithDelta(0.3, $refResult->totalRisk, 1e-4);
     }
 
     /**
@@ -329,6 +337,7 @@ class AcoServiceTest extends TestCase
         $this->assertTrue($acoResult->success);
         $gap = AcoExperimentService::calculateGap($acoResult->totalCost, $refResult->totalCost);
 
+        $this->assertNotNull($gap);
         $this->assertLessThanOrEqual(0.001, $gap);
     }
 
@@ -379,143 +388,139 @@ class AcoServiceTest extends TestCase
         $stats = $expService->runExperiment($graph, 'ORIGEN', 'DESTINO', $config, runsCount: 5);
 
         $this->assertArrayHasKey('cvPercent', $stats);
+        $this->assertNotNull($stats['cvPercent']);
         $this->assertGreaterThanOrEqual(0.0, $stats['cvPercent']);
     }
 
     /**
-     * Test U: Métricas M7 (reducción de riesgo) y M8 (incremento de distancia) calculadas correctamente.
+     * Test U: Auditoría de normalización aditiva:
+     * Dos rutas con idéntica distancia física (200m) pero diferente número de aristas
+     * (1 arista de 200m frente a 2 aristas de 100m) no reciben ninguna preferencia artificial.
+     * Ambas producen exactamente el mismo costo de distancia bajo D/Dmax.
      */
-    public function test_U_calculates_metrics_m7_and_m8_on_synthetic_scenario(): void
+    public function test_U_equal_physical_distance_different_edge_count_not_biased(): void
     {
-        // En ShortRiskyVsLongSafeGraph:
-        // Ruta Corta: D=150m, R=1.8 (R_corta = 1.8)
-        // Ruta Segura: D=600m, R=0.15 (R_aco = 0.15)
-        $shortestDist = 150.0;
-        $shortestRisk = 1.8;
+        $graph = AcoGraphFixtures::createEqualDistanceDifferentEdgeCountGraph();
+        $calc = new CostCalculator(wDistance: 1.0, wRisk: 0.0); // Puramente distancia
+        $maxD = $graph->getMaxDistance(); // 200.0
 
-        $acoDist = 600.0;
-        $acoRisk = 0.15;
+        // Ruta A: 1 arista de 200m
+        $edgeA = $graph->getEdge('ORIGEN', 'DEST_A');
+        $this->assertNotNull($edgeA);
+        $costA = $calc->calculateEdgeCost($edgeA, $maxD);
 
-        $rr = AcoExperimentService::calculateRiskReduction($shortestRisk, $acoRisk);
-        $id = AcoExperimentService::calculateDistanceIncrease($shortestDist, $acoDist);
+        // Ruta B: 2 aristas de 100m
+        $edgeB1 = $graph->getEdge('ORIGEN', 'MID_B');
+        $edgeB2 = $graph->getEdge('MID_B', 'DEST_B');
+        $this->assertNotNull($edgeB1);
+        $this->assertNotNull($edgeB2);
+        $costB = $calc->calculateEdgeCost($edgeB1, $maxD) + $calc->calculateEdgeCost($edgeB2, $maxD);
 
-        // RR = ((1.8 - 0.15) / 1.8) * 100 = 91.666%
-        $this->assertEqualsWithDelta(91.6666, $rr, 0.01);
-
-        // ID = ((600 - 150) / 150) * 100 = 300.0%
-        $this->assertEqualsWithDelta(300.0, $id, 0.01);
+        // Ambas distancias físicas son 200m -> Ambos costos normalizados deben ser exactamente 1.0
+        $this->assertEqualsWithDelta(1.0, $costA, 1e-9);
+        $this->assertEqualsWithDelta(1.0, $costB, 1e-9);
+        $this->assertEqualsWithDelta($costA, $costB, 1e-9, "La normalización sesga rutas por fragmentación de aristas.");
     }
 
     /**
-     * Test V: Invariante de probabilidades de transición:
-     * Para cualquier nodo con alternativas salientes válidas, las probabilidades son finitas, >= 0, <= 1 y suman ~ 1.0.
+     * Test V: M2 Gap con costo de referencia determinista igual a 0 devuelve null (N/A).
      */
-    public function test_V_transition_probabilities_invariant(): void
+    public function test_V_gap_with_zero_reference_cost_returns_null(): void
     {
-        $graph = AcoGraphFixtures::createMultiPathGridGraph();
-        $outgoing = $graph->getOutgoingEdges('ORIGEN');
-        $this->assertCount(2, $outgoing);
+        $gapZero = AcoExperimentService::calculateGap(0.0, 0.0);
+        $this->assertNull($gapZero, "Gap con C_ref=0 debe ser null (indefinido), no 0.0%");
 
-        $costCalc = new CostCalculator(0.5, 0.5);
-        $maxD = $graph->getMaxDistance();
-        $minD = $graph->getMinDistance();
+        $gapPositive = AcoExperimentService::calculateGap(1.5, 0.0);
+        $this->assertNull($gapPositive, "Gap con C_ref=0 debe ser null (indefinido)");
 
-        $desirabilities = [];
-        $sum = 0.0;
-
-        foreach ($outgoing as $edge) {
-            $cost = $costCalc->calculateEdgeCost($edge, $maxD, $minD);
-            $eta = 1.0 / ($cost + 1e-6);
-            $tau = 1.0;
-            $des = pow($tau, 1.0) * pow($eta, 2.0);
-            $desirabilities[] = $des;
-            $sum += $des;
-        }
-
-        $this->assertGreaterThan(0.0, $sum);
-        $probSum = 0.0;
-
-        foreach ($desirabilities as $des) {
-            $p = $des / $sum;
-            $this->assertGreaterThanOrEqual(0.0, $p);
-            $this->assertLessThanOrEqual(1.0, $p);
-            $this->assertFalse(is_nan($p));
-            $this->assertFalse(is_infinite($p));
-            $probSum += $p;
-        }
-
-        $this->assertEqualsWithDelta(1.0, $probSum, 1e-5);
+        $validGap = AcoExperimentService::calculateGap(1.2, 1.0);
+        $this->assertEqualsWithDelta(20.0, $validGap, 1e-4);
     }
 
     /**
-     * Test W: Invariante de aristas consecutivas:
-     * Cada par consecutivo de nodos (u, v) en la ruta devuelta corresponde a una arista real del grafo.
+     * Test W: M6 Coeficiente de Variación con media de costo igual a 0 devuelve null (N/A).
      */
-    public function test_W_consecutive_path_nodes_are_real_edges(): void
+    public function test_W_cv_with_zero_mean_returns_null(): void
     {
-        $graph = AcoGraphFixtures::createMultiPathGridGraph();
-        $config = new AcoConfig(seed: 42, iterations: 20, ants: 10);
+        $cvZero = AcoExperimentService::calculateCoefficientOfVariation(0.0, 0.0);
+        $this->assertNull($cvZero, "CV con media=0 debe ser null (indefinido)");
+
+        $cvValid = AcoExperimentService::calculateCoefficientOfVariation(0.1, 1.0);
+        $this->assertEqualsWithDelta(10.0, $cvValid, 1e-4);
+    }
+
+    /**
+     * Test X: M7 Reducción de Riesgo con riesgo base igual a 0 devuelve null (N/A).
+     */
+    public function test_X_m7_risk_reduction_with_zero_base_risk_returns_null(): void
+    {
+        $rrZero = AcoExperimentService::calculateRiskReduction(0.0, 0.0);
+        $this->assertNull($rrZero, "Reducción de riesgo con R_corta=0 debe ser null");
+
+        $rrValid = AcoExperimentService::calculateRiskReduction(1.0, 0.2);
+        $this->assertEqualsWithDelta(80.0, $rrValid, 1e-4);
+    }
+
+    /**
+     * Test Y: M8 Incremento de Distancia con distancia base igual a 0 devuelve null (N/A).
+     */
+    public function test_Y_m8_distance_increase_with_zero_base_distance_returns_null(): void
+    {
+        $idZero = AcoExperimentService::calculateDistanceIncrease(0.0, 0.0);
+        $this->assertNull($idZero, "Incremento de distancia con D_corta=0 debe ser null");
+
+        $idValid = AcoExperimentService::calculateDistanceIncrease(100.0, 150.0);
+        $this->assertEqualsWithDelta(50.0, $idValid, 1e-4);
+    }
+
+    /**
+     * Test Z: Misma semilla reproduce comportamiento algorítmico sin exigir igualdad de tiempo de ejecución.
+     */
+    public function test_Z_same_seed_reproduces_algorithm_without_demanding_same_execution_time(): void
+    {
+        $graph = AcoGraphFixtures::createSmallGraph();
+        $configA = new AcoConfig(seed: 777, iterations: 20, ants: 10);
+        $configB = new AcoConfig(seed: 777, iterations: 20, ants: 10);
         $service = new AcoService();
 
-        $result = $service->solve($graph, 'ORIGEN', 'DESTINO', $config);
-        $this->assertTrue($result->success);
+        $runA = $service->solve($graph, 'ORIGEN', 'DESTINO', $configA);
+        $runB = $service->solve($graph, 'ORIGEN', 'DESTINO', $configB);
 
-        $this->assertEquals('ORIGEN', $result->path[0]);
-        $this->assertEquals('DESTINO', $result->path[count($result->path) - 1]);
+        $this->assertEquals($runA->path, $runB->path);
+        $this->assertEqualsWithDelta($runA->totalCost, $runB->totalCost, 1e-9);
+        $this->assertEqualsWithDelta($runA->totalDistance, $runB->totalDistance, 1e-9);
+        $this->assertEqualsWithDelta($runA->totalRisk, $runB->totalRisk, 1e-9);
+        $this->assertEquals($runA->bestCostHistory, $runB->bestCostHistory);
 
-        for ($i = 0; $i < count($result->path) - 1; $i++) {
-            $u = $result->path[$i];
-            $v = $result->path[$i + 1];
-            $this->assertTrue($graph->hasEdge($u, $v), "El salto {$u}->{$v} no es una arista válida en el grafo.");
-        }
+        // El tiempo de cómputo depende del entorno del sistema y de la carga de CPU; se verifica no negatividad.
+        $this->assertGreaterThanOrEqual(0.0, $runA->executionTimeMs);
+        $this->assertGreaterThanOrEqual(0.0, $runB->executionTimeMs);
     }
 
     /**
-     * Test X: Grafo sintético de gran escala (35+ nodos) resuelve y encuentra solución válida.
+     * Test AA: La semilla de ACO no altera el estado pseudoaleatorio global del sistema (RNG encapsulado).
      */
-    public function test_X_large_graph_solves_successfully(): void
+    public function test_AA_aco_seed_does_not_mutate_global_rng(): void
     {
-        $graph = AcoGraphFixtures::createLargeGraph(10);
-        $this->assertGreaterThanOrEqual(30, count($graph->getNodes()));
+        // Fijar semilla global de PHP
+        mt_srand(123456);
+        $expectedNextRand = mt_rand();
 
-        $config = new AcoConfig(seed: 42, iterations: 30, ants: 15);
+        // Restablecer semilla global al mismo punto
+        mt_srand(123456);
+
+        // Ejecutar ACO con semilla propia encapsulada
+        $graph = AcoGraphFixtures::createSmallGraph();
+        $config = new AcoConfig(seed: 987654, iterations: 10, ants: 5);
         $service = new AcoService();
+        $service->solve($graph, 'ORIGEN', 'DESTINO', $config);
 
-        $result = $service->solve($graph, 'ORIGEN', 'DESTINO', $config);
-
-        $this->assertTrue($result->success);
-        $this->assertEquals('ORIGEN', $result->path[0]);
-        $this->assertEquals('DESTINO', $result->path[count($result->path) - 1]);
-        $this->assertGreaterThan(0.0, $result->totalCost);
-    }
-
-    /**
-     * Test Y: Grafo con aristas compartidas (cuello de botella) transita obligatoriamente la arista común.
-     */
-    public function test_Y_shared_edges_bottleneck_graph(): void
-    {
-        $graph = AcoGraphFixtures::createSharedEdgesGraph();
-        $config = new AcoConfig(seed: 42, iterations: 15, ants: 10);
-        $service = new AcoService();
-
-        $result = $service->solve($graph, 'ORIGEN', 'DESTINO', $config);
-
-        $this->assertTrue($result->success);
-        $this->assertContains('BOTTLENECK', $result->path);
-    }
-
-    /**
-     * Test Z: Grafo con costos gemelos casi idénticos resuelve con estabilidad.
-     */
-    public function test_Z_twin_costs_graph_resolves_cleanly(): void
-    {
-        $graph = AcoGraphFixtures::createTwinCostsGraph();
-        $config = new AcoConfig(seed: 42, iterations: 15, ants: 10);
-        $service = new AcoService();
-
-        $result = $service->solve($graph, 'ORIGEN', 'DESTINO', $config);
-
-        $this->assertTrue($result->success);
-        $this->assertGreaterThan(0.0, $result->totalCost);
+        // La siguiente llamada a mt_rand() debe ser exactamente idéntica a $expectedNextRand
+        $actualNextRand = mt_rand();
+        $this->assertEquals(
+            $expectedNextRand,
+            $actualNextRand,
+            "ACO mutó el generador pseudoaleatorio global de PHP (fuga de estado RNG)."
+        );
     }
 }

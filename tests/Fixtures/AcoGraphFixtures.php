@@ -71,8 +71,8 @@ class AcoGraphFixtures
 
     /**
      * Escenario 4: Dos rutas con costos globales muy similares (prueba de sensibilidad y dispersión).
-     * Ruta A: ORIGEN -> T1 -> DESTINO (200m, riesgo 0.30) -> C_norm ≈ 0.5 * (200/202) + 0.5 * 0.30 = 0.645
-     * Ruta B: ORIGEN -> T2 -> DESTINO (202m, riesgo 0.29) -> C_norm ≈ 0.5 * (202/202) + 0.5 * 0.29 = 0.645
+     * Ruta A: ORIGEN -> T1 -> DESTINO (200m, riesgo 0.30)
+     * Ruta B: ORIGEN -> T2 -> DESTINO (202m, riesgo 0.29)
      */
     public static function createTwinCostsGraph(): Graph
     {
@@ -159,7 +159,6 @@ class AcoGraphFixtures
     {
         $graph = new Graph();
         // Red tipo cuadrícula desde (0,0) [ORIGEN] hasta (2,2) [DESTINO]
-        // Nodos: ORIGEN, N01, N02, N10, N11, N12, N20, N21, DESTINO
         $graph->addEdge(new Edge('ORIGEN', 'N01', 100.0, 0.2));
         $graph->addEdge(new Edge('ORIGEN', 'N10', 110.0, 0.15));
 
@@ -183,7 +182,6 @@ class AcoGraphFixtures
 
     /**
      * Escenario 10: Aristas compartidas entre diferentes soluciones (cuello de botella central).
-     * O1 / O2 -> CUELLO -> D1 / DESTINO
      */
     public static function createSharedEdgesGraph(): Graph
     {
@@ -204,6 +202,12 @@ class AcoGraphFixtures
      * Ruta A (Corta / Riesgo Alto): ORIGEN -> C -> E -> DESTINO (Distancia 500m, Riesgo 2.6)
      * Ruta B (Larga / Riesgo Bajo): ORIGEN -> B -> D -> DESTINO (Distancia 1100m, Riesgo 0.3)
      * Ruta C (Intermedia):          ORIGEN -> B -> E -> DESTINO (Distancia 750m, Riesgo 1.3)
+     * Dmax = 400.0.
+     * Bajo D/Dmax con wD=0.5, wR=0.5:
+     * - Ruta B (B-D-DESTINO): C = 0.5*(1100/400) + 0.5*0.3 = 1.375 + 0.15 = 1.5250
+     * - Ruta C (B-E-DESTINO): C = 0.5*(750/400) + 0.5*1.3 = 0.9375 + 0.65 = 1.5875
+     * - Ruta A (C-E-DESTINO): C = 0.5*(500/400) + 0.5*2.6 = 0.625 + 1.30 = 1.9250
+     * Por tanto, la ruta de menor costo canónico es la Ruta B con C = 1.5250.
      */
     public static function createSmallGraph(): Graph
     {
@@ -267,8 +271,6 @@ class AcoGraphFixtures
 
     /**
      * Escenario 13: Grafo sintético de gran escala (35 nodos estructurados en capas).
-     *
-     * @param int $layers Cantidad de capas intermedias (por defecto 10 capas x 3 nodos = 30 + origen + destino = 32+).
      */
     public static function createLargeGraph(int $layers = 10): Graph
     {
@@ -297,6 +299,25 @@ class AcoGraphFixtures
         $graph->addEdge(new Edge("L{$last}_A", 'DESTINO', 100.0, 0.2));
         $graph->addEdge(new Edge("L{$last}_B", 'DESTINO', 110.0, 0.1));
         $graph->addEdge(new Edge("L{$last}_C", 'DESTINO', 90.0, 0.4));
+
+        return $graph;
+    }
+
+    /**
+     * Escenario 14 (Auditoría de Normalización Aditiva):
+     * Dos rutas con idéntica distancia física total (200m) pero diferente número de aristas.
+     * Ruta A: 1 arista de 200m.
+     * Ruta B: 2 aristas de 100m.
+     */
+    public static function createEqualDistanceDifferentEdgeCountGraph(): Graph
+    {
+        $graph = new Graph();
+        // Ruta A: 1 arista de 200m
+        $graph->addEdge(new Edge('ORIGEN', 'DEST_A', 200.0, 0.1));
+
+        // Ruta B: 2 aristas de 100m
+        $graph->addEdge(new Edge('ORIGEN', 'MID_B', 100.0, 0.05));
+        $graph->addEdge(new Edge('MID_B', 'DEST_B', 100.0, 0.05));
 
         return $graph;
     }

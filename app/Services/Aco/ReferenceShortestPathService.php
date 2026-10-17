@@ -14,8 +14,12 @@ use InvalidArgumentException;
  * AVISO METODOLÓGICO:
  * Este componente actúa como patrón de referencia experimental para contrastar
  * el aporte ingenieril y calcular la métrica M2 (Gap porcentual respecto al óptimo).
- * Utiliza EXACTAMENTE la misma función de costo canónica y los mismos pesos (wD, wR)
- * que el motor ACO, garantizando la validez científica y comparabilidad directa.
+ * Utiliza EXACTAMENTE la misma función de costo canónica (wD * D/Dmax + wR * R) y los mismos
+ * pesos (wD, wR) que el motor ACO, garantizando la validez científica y comparabilidad directa.
+ *
+ * NOTA SOBRE EL RIESGO TOTAL:
+ * Al igual que en AcoService, totalRisk suma temporalmente los riesgos de las aristas
+ * como agregación experimental para benchmarking y NO como la fórmula definitiva del modelo IBC.
  */
 class ReferenceShortestPathService
 {
@@ -59,10 +63,9 @@ class ReferenceShortestPathService
             throw new InvalidArgumentException("El nodo destino '{$trimTarget}' no existe en el grafo.");
         }
 
-        // Instanciar el calculador de costo con los mismos pesos
+        // Instanciar el calculador de costo con los mismos pesos y normalización
         $costCalc = new CostCalculator($wDistance, $wRisk);
         $maxDistance = $graph->getMaxDistance();
-        $minDistance = $graph->getMinDistance();
 
         // Caso trivial: Origen == Destino
         if ($trimStart === $trimTarget) {
@@ -124,7 +127,7 @@ class ReferenceShortestPathService
                     continue;
                 }
 
-                $edgeCost = $costCalc->calculateEdgeCost($edge, $maxDistance, $minDistance);
+                $edgeCost = $costCalc->calculateEdgeCost($edge, $maxDistance);
                 $alt = $dist[$u] + $edgeCost;
 
                 if ($alt < $dist[$v]) {
@@ -155,7 +158,7 @@ class ReferenceShortestPathService
             array_unshift($path, $curr);
         }
 
-        $metrics = $costCalc->calculatePathMetrics($edges, $maxDistance, $minDistance);
+        $metrics = $costCalc->calculatePathMetrics($edges, $maxDistance);
         $execTime = (microtime(true) - $startTime) * 1000.0;
 
         return new AcoResult(

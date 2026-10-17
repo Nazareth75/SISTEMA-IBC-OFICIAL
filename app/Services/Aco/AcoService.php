@@ -3,6 +3,9 @@
 namespace App\Services\Aco;
 
 use InvalidArgumentException;
+use Random\Engine\Mt19937;
+use Random\IntervalBoundary;
+use Random\Randomizer;
 
 /**
  * Núcleo del Algoritmo de Optimización por Colonia de Hormigas (ACO) para Navegación Peatonal.
@@ -30,6 +33,11 @@ use InvalidArgumentException;
  * 4. Depósito de feromona:
  *    Delta_tau = Q / max(epsilon, Costo_Ruta)
  *    Premia con mayor intensidad las rutas con menor costo integral multiobjetivo.
+ *
+ * ENCAPSULACIÓN DEL GENERADOR DE NÚMEROS PSEUDOALEATORIOS (RNG):
+ * Para cumplir estrictamente con los estándares modernos de PHP 8.3 y garantizar que la semilla
+ * experimental de ACO no altere ni contamine el estado pseudoaleatorio global de otros componentes
+ * del sistema, se utiliza \Random\Randomizer con un motor \Random\Engine\Mt19937 aislado por ejecución.
  */
 class AcoService
 {
@@ -102,10 +110,12 @@ class AcoService
             );
         }
 
-        // Semilla para reproducibilidad experimental estocástica
-        if ($config->seed !== null) {
-            mt_srand($config->seed);
-        }
+        // Instanciación del motor RNG encapsulado e independiente de PHP 8.3
+        // Garantiza que la semilla local no modifique el estado global de mt_rand()
+        $rngEngine = ($config->seed !== null)
+            ? new Mt19937($config->seed)
+            : new Mt19937();
+        $randomizer = new Randomizer($rngEngine);
 
         // Caso trivial: Origen y destino son el mismo punto (costo cero, sin transitar aristas)
         if ($trimStart === $trimTarget) {
@@ -135,7 +145,6 @@ class AcoService
         }
 
         $maxDistance = $graph->getMaxDistance();
-        $minDistance = $graph->getMinDistance();
         $costCalc = new CostCalculator($config->wDistance, $config->wRisk);
 
         // Inicialización homogénea de feromona tau en todas las aristas
@@ -189,7 +198,7 @@ class AcoService
                     $totalDesirability = 0.0;
 
                     foreach ($candidates as $edge) {
-                        $edgeCost = $costCalc->calculateEdgeCost($edge, $maxDistance, $minDistance);
+                        $edgeCost = $costCalc->calculateEdgeCost($edge, $maxDistance);
                         // Heurística eta: inversa del costo para preferir tramos más eficientes y seguros
                         $eta = 1.0 / ($edgeCost + self::EPSILON_HEURISTIC);
                         $tau = $pheromones[$edge->getId()] ?? $config->initialPheromone;
@@ -211,11 +220,11 @@ class AcoService
                         break;
                     }
 
-                    // Selección estocástica por ruleta proporcional (Random Proportional Rule)
-                    $randFraction = mt_rand() / mt_getrandmax();
+                    // Selección estocástica por ruleta proporcional mediante el Randomizer aislado
+                    $randFraction = $randomizer->getFloat(0.0, 1.0, IntervalBoundary::ClosedOpen);
                     $randVal = $randFraction * $totalDesirability;
                     $accum = 0.0;
-                    $chosenEdge = $candidates[count($candidates) - 1]; // Fallback al último candidato válido
+                    $chosenEdge = $candidates[count($candidates) - 1]; // Fallback defensivo al último candidato
 
                     foreach ($candidates as $idx => $edge) {
                         $accum += $desirabilities[$idx];
@@ -234,7 +243,7 @@ class AcoService
 
                 // Si la hormiga alcanzó el destino sin quedar bloqueada, se registra como solución válida
                 if (!$stuck && $currentNode === $trimTarget) {
-                    $metrics = $costCalc->calculatePathMetrics($antEdges, $maxDistance, $minDistance);
+                    $metrics = $costCalc->calculatePathMetrics($antEdges, $maxDistance);
                     $iterationSolutions[] = [
                         'path' => $antPath,
                         'edges' => $antEdges,
