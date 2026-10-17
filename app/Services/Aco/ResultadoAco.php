@@ -9,7 +9,7 @@ namespace App\Services\Aco;
  * Proporciona una estructura inmutable, tipada y exhaustiva con todas las métricas primarias
  * (M1 a M4) generadas durante la resolución algorítmica de una ruta peatonal.
  */
-class AcoResult
+class ResultadoAco
 {
     /**
      * Indica si el algoritmo logró encontrar una ruta válida desde el origen hasta el destino.

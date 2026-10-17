@@ -29,49 +29,49 @@ use InvalidArgumentException;
  *       ID(%) = [(D_ACO - D_corta) / D_corta] * 100.
  *       CONTRATO MATEMÁTICO: Si D_corta <= 0, retorna null (N/A).
  */
-class AcoExperimentService
+class ServicioExperimentosAco
 {
     /**
      * Motor de resolución estocástica ACO.
      */
-    private AcoService $acoService;
+    private ServicioAco $acoService;
 
     /**
      * Motor de referencia determinista (Dijkstra) para cálculo de Gap (M2).
      */
-    private ReferenceShortestPathService $refService;
+    private ServicioRutaReferencia $refService;
 
     /**
      * Constructor del servicio experimental.
      *
-     * @param AcoService|null                   $acoService Instancia del motor ACO.
-     * @param ReferenceShortestPathService|null $refService Instancia del algoritmo determinista de referencia.
+     * @param ServicioAco|null            $acoService Instancia del motor ACO.
+     * @param ServicioRutaReferencia|null $refService Instancia del algoritmo determinista de referencia.
      */
     public function __construct(
-        ?AcoService $acoService = null,
-        ?ReferenceShortestPathService $refService = null
+        ?ServicioAco $acoService = null,
+        ?ServicioRutaReferencia $refService = null
     ) {
-        $this->acoService = $acoService ?? new AcoService();
-        $this->refService = $refService ?? new ReferenceShortestPathService();
+        $this->acoService = $acoService ?? new ServicioAco();
+        $this->refService = $refService ?? new ServicioRutaReferencia();
     }
 
     /**
      * Ejecuta una batería controlada de N repeticiones del algoritmo ACO sobre un grafo dado.
      *
-     * @param Graph     $graph      Grafo con la topología a evaluar.
-     * @param string    $startNode  Nodo origen.
-     * @param string    $targetNode Nodo destino.
-     * @param AcoConfig $config     Parámetros de configuración del experimento.
-     * @param int       $runsCount  Número de ejecuciones repetidas (runsCount >= 1).
+     * @param Grafo            $graph      Grafo con la topología a evaluar.
+     * @param string           $startNode  Nodo origen.
+     * @param string           $targetNode Nodo destino.
+     * @param ConfiguracionAco $config     Parámetros de configuración del experimento.
+     * @param int              $runsCount  Número de ejecuciones repetidas (runsCount >= 1).
      * @return array<string, mixed> Resumen estadístico exhaustivo con métricas M1 a M6.
      *
      * @throws InvalidArgumentException Si runsCount < 1.
      */
     public function runExperiment(
-        Graph $graph,
+        Grafo $graph,
         string $startNode,
         string $targetNode,
-        AcoConfig $config,
+        ConfiguracionAco $config,
         int $runsCount = 30
     ): array {
         if ($runsCount < 1) {

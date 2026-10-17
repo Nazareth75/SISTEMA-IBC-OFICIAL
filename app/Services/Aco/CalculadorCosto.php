@@ -23,17 +23,12 @@ use InvalidArgumentException;
  * - R_norm(e) ∈ [0.0, 1.0]: Riesgo normalizado intrínseco del tramo peatonal.
  *
  * JUSTIFICACIÓN MATEMÁTICA DE LA NORMALIZACIÓN LINEAL (D / D_max):
- * La normalización Min-Max por arista: (D(e) - Dmin) / (Dmax - Dmin), al ser sumada a lo largo de una ruta:
- *   Σ D_norm(e) = [Σ D(e) - k * Dmin] / (Dmax - Dmin) = [D_total - k * Dmin] / (Dmax - Dmin)
- * introduce una distorsión no aditiva proporcional al número de aristas k. Dos rutas con la misma
- * distancia física total (por ejemplo, una arista de 200m frente a dos aristas de 100m con Dmin=100 y Dmax=200)
- * recibirían costos de distancia artificialmente dispares (1.0 vs 0.0), favoreciendo ilegítimamente la fragmentación.
  * La escala lineal D_norm(e) = D(e) / D_max preserva estrictamente la propiedad aditiva:
  *   Σ D_norm(e) = (1 / D_max) * Σ D(e) = D_total / D_max
  * garantizando comparabilidad uniforme, compatibilidad con la subestructura óptima de Dijkstra y con
  * la heurística local paso a paso de ACO.
  */
-class CostCalculator
+class CalculadorCosto
 {
     /**
      * Peso ponderado asignado al componente de distancia.
@@ -115,11 +110,11 @@ class CostCalculator
      *
      * C(e) = wD * (D / D_max) + wR * R_norm
      *
-     * @param Edge  $edge        Arista evaluada.
-     * @param float $maxDistance Distancia máxima para normalización.
+     * @param Arista $edge       Arista evaluada.
+     * @param float  $maxDistance Distancia máxima para normalización.
      * @return float Costo normalizado en [0.0, 1.0].
      */
-    public function calculateEdgeCost(Edge $edge, float $maxDistance): float
+    public function calculateEdgeCost(Arista $edge, float $maxDistance): float
     {
         $dNorm = $this->calculateNormalizedDistance($edge->getDistance(), $maxDistance);
         $rNorm = $edge->getRisk();
@@ -136,8 +131,8 @@ class CostCalculator
      * del modelo de riesgo integral de rutas del sistema IBC (la cual será articulada
      * posteriormente al integrar TramoRiskService).
      *
-     * @param Edge[] $edges       Secuencia consecutiva de aristas que forman la ruta.
-     * @param float  $maxDistance Cota superior para normalización de distancia.
+     * @param Arista[] $edges       Secuencia consecutiva de aristas que forman la ruta.
+     * @param float    $maxDistance Cota superior para normalización de distancia.
      * @return array{totalDistance: float, totalRisk: float, totalCost: float}
      */
     public function calculatePathMetrics(array $edges, float $maxDistance): array
@@ -162,12 +157,12 @@ class CostCalculator
     /**
      * Calcula el costo total de un camino dado como secuencia de nombres de nodos.
      *
-     * @param Graph      $graph       Grafo con la topología y distancias.
+     * @param Grafo      $graph       Grafo con la topología y distancias.
      * @param string[]   $path        Secuencia de nodos [origen, ..., destino].
      * @param float|null $maxDistance Cota superior opcional (se obtiene del grafo si es null).
      * @return float Costo total acumulado del camino.
      */
-    public function calculatePathCost(Graph $graph, array $path, ?float $maxDistance = null): float
+    public function calculatePathCost(Grafo $graph, array $path, ?float $maxDistance = null): float
     {
         if (count($path) <= 1) {
             return 0.0;

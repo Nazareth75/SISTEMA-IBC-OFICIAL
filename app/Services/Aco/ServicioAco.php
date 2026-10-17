@@ -39,12 +39,12 @@ use Random\Randomizer;
  * experimental de ACO no altere ni contamine el estado pseudoaleatorio global de otros componentes
  * del sistema, se utiliza \Random\Randomizer con un motor \Random\Engine\Mt19937 aislado por ejecución.
  */
-class AcoService
+class ServicioAco
 {
     /**
      * Configuración por defecto utilizada en ausencia de parámetros específicos.
      */
-    private AcoConfig $defaultConfig;
+    private ConfiguracionAco $defaultConfig;
 
     /**
      * Epsilon matemático para proteger heurística y depósitos contra división por cero.
@@ -59,30 +59,30 @@ class AcoService
     /**
      * Constructor del servicio ACO.
      *
-     * @param AcoConfig|null $config Configuración base opcional.
+     * @param ConfiguracionAco|null $config Configuración base opcional.
      */
-    public function __construct(?AcoConfig $config = null)
+    public function __construct(?ConfiguracionAco $config = null)
     {
-        $this->defaultConfig = $config ?? new AcoConfig();
+        $this->defaultConfig = $config ?? new ConfiguracionAco();
     }
 
     /**
      * Resuelve la ruta óptima/subóptima entre dos nodos del grafo mediante la colonia de hormigas.
      *
-     * @param Graph          $graph          Grafo dirigido con la red de tramos y costos.
-     * @param string         $startNode      Identificador del nodo origen.
-     * @param string         $targetNode     Identificador del nodo destino.
-     * @param AcoConfig|null $overrideConfig Configuración específica opcional para esta ejecución.
-     * @return AcoResult Resultado estructurado con métricas completas de la solución.
+     * @param Grafo                 $graph          Grafo dirigido con la red de tramos y costos.
+     * @param string                $startNode      Identificador del nodo origen.
+     * @param string                $targetNode     Identificador del nodo destino.
+     * @param ConfiguracionAco|null $overrideConfig Configuración específica opcional para esta ejecución.
+     * @return ResultadoAco Resultado estructurado con métricas completas de la solución.
      *
      * @throws InvalidArgumentException Si los identificadores de nodos son vacíos o inexistentes en el grafo.
      */
     public function solve(
-        Graph $graph,
+        Grafo $graph,
         string $startNode,
         string $targetNode,
-        ?AcoConfig $overrideConfig = null
-    ): AcoResult {
+        ?ConfiguracionAco $overrideConfig = null
+    ): ResultadoAco {
         $startTime = microtime(true);
         $config = $overrideConfig ?? $this->defaultConfig;
 
@@ -120,7 +120,7 @@ class AcoService
         // Caso trivial: Origen y destino son el mismo punto (costo cero, sin transitar aristas)
         if ($trimStart === $trimTarget) {
             $execTime = (microtime(true) - $startTime) * 1000.0;
-            return new AcoResult(
+            return new ResultadoAco(
                 success: true,
                 path: [$trimStart],
                 totalCost: 0.0,
@@ -137,7 +137,7 @@ class AcoService
         // Si el grafo no tiene aristas y origen != destino, el destino es inalcanzable de forma controlada
         if (empty($allEdges)) {
             $execTime = (microtime(true) - $startTime) * 1000.0;
-            return new AcoResult(
+            return new ResultadoAco(
                 success: false,
                 executionTimeMs: $execTime,
                 bestCostHistory: array_fill(0, $config->iterations, 0.0)
@@ -145,7 +145,7 @@ class AcoService
         }
 
         $maxDistance = $graph->getMaxDistance();
-        $costCalc = new CostCalculator($config->wDistance, $config->wRisk);
+        $costCalc = new CalculadorCosto($config->wDistance, $config->wRisk);
 
         // Inicialización homogénea de feromona tau en todas las aristas
         $pheromones = [];
@@ -325,14 +325,14 @@ class AcoService
 
         // Si no se encontró ningún camino factible hacia el destino
         if ($globalBestCost === INF) {
-            return new AcoResult(
+            return new ResultadoAco(
                 success: false,
                 executionTimeMs: $execTime,
                 bestCostHistory: $bestCostHistory
             );
         }
 
-        return new AcoResult(
+        return new ResultadoAco(
             success: true,
             path: $globalBestPath,
             totalCost: $globalBestCost,

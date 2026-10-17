@@ -18,7 +18,7 @@ use InvalidArgumentException;
  * Por ello, la estructura es explícitamente dirigida. Para modelar una calle bidireccional,
  * deben agregarse dos aristas independientes (A->B y B->A).
  */
-class Graph
+class Grafo
 {
     /**
      * Conjunto de identificadores de nodos registrados en el grafo.
@@ -29,16 +29,16 @@ class Graph
     private array $nodes = [];
 
     /**
-     * Lista de adyacencia dirigida saliente: [id_nodo_origen => Edge[]].
+     * Lista de adyacencia dirigida saliente: [id_nodo_origen => Arista[]].
      *
-     * @var array<string, array<Edge>>
+     * @var array<string, array<Arista>>
      */
     private array $adjacencyList = [];
 
     /**
      * Índice de aristas indexadas unívocamente por su clave compuesta ("origen->destino").
      *
-     * @var array<string, Edge>
+     * @var array<string, Arista>
      */
     private array $edgesById = [];
 
@@ -73,12 +73,12 @@ class Graph
      * Detecta y rechaza explícitamente aristas duplicadas con el mismo origen y destino,
      * garantizando la unicidad y coherencia de las conexiones topológicas.
      *
-     * @param Edge $edge Instancia válida de arista.
+     * @param Arista $edge Instancia válida de arista.
      * @return self
      *
      * @throws InvalidArgumentException Si ya existe una arista registrada con el mismo id.
      */
-    public function addEdge(Edge $edge): self
+    public function addEdge(Arista $edge): self
     {
         $edgeId = $edge->getId();
 
@@ -131,7 +131,7 @@ class Graph
     /**
      * Retorna la lista de todas las aristas dirigidas registradas en el grafo.
      *
-     * @return Edge[]
+     * @return Arista[]
      */
     public function getEdges(): array
     {
@@ -163,7 +163,7 @@ class Graph
      * Retorna todas las aristas dirigidas salientes desde un nodo específico.
      *
      * @param string $node Identificador del nodo origen.
-     * @return Edge[]
+     * @return Arista[]
      */
     public function getOutgoingEdges(string $node): array
     {
@@ -175,9 +175,9 @@ class Graph
      *
      * @param string $from Nodo origen.
      * @param string $to   Nodo destino.
-     * @return Edge|null La instancia de Edge o null si no existe conexión directa.
+     * @return Arista|null La instancia de Arista o null si no existe conexión directa.
      */
-    public function getEdge(string $from, string $to): ?Edge
+    public function getEdge(string $from, string $to): ?Arista
     {
         return $this->edgesById[trim($from) . '->' . trim($to)] ?? null;
     }

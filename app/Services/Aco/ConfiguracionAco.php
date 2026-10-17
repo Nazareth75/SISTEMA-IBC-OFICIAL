@@ -18,7 +18,7 @@ use InvalidArgumentException;
  * - wDistance y wRisk: Pesos de la función objetivo de optimización que definen el balance
  *   de preferencias entre minimizar la longitud del trayecto y maximizar la seguridad peatonal.
  */
-class AcoConfig
+class ConfiguracionAco
 {
     /**
      * Coeficiente de influencia de la feromona (alpha >= 0.0).
@@ -77,7 +77,7 @@ class AcoConfig
 
     /**
      * Semilla pseudo-aleatoria para garantizar reproducibilidad experimental (opcional).
-     * Si es null, el algoritmo opera con aleatoriedad estándar de la plataforma.
+     * Si es null, el algoritmo opera con un motor aleatorio no fijado.
      */
     public ?int $seed;
 
