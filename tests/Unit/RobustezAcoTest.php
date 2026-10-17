@@ -2,12 +2,12 @@
 
 namespace Tests\Unit;
 
-use App\Services\Aco\AcoConfig;
-use App\Services\Aco\AcoExperimentService;
-use App\Services\Aco\AcoService;
-use App\Services\Aco\CostCalculator;
-use App\Services\Aco\Edge;
-use App\Services\Aco\Graph;
+use App\Services\Aco\Arista;
+use App\Services\Aco\CalculadorCosto;
+use App\Services\Aco\ConfiguracionAco;
+use App\Services\Aco\Grafo;
+use App\Services\Aco\ServicioAco;
+use App\Services\Aco\ServicioExperimentosAco;
 use InvalidArgumentException;
 use Tests\TestCase;
 
@@ -20,7 +20,7 @@ use Tests\TestCase;
  * verificar la solidez de las invariantes y confirmar que ningún error se propaga en silencio
  * ni produce divisiones por cero, NaN o bucles infinitos.
  */
-class AcoRobustnessTest extends TestCase
+class RobustezAcoTest extends TestCase
 {
     // ==========================================
     // 1. TOPOLOGÍA Y GRAFOS INVÁLIDOS
@@ -28,8 +28,8 @@ class AcoRobustnessTest extends TestCase
 
     public function test_empty_graph_throws_exception_on_solve(): void
     {
-        $graph = new Graph();
-        $service = new AcoService();
+        $graph = new Grafo();
+        $service = new ServicioAco();
 
         $this->expectException(InvalidArgumentException::class);
         $service->solve($graph, 'ORIGEN', 'DESTINO');
@@ -37,11 +37,11 @@ class AcoRobustnessTest extends TestCase
 
     public function test_empty_edges_returns_failure_cleanly_when_nodes_exist(): void
     {
-        $graph = new Graph();
+        $graph = new Grafo();
         $graph->addNode('ORIGEN');
         $graph->addNode('DESTINO');
 
-        $service = new AcoService();
+        $service = new ServicioAco();
         $result = $service->solve($graph, 'ORIGEN', 'DESTINO');
 
         $this->assertFalse($result->success);
@@ -51,9 +51,9 @@ class AcoRobustnessTest extends TestCase
 
     public function test_non_existent_start_node_throws_exception(): void
     {
-        $graph = new Graph();
+        $graph = new Grafo();
         $graph->addNode('DESTINO');
-        $service = new AcoService();
+        $service = new ServicioAco();
 
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("El nodo origen 'FANTASMA' no existe");
@@ -62,9 +62,9 @@ class AcoRobustnessTest extends TestCase
 
     public function test_non_existent_target_node_throws_exception(): void
     {
-        $graph = new Graph();
+        $graph = new Grafo();
         $graph->addNode('ORIGEN');
-        $service = new AcoService();
+        $service = new ServicioAco();
 
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("El nodo destino 'INEXISTENTE' no existe");
@@ -73,16 +73,16 @@ class AcoRobustnessTest extends TestCase
 
     public function test_empty_node_names_rejected_in_graph(): void
     {
-        $graph = new Graph();
+        $graph = new Grafo();
         $this->expectException(InvalidArgumentException::class);
         $graph->addNode('   ');
     }
 
     public function test_duplicate_edges_in_graph_throws_exception(): void
     {
-        $graph = new Graph();
-        $edge1 = new Edge('A', 'B', 100.0, 0.2);
-        $edge2 = new Edge('A', 'B', 150.0, 0.4);
+        $graph = new Grafo();
+        $edge1 = new Arista('A', 'B', 100.0, 0.2);
+        $edge2 = new Arista('A', 'B', 150.0, 0.4);
 
         $graph->addEdge($edge1);
 
@@ -98,72 +98,72 @@ class AcoRobustnessTest extends TestCase
     public function test_edge_with_empty_from_throws_exception(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        new Edge('', 'B', 100.0, 0.2);
+        new Arista('', 'B', 100.0, 0.2);
     }
 
     public function test_edge_with_empty_to_throws_exception(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        new Edge('A', '   ', 100.0, 0.2);
+        new Arista('A', '   ', 100.0, 0.2);
     }
 
     public function test_edge_self_loop_throws_exception(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("no puede conectar un nodo consigo mismo");
-        new Edge('MISMO_NODO', 'MISMO_NODO', 100.0, 0.2);
+        new Arista('MISMO_NODO', 'MISMO_NODO', 100.0, 0.2);
     }
 
     public function test_edge_negative_distance_throws_exception(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("estrictamente positiva");
-        new Edge('A', 'B', -50.0, 0.2);
+        new Arista('A', 'B', -50.0, 0.2);
     }
 
     public function test_edge_zero_distance_throws_exception(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("estrictamente positiva");
-        new Edge('A', 'B', 0.0, 0.2);
+        new Arista('A', 'B', 0.0, 0.2);
     }
 
     public function test_edge_negative_risk_throws_exception(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("intervalo cerrado [0.0, 1.0]");
-        new Edge('A', 'B', 100.0, -0.1);
+        new Arista('A', 'B', 100.0, -0.1);
     }
 
     public function test_edge_risk_greater_than_one_throws_exception(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("intervalo cerrado [0.0, 1.0]");
-        new Edge('A', 'B', 100.0, 1.05);
+        new Arista('A', 'B', 100.0, 1.05);
     }
 
     public function test_edge_nan_distance_throws_exception(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        new Edge('A', 'B', NAN, 0.5);
+        new Arista('A', 'B', NAN, 0.5);
     }
 
     public function test_edge_infinite_distance_throws_exception(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        new Edge('A', 'B', INF, 0.5);
+        new Arista('A', 'B', INF, 0.5);
     }
 
     public function test_edge_nan_risk_throws_exception(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        new Edge('A', 'B', 100.0, NAN);
+        new Arista('A', 'B', 100.0, NAN);
     }
 
     public function test_edge_infinite_risk_throws_exception(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        new Edge('A', 'B', 100.0, INF);
+        new Arista('A', 'B', 100.0, INF);
     }
 
     // ==========================================
@@ -173,36 +173,36 @@ class AcoRobustnessTest extends TestCase
     public function test_negative_w_distance_throws_exception(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        new CostCalculator(-0.2, 1.2);
+        new CalculadorCosto(-0.2, 1.2);
     }
 
     public function test_negative_w_risk_throws_exception(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        new CostCalculator(1.1, -0.1);
+        new CalculadorCosto(1.1, -0.1);
     }
 
     public function test_weights_sum_not_one_throws_exception(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        new CostCalculator(0.6, 0.6); // 1.2 != 1.0
+        new CalculadorCosto(0.6, 0.6); // 1.2 != 1.0
     }
 
     public function test_nan_weights_throw_exception(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        new CostCalculator(NAN, 0.5);
+        new CalculadorCosto(NAN, 0.5);
     }
 
     public function test_infinite_weights_throw_exception(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        new CostCalculator(INF, 0.5);
+        new CalculadorCosto(INF, 0.5);
     }
 
     public function test_normalizer_division_by_zero_protection_when_max_is_zero(): void
     {
-        $calc = new CostCalculator(0.5, 0.5);
+        $calc = new CalculadorCosto(0.5, 0.5);
         $norm = $calc->calculateNormalizedDistance(100.0, 0.0);
         $this->assertEquals(0.0, $norm);
         $this->assertFalse(is_nan($norm));
@@ -210,91 +210,91 @@ class AcoRobustnessTest extends TestCase
     }
 
     // ==========================================
-    // 4. CONFIGURACIÓN ACO INVÁLIDA (AcoConfig)
+    // 4. CONFIGURACIÓN ACO INVÁLIDA (ConfiguracionAco)
     // ==========================================
 
     public function test_negative_alpha_throws_exception(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        new AcoConfig(alpha: -1.0);
+        new ConfiguracionAco(alpha: -1.0);
     }
 
     public function test_negative_beta_throws_exception(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        new AcoConfig(beta: -0.5);
+        new ConfiguracionAco(beta: -0.5);
     }
 
     public function test_rho_negative_throws_exception(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        new AcoConfig(rho: -0.01);
+        new ConfiguracionAco(rho: -0.01);
     }
 
     public function test_rho_greater_than_one_throws_exception(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        new AcoConfig(rho: 1.01);
+        new ConfiguracionAco(rho: 1.01);
     }
 
     public function test_q_zero_or_negative_throws_exception(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        new AcoConfig(Q: 0.0);
+        new ConfiguracionAco(Q: 0.0);
     }
 
     public function test_zero_ants_throws_exception(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        new AcoConfig(ants: 0);
+        new ConfiguracionAco(ants: 0);
     }
 
     public function test_negative_ants_throws_exception(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        new AcoConfig(ants: -5);
+        new ConfiguracionAco(ants: -5);
     }
 
     public function test_zero_iterations_throws_exception(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        new AcoConfig(iterations: 0);
+        new ConfiguracionAco(iterations: 0);
     }
 
     public function test_negative_iterations_throws_exception(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        new AcoConfig(iterations: -10);
+        new ConfiguracionAco(iterations: -10);
     }
 
     public function test_zero_or_negative_initial_pheromone_throws_exception(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        new AcoConfig(initialPheromone: 0.0);
+        new ConfiguracionAco(initialPheromone: 0.0);
     }
 
     public function test_negative_convergence_epsilon_throws_exception(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        new AcoConfig(convergenceEpsilon: -0.001);
+        new ConfiguracionAco(convergenceEpsilon: -0.001);
     }
 
     public function test_zero_or_negative_patience_throws_exception(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        new AcoConfig(convergencePatience: 0);
+        new ConfiguracionAco(convergencePatience: 0);
     }
 
     public function test_nan_in_config_floats_throws_exception(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        new AcoConfig(alpha: NAN);
+        new ConfiguracionAco(alpha: NAN);
     }
 
     public function test_inf_in_config_floats_throws_exception(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        new AcoConfig(Q: INF);
+        new ConfiguracionAco(Q: INF);
     }
 
     // ==========================================
@@ -303,37 +303,37 @@ class AcoRobustnessTest extends TestCase
 
     public function test_gap_calculation_returns_null_when_ref_cost_is_zero(): void
     {
-        $gap1 = AcoExperimentService::calculateGap(0.0, 0.0);
+        $gap1 = ServicioExperimentosAco::calculateGap(0.0, 0.0);
         $this->assertNull($gap1, "Gap con C_ref=0 debe ser null (indefinido)");
 
-        $gap2 = AcoExperimentService::calculateGap(1.5, 0.0);
+        $gap2 = ServicioExperimentosAco::calculateGap(1.5, 0.0);
         $this->assertNull($gap2, "Gap con C_ref=0 debe ser null (indefinido)");
     }
 
     public function test_coefficient_of_variation_returns_null_when_mean_is_zero(): void
     {
-        $cv = AcoExperimentService::calculateCoefficientOfVariation(0.0, 0.0);
+        $cv = ServicioExperimentosAco::calculateCoefficientOfVariation(0.0, 0.0);
         $this->assertNull($cv, "CV con media=0 debe ser null (indefinido)");
     }
 
     public function test_risk_reduction_returns_null_when_shortest_risk_is_zero(): void
     {
-        $rr = AcoExperimentService::calculateRiskReduction(0.0, 0.0);
+        $rr = ServicioExperimentosAco::calculateRiskReduction(0.0, 0.0);
         $this->assertNull($rr, "Reducción de riesgo con R_corta=0 debe ser null (indefinido)");
     }
 
     public function test_distance_increase_returns_null_when_shortest_distance_is_zero(): void
     {
-        $id = AcoExperimentService::calculateDistanceIncrease(0.0, 0.0);
+        $id = ServicioExperimentosAco::calculateDistanceIncrease(0.0, 0.0);
         $this->assertNull($id, "Incremento de distancia con D_corta=0 debe ser null (indefinido)");
     }
 
     public function test_experiment_service_rejects_zero_or_negative_runs_count(): void
     {
-        $graph = new Graph();
-        $graph->addEdge(new Edge('A', 'B', 10.0, 0.1));
-        $config = new AcoConfig();
-        $expService = new AcoExperimentService();
+        $graph = new Grafo();
+        $graph->addEdge(new Arista('A', 'B', 10.0, 0.1));
+        $config = new ConfiguracionAco();
+        $expService = new ServicioExperimentosAco();
 
         $this->expectException(InvalidArgumentException::class);
         $expService->runExperiment($graph, 'A', 'B', $config, runsCount: 0);
@@ -345,12 +345,12 @@ class AcoRobustnessTest extends TestCase
 
     public function test_extremely_large_distances_do_not_overflow(): void
     {
-        $graph = new Graph();
-        $graph->addEdge(new Edge('ORIGEN', 'N1', 1e8, 0.1));
-        $graph->addEdge(new Edge('N1', 'DESTINO', 2e8, 0.2));
+        $graph = new Grafo();
+        $graph->addEdge(new Arista('ORIGEN', 'N1', 1e8, 0.1));
+        $graph->addEdge(new Arista('N1', 'DESTINO', 2e8, 0.2));
 
-        $config = new AcoConfig(seed: 42, iterations: 5, ants: 3);
-        $service = new AcoService();
+        $config = new ConfiguracionAco(seed: 42, iterations: 5, ants: 3);
+        $service = new ServicioAco();
 
         $result = $service->solve($graph, 'ORIGEN', 'DESTINO', $config);
 
@@ -363,13 +363,13 @@ class AcoRobustnessTest extends TestCase
     public function test_all_ants_stuck_in_dead_ends_terminates_gracefully(): void
     {
         // Grafo donde desde ORIGEN sólo hay un callejón sin salida y no existe camino a DESTINO
-        $graph = new Graph();
-        $graph->addEdge(new Edge('ORIGEN', 'DEAD_1', 100.0, 0.1));
-        $graph->addEdge(new Edge('DEAD_1', 'DEAD_2', 100.0, 0.1));
+        $graph = new Grafo();
+        $graph->addEdge(new Arista('ORIGEN', 'DEAD_1', 100.0, 0.1));
+        $graph->addEdge(new Arista('DEAD_1', 'DEAD_2', 100.0, 0.1));
         $graph->addNode('DESTINO');
 
-        $config = new AcoConfig(seed: 42, iterations: 10, ants: 5);
-        $service = new AcoService();
+        $config = new ConfiguracionAco(seed: 42, iterations: 10, ants: 5);
+        $service = new ServicioAco();
 
         $result = $service->solve($graph, 'ORIGEN', 'DESTINO', $config);
 

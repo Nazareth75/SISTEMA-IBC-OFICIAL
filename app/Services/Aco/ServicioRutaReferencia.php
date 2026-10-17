@@ -18,30 +18,30 @@ use InvalidArgumentException;
  * pesos (wD, wR) que el motor ACO, garantizando la validez científica y comparabilidad directa.
  *
  * NOTA SOBRE EL RIESGO TOTAL:
- * Al igual que en AcoService, totalRisk suma temporalmente los riesgos de las aristas
+ * Al igual que en ServicioAco, totalRisk suma temporalmente los riesgos de las aristas
  * como agregación experimental para benchmarking y NO como la fórmula definitiva del modelo IBC.
  */
-class ReferenceShortestPathService
+class ServicioRutaReferencia
 {
     /**
      * Resuelve el camino de costo mínimo global determinista mediante el algoritmo de Dijkstra.
      *
-     * @param Graph  $graph      Grafo dirigido con la red de tramos.
+     * @param Grafo  $graph      Grafo dirigido con la red de tramos.
      * @param string $startNode  Identificador del nodo origen.
      * @param string $targetNode Identificador del nodo destino.
      * @param float  $wDistance  Ponderación asignada a la distancia (>= 0.0).
      * @param float  $wRisk      Ponderación asignada al riesgo (>= 0.0).
-     * @return AcoResult Resultado estructurado con la solución óptima determinista.
+     * @return ResultadoAco Resultado estructurado con la solución óptima determinista.
      *
      * @throws InvalidArgumentException Si los nodos son inválidos o no existen en el grafo.
      */
     public function solve(
-        Graph $graph,
+        Grafo $graph,
         string $startNode,
         string $targetNode,
         float $wDistance = 0.5,
         float $wRisk = 0.5
-    ): AcoResult {
+    ): ResultadoAco {
         $startTime = microtime(true);
 
         $trimStart = trim($startNode);
@@ -64,13 +64,13 @@ class ReferenceShortestPathService
         }
 
         // Instanciar el calculador de costo con los mismos pesos y normalización
-        $costCalc = new CostCalculator($wDistance, $wRisk);
+        $costCalc = new CalculadorCosto($wDistance, $wRisk);
         $maxDistance = $graph->getMaxDistance();
 
         // Caso trivial: Origen == Destino
         if ($trimStart === $trimTarget) {
             $execTime = (microtime(true) - $startTime) * 1000.0;
-            return new AcoResult(
+            return new ResultadoAco(
                 success: true,
                 path: [$trimStart],
                 totalCost: 0.0,
@@ -140,7 +140,7 @@ class ReferenceShortestPathService
         // Si el destino permanece con distancia infinita, es inalcanzable
         if ($dist[$trimTarget] === INF) {
             $execTime = (microtime(true) - $startTime) * 1000.0;
-            return new AcoResult(
+            return new ResultadoAco(
                 success: false,
                 executionTimeMs: $execTime
             );
@@ -161,7 +161,7 @@ class ReferenceShortestPathService
         $metrics = $costCalc->calculatePathMetrics($edges, $maxDistance);
         $execTime = (microtime(true) - $startTime) * 1000.0;
 
-        return new AcoResult(
+        return new ResultadoAco(
             success: true,
             path: $path,
             totalCost: $metrics['totalCost'],

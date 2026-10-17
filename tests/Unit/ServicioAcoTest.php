@@ -2,16 +2,16 @@
 
 namespace Tests\Unit;
 
-use App\Services\Aco\AcoConfig;
-use App\Services\Aco\AcoExperimentService;
-use App\Services\Aco\AcoResult;
-use App\Services\Aco\AcoService;
-use App\Services\Aco\CostCalculator;
-use App\Services\Aco\Edge;
-use App\Services\Aco\Graph;
-use App\Services\Aco\ReferenceShortestPathService;
+use App\Services\Aco\Arista;
+use App\Services\Aco\CalculadorCosto;
+use App\Services\Aco\ConfiguracionAco;
+use App\Services\Aco\Grafo;
+use App\Services\Aco\ResultadoAco;
+use App\Services\Aco\ServicioAco;
+use App\Services\Aco\ServicioExperimentosAco;
+use App\Services\Aco\ServicioRutaReferencia;
 use InvalidArgumentException;
-use Tests\Fixtures\AcoGraphFixtures;
+use Tests\Fixtures\EscenariosGrafoAco;
 use Tests\TestCase;
 
 /**
@@ -20,16 +20,16 @@ use Tests\TestCase;
  * Esta suite valida el comportamiento del aporte ingenieril sobre grafos sintéticos
  * controlados, garantizando exactitud matemática, estabilidad algorítmica y reproducibilidad.
  */
-class AcoServiceTest extends TestCase
+class ServicioAcoTest extends TestCase
 {
     /**
      * Test A: ACO encuentra una ruta válida en un grafo simple.
      */
     public function test_A_finds_valid_route(): void
     {
-        $graph = AcoGraphFixtures::createSinglePathGraph();
-        $config = new AcoConfig(seed: 42, iterations: 10, ants: 5);
-        $service = new AcoService();
+        $graph = EscenariosGrafoAco::createSinglePathGraph();
+        $config = new ConfiguracionAco(seed: 42, iterations: 10, ants: 5);
+        $service = new ServicioAco();
 
         $result = $service->solve($graph, 'ORIGEN', 'DESTINO', $config);
 
@@ -44,9 +44,9 @@ class AcoServiceTest extends TestCase
      */
     public function test_B_origin_equals_destination_produces_trivial_route(): void
     {
-        $graph = AcoGraphFixtures::createSinglePathGraph();
-        $config = new AcoConfig(iterations: 10, ants: 5);
-        $service = new AcoService();
+        $graph = EscenariosGrafoAco::createSinglePathGraph();
+        $config = new ConfiguracionAco(iterations: 10, ants: 5);
+        $service = new ServicioAco();
 
         $result = $service->solve($graph, 'ORIGEN', 'ORIGEN', $config);
 
@@ -64,9 +64,9 @@ class AcoServiceTest extends TestCase
      */
     public function test_C_unreachable_destination_returns_failure_gracefully(): void
     {
-        $graph = AcoGraphFixtures::createUnreachableGraph();
-        $config = new AcoConfig(iterations: 15, ants: 10, seed: 123);
-        $service = new AcoService();
+        $graph = EscenariosGrafoAco::createUnreachableGraph();
+        $config = new ConfiguracionAco(iterations: 15, ants: 10, seed: 123);
+        $service = new ServicioAco();
 
         $result = $service->solve($graph, 'ORIGEN', 'DESTINO', $config);
 
@@ -81,9 +81,9 @@ class AcoServiceTest extends TestCase
      */
     public function test_D_cycle_prevention_avoids_infinite_loops(): void
     {
-        $graph = AcoGraphFixtures::createCyclicGraph();
-        $config = new AcoConfig(seed: 99, iterations: 20, ants: 10);
-        $service = new AcoService();
+        $graph = EscenariosGrafoAco::createCyclicGraph();
+        $config = new ConfiguracionAco(seed: 99, iterations: 20, ants: 10);
+        $service = new ServicioAco();
 
         $result = $service->solve($graph, 'ORIGEN', 'DESTINO', $config);
 
@@ -102,9 +102,9 @@ class AcoServiceTest extends TestCase
      */
     public function test_E_total_distance_matches_edge_sum(): void
     {
-        $graph = AcoGraphFixtures::createSmallGraph();
-        $config = new AcoConfig(seed: 42, iterations: 20, ants: 10);
-        $service = new AcoService();
+        $graph = EscenariosGrafoAco::createSmallGraph();
+        $config = new ConfiguracionAco(seed: 42, iterations: 20, ants: 10);
+        $service = new ServicioAco();
 
         $result = $service->solve($graph, 'ORIGEN', 'DESTINO', $config);
         $this->assertTrue($result->success);
@@ -124,9 +124,9 @@ class AcoServiceTest extends TestCase
      */
     public function test_F_total_risk_matches_edge_sum(): void
     {
-        $graph = AcoGraphFixtures::createSmallGraph();
-        $config = new AcoConfig(seed: 42, iterations: 20, ants: 10);
-        $service = new AcoService();
+        $graph = EscenariosGrafoAco::createSmallGraph();
+        $config = new ConfiguracionAco(seed: 42, iterations: 20, ants: 10);
+        $service = new ServicioAco();
 
         $result = $service->solve($graph, 'ORIGEN', 'DESTINO', $config);
         $this->assertTrue($result->success);
@@ -142,18 +142,18 @@ class AcoServiceTest extends TestCase
     }
 
     /**
-     * Test G: Costo total coincide exactamente con la suma de costos calculada por CostCalculator.
+     * Test G: Costo total coincide exactamente con la suma de costos calculada por CalculadorCosto.
      */
     public function test_G_total_cost_matches_cost_calculator(): void
     {
-        $graph = AcoGraphFixtures::createSmallGraph();
-        $config = new AcoConfig(wDistance: 0.6, wRisk: 0.4, seed: 42, iterations: 20, ants: 10);
-        $service = new AcoService();
+        $graph = EscenariosGrafoAco::createSmallGraph();
+        $config = new ConfiguracionAco(wDistance: 0.6, wRisk: 0.4, seed: 42, iterations: 20, ants: 10);
+        $service = new ServicioAco();
 
         $result = $service->solve($graph, 'ORIGEN', 'DESTINO', $config);
         $this->assertTrue($result->success);
 
-        $calc = new CostCalculator(0.6, 0.4);
+        $calc = new CalculadorCosto(0.6, 0.4);
         $expectedCost = $calc->calculatePathCost($graph, $result->path);
 
         $this->assertEqualsWithDelta($expectedCost, $result->totalCost, 1e-4);
@@ -164,9 +164,9 @@ class AcoServiceTest extends TestCase
      */
     public function test_H_pheromone_evaporation(): void
     {
-        $graph = AcoGraphFixtures::createSinglePathGraph();
-        $config = new AcoConfig(rho: 0.5, iterations: 5, ants: 2, seed: 1);
-        $service = new AcoService();
+        $graph = EscenariosGrafoAco::createSinglePathGraph();
+        $config = new ConfiguracionAco(rho: 0.5, iterations: 5, ants: 2, seed: 1);
+        $service = new ServicioAco();
 
         $result = $service->solve($graph, 'ORIGEN', 'DESTINO', $config);
 
@@ -179,9 +179,9 @@ class AcoServiceTest extends TestCase
      */
     public function test_I_pheromone_deposit(): void
     {
-        $graph = AcoGraphFixtures::createAlternativePathsGraph();
-        $config = new AcoConfig(Q: 200.0, iterations: 10, ants: 5, seed: 10);
-        $service = new AcoService();
+        $graph = EscenariosGrafoAco::createAlternativePathsGraph();
+        $config = new ConfiguracionAco(Q: 200.0, iterations: 10, ants: 5, seed: 10);
+        $service = new ServicioAco();
 
         $result = $service->solve($graph, 'ORIGEN', 'DESTINO', $config);
 
@@ -197,10 +197,10 @@ class AcoServiceTest extends TestCase
      */
     public function test_J_same_seed_reproduces_exact_solution(): void
     {
-        $graph = AcoGraphFixtures::createSmallGraph();
-        $config1 = new AcoConfig(seed: 9999, iterations: 30, ants: 10);
-        $config2 = new AcoConfig(seed: 9999, iterations: 30, ants: 10);
-        $service = new AcoService();
+        $graph = EscenariosGrafoAco::createSmallGraph();
+        $config1 = new ConfiguracionAco(seed: 9999, iterations: 30, ants: 10);
+        $config2 = new ConfiguracionAco(seed: 9999, iterations: 30, ants: 10);
+        $service = new ServicioAco();
 
         $res1 = $service->solve($graph, 'ORIGEN', 'DESTINO', $config1);
         $res2 = $service->solve($graph, 'ORIGEN', 'DESTINO', $config2);
@@ -222,7 +222,7 @@ class AcoServiceTest extends TestCase
     public function test_K_invalid_weights_rejected(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        new AcoConfig(wDistance: 0.7, wRisk: 0.5); // Suma 1.2 != 1.0
+        new ConfiguracionAco(wDistance: 0.7, wRisk: 0.5); // Suma 1.2 != 1.0
     }
 
     /**
@@ -231,7 +231,7 @@ class AcoServiceTest extends TestCase
     public function test_L_invalid_aco_params_rejected(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        new AcoConfig(rho: 1.5); // rho debe estar en [0.0, 1.0]
+        new ConfiguracionAco(rho: 1.5); // rho debe estar en [0.0, 1.0]
     }
 
     /**
@@ -239,15 +239,15 @@ class AcoServiceTest extends TestCase
      */
     public function test_M_weight_changes_favor_distance_or_risk(): void
     {
-        $graph = AcoGraphFixtures::createComplexGraph();
-        $service = new AcoService();
+        $graph = EscenariosGrafoAco::createComplexGraph();
+        $service = new ServicioAco();
 
         // Favorecer Distancia (wD = 0.85, wR = 0.15) -> Corredor Norte más corto (420m)
-        $configDistance = new AcoConfig(wDistance: 0.85, wRisk: 0.15, seed: 42, iterations: 60, ants: 25);
+        $configDistance = new ConfiguracionAco(wDistance: 0.85, wRisk: 0.15, seed: 42, iterations: 60, ants: 25);
         $resDistance = $service->solve($graph, 'ORIGEN', 'DESTINO', $configDistance);
 
         // Favorecer Seguridad (wD = 0.15, wR = 0.85) -> Corredor Sur más seguro (riesgo 0.25)
-        $configRisk = new AcoConfig(wDistance: 0.15, wRisk: 0.85, seed: 42, iterations: 60, ants: 25);
+        $configRisk = new ConfiguracionAco(wDistance: 0.15, wRisk: 0.85, seed: 42, iterations: 60, ants: 25);
         $resRisk = $service->solve($graph, 'ORIGEN', 'DESTINO', $configRisk);
 
         $this->assertTrue($resDistance->success);
@@ -263,9 +263,9 @@ class AcoServiceTest extends TestCase
      */
     public function test_N_convergence_is_recorded(): void
     {
-        $graph = AcoGraphFixtures::createSmallGraph();
-        $config = new AcoConfig(seed: 42, iterations: 40, ants: 15, convergenceEpsilon: 1e-4, convergencePatience: 5);
-        $service = new AcoService();
+        $graph = EscenariosGrafoAco::createSmallGraph();
+        $config = new ConfiguracionAco(seed: 42, iterations: 40, ants: 15, convergenceEpsilon: 1e-4, convergencePatience: 5);
+        $service = new ServicioAco();
 
         $result = $service->solve($graph, 'ORIGEN', 'DESTINO', $config);
 
@@ -281,9 +281,9 @@ class AcoServiceTest extends TestCase
      */
     public function test_O_best_cost_history_never_worsens(): void
     {
-        $graph = AcoGraphFixtures::createSmallGraph();
-        $config = new AcoConfig(seed: 42, iterations: 25, ants: 10);
-        $service = new AcoService();
+        $graph = EscenariosGrafoAco::createSmallGraph();
+        $config = new ConfiguracionAco(seed: 42, iterations: 25, ants: 10);
+        $service = new ServicioAco();
 
         $result = $service->solve($graph, 'ORIGEN', 'DESTINO', $config);
 
@@ -309,8 +309,8 @@ class AcoServiceTest extends TestCase
      */
     public function test_P_deterministic_reference_finds_minimum_cost(): void
     {
-        $graph = AcoGraphFixtures::createSmallGraph();
-        $refService = new ReferenceShortestPathService();
+        $graph = EscenariosGrafoAco::createSmallGraph();
+        $refService = new ServicioRutaReferencia();
 
         $refResult = $refService->solve($graph, 'ORIGEN', 'DESTINO', 0.5, 0.5);
 
@@ -326,16 +326,16 @@ class AcoServiceTest extends TestCase
      */
     public function test_Q_aco_reaches_near_zero_gap_on_known_optimum(): void
     {
-        $graph = AcoGraphFixtures::createSmallGraph();
-        $refService = new ReferenceShortestPathService();
+        $graph = EscenariosGrafoAco::createSmallGraph();
+        $refService = new ServicioRutaReferencia();
         $refResult = $refService->solve($graph, 'ORIGEN', 'DESTINO', 0.5, 0.5);
 
-        $config = new AcoConfig(wDistance: 0.5, wRisk: 0.5, seed: 42, iterations: 35, ants: 15);
-        $acoService = new AcoService();
+        $config = new ConfiguracionAco(wDistance: 0.5, wRisk: 0.5, seed: 42, iterations: 35, ants: 15);
+        $acoService = new ServicioAco();
         $acoResult = $acoService->solve($graph, 'ORIGEN', 'DESTINO', $config);
 
         $this->assertTrue($acoResult->success);
-        $gap = AcoExperimentService::calculateGap($acoResult->totalCost, $refResult->totalCost);
+        $gap = ServicioExperimentosAco::calculateGap($acoResult->totalCost, $refResult->totalCost);
 
         $this->assertNotNull($gap);
         $this->assertLessThanOrEqual(0.001, $gap);
@@ -346,9 +346,9 @@ class AcoServiceTest extends TestCase
      */
     public function test_R_multiple_experiments_calculates_success_rate(): void
     {
-        $graph = AcoGraphFixtures::createSmallGraph();
-        $config = new AcoConfig(wDistance: 0.5, wRisk: 0.5, iterations: 10, ants: 5);
-        $expService = new AcoExperimentService();
+        $graph = EscenariosGrafoAco::createSmallGraph();
+        $config = new ConfiguracionAco(wDistance: 0.5, wRisk: 0.5, iterations: 10, ants: 5);
+        $expService = new ServicioExperimentosAco();
 
         $stats = $expService->runExperiment($graph, 'ORIGEN', 'DESTINO', $config, runsCount: 5);
 
@@ -364,9 +364,9 @@ class AcoServiceTest extends TestCase
      */
     public function test_S_calculates_mean_and_std_dev(): void
     {
-        $graph = AcoGraphFixtures::createSmallGraph();
-        $config = new AcoConfig(wDistance: 0.5, wRisk: 0.5, iterations: 10, ants: 5);
-        $expService = new AcoExperimentService();
+        $graph = EscenariosGrafoAco::createSmallGraph();
+        $config = new ConfiguracionAco(wDistance: 0.5, wRisk: 0.5, iterations: 10, ants: 5);
+        $expService = new ServicioExperimentosAco();
 
         $stats = $expService->runExperiment($graph, 'ORIGEN', 'DESTINO', $config, runsCount: 5);
 
@@ -381,9 +381,9 @@ class AcoServiceTest extends TestCase
      */
     public function test_T_calculates_coefficient_of_variation(): void
     {
-        $graph = AcoGraphFixtures::createSmallGraph();
-        $config = new AcoConfig(wDistance: 0.5, wRisk: 0.5, iterations: 10, ants: 5);
-        $expService = new AcoExperimentService();
+        $graph = EscenariosGrafoAco::createSmallGraph();
+        $config = new ConfiguracionAco(wDistance: 0.5, wRisk: 0.5, iterations: 10, ants: 5);
+        $expService = new ServicioExperimentosAco();
 
         $stats = $expService->runExperiment($graph, 'ORIGEN', 'DESTINO', $config, runsCount: 5);
 
@@ -400,8 +400,8 @@ class AcoServiceTest extends TestCase
      */
     public function test_U_equal_physical_distance_different_edge_count_not_biased(): void
     {
-        $graph = AcoGraphFixtures::createEqualDistanceDifferentEdgeCountGraph();
-        $calc = new CostCalculator(wDistance: 1.0, wRisk: 0.0); // Puramente distancia
+        $graph = EscenariosGrafoAco::createEqualDistanceDifferentEdgeCountGraph();
+        $calc = new CalculadorCosto(wDistance: 1.0, wRisk: 0.0); // Puramente distancia
         $maxD = $graph->getMaxDistance(); // 200.0
 
         // Ruta A: 1 arista de 200m
@@ -427,13 +427,13 @@ class AcoServiceTest extends TestCase
      */
     public function test_V_gap_with_zero_reference_cost_returns_null(): void
     {
-        $gapZero = AcoExperimentService::calculateGap(0.0, 0.0);
+        $gapZero = ServicioExperimentosAco::calculateGap(0.0, 0.0);
         $this->assertNull($gapZero, "Gap con C_ref=0 debe ser null (indefinido), no 0.0%");
 
-        $gapPositive = AcoExperimentService::calculateGap(1.5, 0.0);
+        $gapPositive = ServicioExperimentosAco::calculateGap(1.5, 0.0);
         $this->assertNull($gapPositive, "Gap con C_ref=0 debe ser null (indefinido)");
 
-        $validGap = AcoExperimentService::calculateGap(1.2, 1.0);
+        $validGap = ServicioExperimentosAco::calculateGap(1.2, 1.0);
         $this->assertEqualsWithDelta(20.0, $validGap, 1e-4);
     }
 
@@ -442,10 +442,10 @@ class AcoServiceTest extends TestCase
      */
     public function test_W_cv_with_zero_mean_returns_null(): void
     {
-        $cvZero = AcoExperimentService::calculateCoefficientOfVariation(0.0, 0.0);
+        $cvZero = ServicioExperimentosAco::calculateCoefficientOfVariation(0.0, 0.0);
         $this->assertNull($cvZero, "CV con media=0 debe ser null (indefinido)");
 
-        $cvValid = AcoExperimentService::calculateCoefficientOfVariation(0.1, 1.0);
+        $cvValid = ServicioExperimentosAco::calculateCoefficientOfVariation(0.1, 1.0);
         $this->assertEqualsWithDelta(10.0, $cvValid, 1e-4);
     }
 
@@ -454,10 +454,10 @@ class AcoServiceTest extends TestCase
      */
     public function test_X_m7_risk_reduction_with_zero_base_risk_returns_null(): void
     {
-        $rrZero = AcoExperimentService::calculateRiskReduction(0.0, 0.0);
+        $rrZero = ServicioExperimentosAco::calculateRiskReduction(0.0, 0.0);
         $this->assertNull($rrZero, "Reducción de riesgo con R_corta=0 debe ser null");
 
-        $rrValid = AcoExperimentService::calculateRiskReduction(1.0, 0.2);
+        $rrValid = ServicioExperimentosAco::calculateRiskReduction(1.0, 0.2);
         $this->assertEqualsWithDelta(80.0, $rrValid, 1e-4);
     }
 
@@ -466,10 +466,10 @@ class AcoServiceTest extends TestCase
      */
     public function test_Y_m8_distance_increase_with_zero_base_distance_returns_null(): void
     {
-        $idZero = AcoExperimentService::calculateDistanceIncrease(0.0, 0.0);
+        $idZero = ServicioExperimentosAco::calculateDistanceIncrease(0.0, 0.0);
         $this->assertNull($idZero, "Incremento de distancia con D_corta=0 debe ser null");
 
-        $idValid = AcoExperimentService::calculateDistanceIncrease(100.0, 150.0);
+        $idValid = ServicioExperimentosAco::calculateDistanceIncrease(100.0, 150.0);
         $this->assertEqualsWithDelta(50.0, $idValid, 1e-4);
     }
 
@@ -478,10 +478,10 @@ class AcoServiceTest extends TestCase
      */
     public function test_Z_same_seed_reproduces_algorithm_without_demanding_same_execution_time(): void
     {
-        $graph = AcoGraphFixtures::createSmallGraph();
-        $configA = new AcoConfig(seed: 777, iterations: 20, ants: 10);
-        $configB = new AcoConfig(seed: 777, iterations: 20, ants: 10);
-        $service = new AcoService();
+        $graph = EscenariosGrafoAco::createSmallGraph();
+        $configA = new ConfiguracionAco(seed: 777, iterations: 20, ants: 10);
+        $configB = new ConfiguracionAco(seed: 777, iterations: 20, ants: 10);
+        $service = new ServicioAco();
 
         $runA = $service->solve($graph, 'ORIGEN', 'DESTINO', $configA);
         $runB = $service->solve($graph, 'ORIGEN', 'DESTINO', $configB);
@@ -510,9 +510,9 @@ class AcoServiceTest extends TestCase
         mt_srand(123456);
 
         // Ejecutar ACO con semilla propia encapsulada
-        $graph = AcoGraphFixtures::createSmallGraph();
-        $config = new AcoConfig(seed: 987654, iterations: 10, ants: 5);
-        $service = new AcoService();
+        $graph = EscenariosGrafoAco::createSmallGraph();
+        $config = new ConfiguracionAco(seed: 987654, iterations: 10, ants: 5);
+        $service = new ServicioAco();
         $service->solve($graph, 'ORIGEN', 'DESTINO', $config);
 
         // La siguiente llamada a mt_rand() debe ser exactamente idéntica a $expectedNextRand

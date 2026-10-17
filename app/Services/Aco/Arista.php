@@ -14,9 +14,9 @@ use InvalidArgumentException;
  * Cada arista encapsula exclusivamente su topología (origen, destino) y sus
  * atributos físicos y de seguridad intrínsecos (distancia métrica y riesgo normalizado).
  * El costo de la arista NO se almacena aquí de forma estática, sino que es evaluado
- * dinámicamente por {@see CostCalculator} en función de los pesos experimentales (wD, wR).
+ * dinámicamente por {@see CalculadorCosto} en función de los pesos experimentales (wD, wR).
  */
-class Edge
+class Arista
 {
     /**
      * Identificador unívoco de la arista en formato "origen->destino".
