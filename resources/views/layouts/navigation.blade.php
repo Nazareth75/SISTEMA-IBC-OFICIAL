@@ -18,7 +18,9 @@
         </a>
     </div>
 
+    @if(strtoupper(Auth::user()->role?->nom_rol ?? '') === 'ADMINISTRADOR_NO_VIDENTE')
     <a href="{{ route('navegacion.index') }}" class="ibc-sidebar-link" style="padding:16px;font-weight:bold">NAVEGACIÓN ACCESIBLE</a>
+    @endif
     {{-- Menú --}}
     <nav class="flex-1 py-4 space-y-1 overflow-y-auto">
 

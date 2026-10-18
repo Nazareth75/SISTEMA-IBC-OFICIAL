@@ -49,6 +49,24 @@ class AsistenteRutaTest extends TestCase
             ->getJson(route('rutas.asistente', $ruta))->assertOk()
             ->assertJsonPath('nodos_seleccionados', $primera['nodos_seleccionados']);
         $this->get(route('rutas.index'))->assertOk()->assertSee('INICIAR ASISTENTE');
+        foreach (['ADMINISTRADOR' => false, 'ADMINISTRADOR_NO_VIDENTE' => true] as $nombreRol => $visible) {
+            $rolPrueba = Role::firstOrCreate(['nom_rol' => $nombreRol], ['act_rol' => true]);
+            $usuario->cod_roles_usu = $rolPrueba->getKey();
+            $usuario->save();
+            $usuario->unsetRelation('role');
+            $this->actingAs($usuario);
+            foreach (['rutas.index', 'rutas.show', 'rutas.edit'] as $pagina) {
+                $respuesta = $this->get(route($pagina, $pagina === 'rutas.index' ? [] : $ruta))->assertOk();
+                if ($visible) {
+                    $respuesta->assertSee('data-asistente-ruta', false)->assertSee('data-detener-asistente', false);
+                } else {
+                    $respuesta->assertDontSee('data-asistente-ruta', false)->assertDontSee('data-detener-asistente', false)
+                        ->assertDontSee('data-leer-rutas', false)->assertDontSee('js/asistente-rutas.js', false);
+                }
+            }
+            $this->get(route('rutas.index'))->assertSee('VER EVENTOS Y SOS DEL BASTÓN')->assertSee('mapa-catalogo-rutas');
+            $this->get(route('rutas.edit', $ruta))->assertSee('VER CAMINOS ACO Y TRAMOS GUARDADOS');
+        }
         $salida=storage_path('framework/testing');
         if(!is_dir($salida))mkdir($salida,0775,true);
         file_put_contents($salida.'/preview-rutas.html',$this->get(route('rutas.index'))->assertOk()->getContent());

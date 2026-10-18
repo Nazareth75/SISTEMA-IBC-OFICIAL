@@ -122,12 +122,16 @@
         <p class="mt-3 text-sm">ESTA VISTA PREVIA ESTIMA UN TRAYECTO. ACO COMPARA LOS CAMINOS DE LOS TRAMOS GUARDADOS EN LA FICHA DE LA RUTA.</p>
         @if(isset($ruta) && $ruta->exists)
             <div class="mt-3 flex flex-wrap gap-3" aria-label="Asistente hablado y caminos ACO">
-                <button type="button" data-asistente-ruta="{{ route('rutas.asistente',$ruta) }}" style="background:#166534;color:white;padding:14px;border-radius:8px">INICIAR ASISTENTE DE VOZ</button>
+                @if(strtoupper(Auth::user()->role?->nom_rol ?? '') === 'ADMINISTRADOR_NO_VIDENTE')
+<button type="button" data-asistente-ruta="{{ route('rutas.asistente',$ruta) }}" style="background:#166534;color:white;padding:14px;border-radius:8px">INICIAR ASISTENTE DE VOZ</button>
                 <button type="button" data-detener-asistente class="border rounded p-3">DETENER AUDIO</button>
+@endif
                 <a href="{{ route('rutas.show',$ruta) }}#mapa-detalle-ruta" class="underline p-3">VER CAMINOS ACO Y TRAMOS GUARDADOS</a>
             </div>
-            <p id="estado-asistente-rutas" role="status" aria-live="polite" class="mt-2">ESCUCHA LA RECOMENDACIÓN Y LOS OBSTÁCULOS DE LA RUTA GUARDADA.</p>
+            @if(strtoupper(Auth::user()->role?->nom_rol ?? '') === 'ADMINISTRADOR_NO_VIDENTE')
+<p id="estado-asistente-rutas" role="status" aria-live="polite" class="mt-2">ESCUCHA LA RECOMENDACIÓN Y LOS OBSTÁCULOS DE LA RUTA GUARDADA.</p>
             <script src="{{ asset('js/asistente-rutas.js') }}" defer></script>
+@endif
         @endif
 
         <div class="mt-3 grid grid-cols-1 lg:grid-cols-3 gap-2" id="pasos-ruta">

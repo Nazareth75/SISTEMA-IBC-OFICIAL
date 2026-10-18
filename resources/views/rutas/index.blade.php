@@ -24,18 +24,23 @@
                 <section class="bg-green-50 border border-green-300 rounded p-4 mb-4">
                     <strong>DEMO GEOGRÁFICA: CALLES DEL CENTRO DE LA PAZ</strong>
                     <p>Compara cuatro caminos conectados sobre geometría vial. Riesgos simulados, sin validación en campo.</p>
-                    <a href="{{ route('rutas.show',$demoGeografica) }}#mapa-detalle-ruta" class="underline font-bold">ABRIR CAMINOS ACO, ALTERNATIVAS Y ASISTENTE</a>
+                    <a href="{{ route('rutas.show',$demoGeografica) }}#mapa-detalle-ruta" class="underline font-bold">ABRIR CAMINOS ACO Y ALTERNATIVAS</a>
                 </section>
             @endif
-            <section class="bg-white rounded-lg shadow p-4 mb-4 uppercase" aria-label="Asistente de rutas">
+            @if(strtoupper(Auth::user()->role?->nom_rol ?? '') === 'ADMINISTRADOR_NO_VIDENTE')
+<section class="bg-white rounded-lg shadow p-4 mb-4 uppercase" aria-label="Asistente de rutas">
                 <button type="button" data-leer-rutas style="background-color:#2d6a27;color:white" class="bg-green-800 text-white font-bold rounded px-5 py-3">ESCUCHAR RUTAS DE ESTA PÁGINA</button>
                 <button type="button" data-detener-asistente class="border border-gray-700 rounded px-5 py-3">DETENER AUDIO</button>
                 <p id="estado-asistente-rutas" role="status" class="mt-3">ELIGE INICIAR ASISTENTE PARA ESCUCHAR LA RECOMENDACIÓN Y LOS OBSTÁCULOS.</p>
-                <a href="{{ route('rutas.eventos') }}" class="underline inline-block mt-3">VER EVENTOS Y SOS DEL BASTÓN</a>
+
             </section>
+@endif
+            <a href="{{ route('rutas.eventos') }}" class="underline inline-block mb-4">VER EVENTOS Y SOS DEL BASTÓN</a>
             @include('rutas.partials.tabla')
             @include('rutas.partials.mapa_catalogo')
         </div>
     </div>
-    <script src="{{ asset('js/asistente-rutas.js') }}" defer></script>
+    @if(strtoupper(Auth::user()->role?->nom_rol ?? '') === 'ADMINISTRADOR_NO_VIDENTE')
+<script src="{{ asset('js/asistente-rutas.js') }}" defer></script>
+@endif
 </x-app-layout>

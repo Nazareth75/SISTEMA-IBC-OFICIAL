@@ -45,12 +45,14 @@
                     <a href="{{ route('rutas.index',['buscar'=>'DEMO-RUT-LP-OSM']) }}" class="underline font-bold">ABRIR LA DEMOSTRACIÓN CON GEOMETRÍA VIAL DE LA PAZ</a>
                 </div>
             @endif
-            <section class="bg-white rounded-lg shadow p-4 uppercase" aria-label="Resumen hablado de ruta">
+            @if(strtoupper(Auth::user()->role?->nom_rol ?? '') === 'ADMINISTRADOR_NO_VIDENTE')
+<section class="bg-white rounded-lg shadow p-4 uppercase" aria-label="Resumen hablado de ruta">
                 <button type="button" data-asistente-ruta="{{ route('rutas.asistente', $ruta) }}" style="background-color:#2d6a27;color:white" class="bg-green-800 text-white font-bold rounded px-5 py-3">INICIAR ASISTENTE</button>
                 <button type="button" data-detener-asistente class="border border-gray-700 rounded px-5 py-3">DETENER AUDIO</button>
                 <p id="estado-asistente-rutas" role="status" class="mt-3">RESUMEN DE LA RUTA Y OBSTÁCULOS ANTES DEL RECORRIDO.</p>
             </section>
             <script src="{{ asset('js/asistente-rutas.js') }}" defer></script>
+@endif
             <div class="bg-white rounded-lg shadow p-6">
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
                     <div>
