@@ -159,6 +159,13 @@
                 @endif
             </div>
 
+            @if($analisisAco->esLineal)
+                <section class="border border-amber-300 bg-amber-50 rounded p-4" aria-label="Explicacion de trayectoria unica">
+                    <strong>ESTA RUTA TIENE UN SOLO CAMINO Y {{ $ruta->tramos->count() }} TRAMOS.</strong>
+                    <p>Se muestran todos sus tramos registrados. Un camino unico no permite comparar alternativas ni mostrar diferentes refuerzos ACO.</p>
+                    <a href="{{ route('rutas.previa-merced') }}" class="underline font-bold">VER DEMOSTRACION ACO IBC - HOSPITAL LA MERCED: 4 CAMINOS Y FEROMONAS REALES</a>
+                </section>
+            @endif
             {{-- ── VISTA PREVIA DEL TRAYECTO ───────────────────── --}}
             <div class="bg-white rounded-lg shadow p-6">
                 <div class="flex items-center justify-between gap-3 mb-3">
@@ -178,7 +185,7 @@
                 </p>
 
                 @if(!empty($analisisAco->aristas))
-                    <div id="mapa-detalle-ruta" class="w-full rounded border border-green-100 h-[360px] lg:h-[460px]"></div>
+                    <div id="mapa-detalle-ruta" class="w-full rounded border border-green-100 h-[520px] lg:h-[620px]"></div>
                     <p class="text-[11px] text-green-700 font-semibold uppercase mt-2">
                         LA RECOMENDACIÓN Y CADA ALTERNATIVA SE FORMAN CON LOS MISMOS TRAMOS DEL GRAFO. ACTIVA CADA CAMINO EN EL SELECTOR DE CAPAS.
                     </p>
@@ -197,7 +204,7 @@
             </details>
             <div id="caminos-aco-lista" aria-label="Caminos completos del grafo"></div>
             <p>REFERENCIA HISTÓRICA: GEO_RUT U OSRM. NO DEFINE LA RECOMENDACIÓN ACO. DISPONIBLE EN LAS CAPAS TÉCNICAS.</p>
-            <p class="text-sm text-purple-900 uppercase">MAYOR GROSOR = MAYOR REFUERZO DE FEROMONA OBTENIDO POR ACO, EN EL TRAZO COLOREADO. EL CONTORNO DORADO MÁS ANCHO DESTACA LA RECOMENDADA. LAS TARJETAS MUESTRAN DISTANCIA, RIESGO Y COSTO: LA SEGURIDAD NO SE DEDUCE SOLO DE LA FEROMONA.</p>
+            <p class="text-sm text-purple-900 uppercase">MAYOR GROSOR = MAYOR REFUERZO DE FEROMONA OBTENIDO POR ACO, EN EL TRAZO COLOREADO. EL CONTORNO BLANCO DESTACA LA RECOMENDADA. LAS TARJETAS MUESTRAN DISTANCIA, RIESGO Y COSTO: LA SEGURIDAD NO SE DEDUCE SOLO DE LA FEROMONA.</p>
 
             {{-- ── TRAMOS ──────────────────────────────────────────── --}}
             <div>
@@ -545,7 +552,7 @@
     </div>
 
     @push('scripts')
-    <script src="{{ asset('js/mapa-aco.js') }}"></script>
+    <script src="{{ asset('js/mapa-aco.js') }}?v=tramos-admin-3"></script>
     <script>
     function confirmarCambioEstado(id, estadoActual, transiciones, puedePublicar) {
         const opciones = transiciones.map(e => `<option value="${e}">${e}</option>`).join('');
@@ -687,9 +694,11 @@
                 }
             }
 
-            const capaTramosTecnicos = window.L.layerGroup();
+            const capaTramosTecnicos = window.L.layerGroup().addTo(map);
+            const etiquetasTramos = window.L.layerGroup().addTo(map);
             map._referenciasTecnicas = map._referenciasTecnicas || {};
-            map._referenciasTecnicas['TRAMOS INDIVIDUALES (VISTA TÉCNICA)'] = capaTramosTecnicos;
+            map._referenciasTecnicas['TODOS LOS TRAMOS DE ESTA RUTA'] = capaTramosTecnicos;
+            map._referenciasTecnicas['ETIQUETAS DE TRAMOS'] = etiquetasTramos;
             // 2. Dibujar tramos físicos registrados
             const paletaColores = ['#15803d', '#0284c7', '#7c3aed', '#d97706', '#dc2626', '#0d9488'];
             tramosDetalle.forEach((t, idx) => {
@@ -716,6 +725,12 @@
                             </div>
                         `;
                         polyTramo.bindPopup(popupHtml);
+                        const puntoEtiqueta=puntosTramo[Math.floor(puntosTramo.length/2)];
+                        const etiqueta=document.createElement('span');
+                        etiqueta.textContent=`T${t.id} - ${t.nombre}`;
+                        window.L.circleMarker(puntoEtiqueta,{radius:4,color:'#0f172a',fillColor:'#fff',fillOpacity:1,weight:2})
+                            .bindTooltip(etiqueta,{permanent:true,direction:'top',className:'etiqueta-tramo-ibc'})
+                            .addTo(etiquetasTramos);
                         window.tramosLayers[t.id] = polyTramo;
 
                         polyTramo.on('mouseover', function() {
@@ -747,6 +762,7 @@
             if (allBounds.isValid()) {
                 map.fitBounds(allBounds, { padding: [30, 30] });
             }
+            if(!window.recomendacionAcoData?.success)window.L.control.layers({},map._referenciasTecnicas,{collapsed:false}).addTo(map);
             setTimeout(() => map.invalidateSize(), 120);
             if(window.recomendacionAcoData?.success) window.renderizarCaminosAco?.(map,window.recomendacionAcoData,{alternativas:true,tecnico:true});
         }).catch(() => {

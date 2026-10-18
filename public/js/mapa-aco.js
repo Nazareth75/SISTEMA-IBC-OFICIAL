@@ -20,7 +20,7 @@ window.renderizarCaminosAco = function(map, data, opciones = {}) {
     };
     caminos.forEach((camino,i) => {
         const grupo = L.featureGroup();
-        const color = colores[i % colores.length];
+        const color = camino.recomendada ? '#15803d' : colores[1 + (i % (colores.length-1))];
         const grosor = 3 + 11 * camino.refuerzo_relativo;
         camino.geometria.forEach((geo,indiceTramo) => {
             if (!Array.isArray(geo) || geo.length<2) return;
@@ -68,4 +68,5 @@ window.renderizarCaminosAco = function(map, data, opciones = {}) {
     }
     map._selectorAco=L.control.layers({},overlays,{collapsed:false}).addTo(map);
     if(bounds.isValid()) map.fitBounds(bounds,{padding:[35,35]});
+    map._referenciasTecnicas?.['ETIQUETAS DE TRAMOS']?.bringToFront?.();
 };
