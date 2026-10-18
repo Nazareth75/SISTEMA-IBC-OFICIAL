@@ -268,15 +268,27 @@ class ConstructorGrafoRuta
 
     /**
      * Construye una instancia ejecutable de Grafo para ACO cuando la ruta es optimizable.
-     * En caso de riesgo no medible en producción, retorna null o utiliza pesos provistos.
+     * Calcula rigurosamente R_norm para cada tramo mediante CalculadorRiesgoTramoAco.
+     * En caso de riesgo no medible o cobertura SIN_DATOS, retorna null para proteger la integridad.
+     *
+     * @param Ruta                          $ruta              Ruta a procesar.
+     * @param array<int, float>             $riesgosSinteticos Riesgos opcionales para pruebas sintéticas.
+     * @param CalculadorRiesgoTramoAco|null $calculadorRiesgo  Calculador de riesgo opcional.
+     * @return Grafo|null Instancia de Grafo lista para ACO o null si la ruta no es procesable.
      */
-    public function construirGrafo(Ruta $ruta, array $riesgosSinteticos = []): ?Grafo
-    {
+    public function construirGrafo(
+        Ruta $ruta,
+        array $riesgosSinteticos = [],
+        ?CalculadorRiesgoTramoAco $calculadorRiesgo = null
+    ): ?Grafo {
         $analisis = $this->analizar($ruta);
 
         if (!$analisis->tieneTramos() || empty($analisis->aristas)) {
             return null;
         }
+
+        $calc = $calculadorRiesgo ?? new CalculadorRiesgoTramoAco(riskService: $this->riskService);
+        $tramosKeyed = $ruta->tramos->keyBy('cod_calles_tramos');
 
         $grafo = new Grafo();
 
@@ -284,19 +296,25 @@ class ConstructorGrafoRuta
             $tramoId = $arista['tramo_id'];
             $longitud = (float) $arista['longitud'];
 
-            // Usar riesgo provisto sintéticamente para tests o extraer del análisis
-            $riesgo = $riesgosSinteticos[$tramoId] ?? null;
-
-            if ($riesgo === null) {
-                // Si no hay riesgo sintético y la ruta no tiene riesgo calculable, no inventar
-                if (!$analisis->tieneRiesgoSuficiente) {
+            // Usar riesgo provisto sintéticamente para tests si existe
+            if (isset($riesgosSinteticos[$tramoId])) {
+                $riesgo = (float) $riesgosSinteticos[$tramoId];
+            } else {
+                // Obtener modelo y calcular R_norm formal
+                $tramoModel = $tramosKeyed[$tramoId] ?? CalleTramo::find($tramoId);
+                if (!$tramoModel) {
                     return null;
                 }
-                $riesgo = 0.5; // Placeholder estructurado únicamente si está validado
+
+                try {
+                    $riesgo = $calc->calcular($tramoModel);
+                } catch (\InvalidArgumentException $e) {
+                    // Si el tramo carece de datos de riesgo o tiene SIN_DATOS, no inventar valores
+                    return null;
+                }
             }
 
             $grafo->agregarArista(new Arista(
-                (string) $arista['id'],
                 (string) $arista['origen'],
                 (string) $arista['destino'],
                 $longitud,

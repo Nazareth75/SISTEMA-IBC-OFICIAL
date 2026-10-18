@@ -7,6 +7,8 @@ use App\Http\Requests\UpdateRutaRequest;
 use App\Models\NivelSeguridad;
 use App\Models\Ruta;
 use App\Services\Aco\ConstructorGrafoRuta;
+use App\Services\Aco\ServicioRecomendacionRutaAco;
+use App\Services\Aco\ConfiguracionAco;
 use App\Services\RutaEstimacionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -78,12 +80,17 @@ class RutaController extends Controller
 
     // ─── Detalle ──────────────────────────────────────────────
 
-    public function show(Ruta $ruta, RutaEstimacionService $estimador, ConstructorGrafoRuta $constructorAco): View
-    {
+    public function show(
+        Ruta $ruta,
+        RutaEstimacionService $estimador,
+        ConstructorGrafoRuta $constructorAco,
+        ServicioRecomendacionRutaAco $recomendadorAco
+    ): View {
         $ruta->load([
             'creador',
             'aprobador',
             'tramos.condiciones',
+            'tramos.obstaculos.reportes',
             'tramos.obstaculos.reportadoPor',
             'tramos.evaluaciones.nivelSeguridad',
             'tramos.evaluaciones.evaluador',
@@ -100,8 +107,17 @@ class RutaController extends Controller
         }
 
         $analisisAco = $constructorAco->analizar($ruta);
+        $recomendacionAco = null;
 
-        return view('rutas.show', compact('ruta', 'nivelGeneral', 'transiciones', 'puedePublicarse', 'trayectoDetalle', 'analisisAco'));
+        if ($analisisAco->esOptimizable) {
+            try {
+                $recomendacionAco = $recomendadorAco->recomendar($ruta);
+            } catch (\Throwable $e) {
+                $recomendacionAco = null;
+            }
+        }
+
+        return view('rutas.show', compact('ruta', 'nivelGeneral', 'transiciones', 'puedePublicarse', 'trayectoDetalle', 'analisisAco', 'recomendacionAco'));
     }
 
     // ─── Editar ───────────────────────────────────────────────
@@ -341,5 +357,60 @@ class RutaController extends Controller
     private function normalizarGeoDesdeEstimacion(array $estimacion): ?array
     {
         return $this->normalizarGeoDesdeRequest($estimacion);
+    }
+
+    /**
+     * Recalcula dinámicamente la recomendación bioinspirada ACO para la ruta dada.
+     * Retorna una respuesta JSON estructurada para actualización inmediata en la sesión web.
+     *
+     * @param Request                      $request
+     * @param Ruta                         $ruta
+     * @param ServicioRecomendacionRutaAco $recomendadorAco
+     * @return JsonResponse
+     */
+    public function recalcularAco(
+        Request $request,
+        Ruta $ruta,
+        ServicioRecomendacionRutaAco $recomendadorAco
+    ): JsonResponse {
+        abort_unless(Auth::user()?->tieneRol('SUPERADMINISTRADOR', 'ADMINISTRADOR', 'TECNICO'), 403);
+
+        $ruta->load([
+            'tramos.condiciones',
+            'tramos.obstaculos.reportes',
+            'tramos.obstaculos.reportadoPor',
+            'tramos.evaluaciones.nivelSeguridad',
+            'tramos.evaluaciones.evaluador',
+            'tramos.zonas.nivelSeguridad',
+        ]);
+
+        try {
+            $config = null;
+            if ($request->filled('w_distancia') || $request->filled('w_riesgo') || $request->filled('hormigas')) {
+                $wDist = (float) $request->input('w_distancia', 0.5);
+                $wRiesgo = (float) $request->input('w_riesgo', 0.5);
+                $ants = (int) $request->input('hormigas', 20);
+                $iters = (int) $request->input('iteraciones', 25);
+                $config = new ConfiguracionAco(
+                    ants: max(1, $ants),
+                    iterations: max(1, $iters),
+                    wDistance: $wDist,
+                    wRisk: $wRiesgo
+                );
+            }
+
+            $resultado = $recomendadorAco->recomendar($ruta, $config);
+
+            return response()->json([
+                'success'       => $resultado->success,
+                'mensaje'       => $resultado->mensajeError,
+                'recomendacion' => $resultado->toArray(),
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'mensaje' => 'Error durante el recálculo de recomendación ACO: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 }
