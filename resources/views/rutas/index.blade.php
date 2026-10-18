@@ -19,7 +19,7 @@
 
     <div class="py-6">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <a href="{{ route('rutas.previa-merced') }}" class="block border p-4 mb-4 font-bold">IBC A HOSPITAL LA MERCED: CAMINOS, TRAMOS Y DISTANCIA (VISTA PREVIA SIN RIESGO VALIDADO)</a>
+            <a href="{{ route('rutas.previa-merced') }}" class="block border p-4 mb-4 font-bold">VER EL MISMO MAPA DE ISRAEL EN LA APP: IBC - HOSPITAL LA MERCED (VISTA PREVIA)</a>
             @include('rutas.partials.filtros')
             @if($demoGeografica)
                 <section class="bg-green-50 border border-green-300 rounded p-4 mb-4">

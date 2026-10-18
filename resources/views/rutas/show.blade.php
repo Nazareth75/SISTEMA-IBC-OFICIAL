@@ -166,6 +166,11 @@
                     <a href="{{ route('rutas.previa-merced') }}" class="underline font-bold">VER DEMOSTRACION ACO IBC - HOSPITAL LA MERCED: 4 CAMINOS Y FEROMONAS REALES</a>
                 </section>
             @endif
+            <section class="border border-green-600 bg-green-50 rounded p-5">
+                <strong>RUTA QUE USA ISRAEL EN EL CELULAR: IBC - HOSPITAL LA MERCED</strong>
+                <p>Esta ficha corresponde a {{ $ruta->ide_rut }}. Para ver exactamente los caminos y tramos enviados a la app, abre el mapa compartido.</p>
+                <a href="{{ route('rutas.previa-merced') }}" class="inline-block rounded text-white font-bold px-5 py-3 mt-2" style="background:#166534">VER EL MISMO MAPA DE LA APP</a>
+            </section>
             {{-- ── VISTA PREVIA DEL TRAYECTO ───────────────────── --}}
             <div class="bg-white rounded-lg shadow p-6">
                 <div class="flex items-center justify-between gap-3 mb-3">

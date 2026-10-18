@@ -66,7 +66,7 @@ class AsistenteRutaTest extends TestCase
             }
             $this->get(route('rutas.index'))->assertSee('VER EVENTOS Y SOS DEL BASTÓN')->assertSee('mapa-catalogo-rutas');
             $this->get(route('rutas.edit', $ruta))->assertSee('VER CAMINOS ACO Y TRAMOS GUARDADOS');
-            $previa = $this->get(route('rutas.previa-merced'))->assertOk();
+            $previa = $this->get(route('rutas.previa-merced'))->assertOk()->assertSee('MISMA RUTA DE LA APP')->assertSee('celular:true', false);
             if ($visible) $previa->assertSee('id="leer-previa"', false);
             else $previa->assertDontSee('id="leer-previa"', false);
         }

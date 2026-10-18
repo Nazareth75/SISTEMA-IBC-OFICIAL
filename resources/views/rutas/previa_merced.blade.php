@@ -1,5 +1,5 @@
 <x-app-layout>
-    <x-slot name="header"><h2 class="font-bold text-xl">IBC a Hospital La Merced - vista previa vial</h2></x-slot>
+    <x-slot name="header"><h2 class="font-bold text-xl">MISMA RUTA DE LA APP: IBC - HOSPITAL LA MERCED</h2></x-slot>
     <div class="max-w-6xl mx-auto p-6">
         <p role="note">{{ $previa['advertencia'] }} ACO compara solamente distancia; no hay riesgo validado.</p>
         <p>Camino mas corto de la red comparada: {{ number_format($previa['distancia_mas_corta'], 1) }} m.
@@ -14,18 +14,19 @@
             });
             </script>
         @endif
-        <div id="mapa-previa" style="height:520px"></div>
+        <p class="font-bold my-3">VERDE: RECOMENDADA ACO. AZUL: ALTERNATIVAS. T: TRAMOS. MISMA GEOMETRIA Y REFUERZO QUE RECIBE EL CELULAR.</p>
+        <div id="mapa-previa" style="height:620px"></div>
         <div id="caminos-previa"></div>
         <p>Circulos blancos: limites de tramos. Pulsa un tramo para consultar su calle. Ancho: refuerzo real de feromona ACO.</p>
     </div>
     @push('styles')<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">@endpush
     @push('scripts')
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="{{ asset('js/mapa-aco.js') }}?v=merced2"></script>
+    <script src="{{ asset('js/mapa-aco.js') }}?v=celular4"></script>
     <script>
         const mapaPrevia=L.map('mapa-previa').setView([-16.49,-68.13],14);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'OpenStreetMap contributors'}).addTo(mapaPrevia);
-        window.renderizarCaminosAco(mapaPrevia,@json($previa),{alternativas:true,panel:'caminos-previa'});
+        window.renderizarCaminosAco(mapaPrevia,@json($previa),{alternativas:true,celular:true,panel:'caminos-previa'});
     </script>
     @endpush
 </x-app-layout>

@@ -20,17 +20,17 @@ window.renderizarCaminosAco = function(map, data, opciones = {}) {
     };
     caminos.forEach((camino,i) => {
         const grupo = L.featureGroup();
-        const color = camino.recomendada ? '#15803d' : colores[1 + (i % (colores.length-1))];
+        const color = opciones.celular ? (camino.recomendada ? '#166534' : '#1e88e5') : (camino.recomendada ? '#15803d' : colores[1 + (i % (colores.length-1))]);
         const grosor = 3 + 11 * camino.refuerzo_relativo;
         camino.geometria.forEach((geo,indiceTramo) => {
             if (!Array.isArray(geo) || geo.length<2) return;
             const puntos = geo.map(p => [p.lat,p.lng]);
             // El halo solo identifica la recomendación; el trazo coloreado mide refuerzo.
-            if(camino.recomendada) L.polyline(puntos,{color:'#ffffff',weight:grosor+4,opacity:0.8,interactive:false}).addTo(grupo);
+            if(camino.recomendada && !opciones.celular) L.polyline(puntos,{color:'#ffffff',weight:grosor+4,opacity:0.8,interactive:false}).addTo(grupo);
             const fichaTramo = resumen(camino);
             fichaTramo.append(texto('strong', `TRAMO ${camino.tramos_ids[indiceTramo]}: ${camino.tramos_nombres[indiceTramo]}`));
             L.polyline(puntos,{color,weight:grosor,opacity:camino.recomendada?1:0.62,
-                dashArray:camino.recomendada?null:'10 5'}).bindPopup(fichaTramo,{maxWidth:420}).addTo(grupo);
+                dashArray:opciones.celular?null:(camino.recomendada?null:'10 5')}).bindPopup(fichaTramo,{maxWidth:420}).addTo(grupo);
         });
         overlays[camino.nombre] = grupo;
         map._capasCaminosAco.push(grupo);
@@ -51,7 +51,7 @@ window.renderizarCaminosAco = function(map, data, opciones = {}) {
             if(!geo.length)return;
             const p=geo[0];
             const limite=L.circleMarker([p.lat,p.lng],{radius:5,color:'#0f172a',fillColor:'#fff',fillOpacity:1,weight:2})
-                .bindTooltip(`Tramo ${recomendada.tramos_ids[i]}: ${recomendada.tramos_nombres[i]}`,{permanent:false})
+                .bindTooltip(opciones.celular ? `T${recomendada.tramos_ids[i]}` : `Tramo ${recomendada.tramos_ids[i]}: ${recomendada.tramos_nombres[i]}`,{permanent:!!opciones.celular,direction:'top'})
                 .addTo(map);
             map._capasCaminosAco.push(limite);
         });
