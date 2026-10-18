@@ -18,6 +18,7 @@
         </a>
     </div>
 
+    <a href="{{ route('navegacion.index') }}" class="ibc-sidebar-link" style="padding:16px;font-weight:bold">NAVEGACIÓN ACCESIBLE</a>
     {{-- Menú --}}
     <nav class="flex-1 py-4 space-y-1 overflow-y-auto">
 
@@ -105,6 +106,13 @@
         </a>
         @endif
         @endif
+        @endif
+
+        @if(strtoupper(auth()->user()->role?->nom_rol ?? '') === 'ADMINISTRADOR_NO_VIDENTE')
+        <a href="{{ route('rutas.index') }}" class="ibc-sidebar-link {{ request()->routeIs('rutas.*') ? 'ibc-sidebar-active' : '' }}">
+            <span class="material-symbols-outlined" aria-hidden="true">map</span>
+            <span>Rutas Seguras y Asistente</span>
+        </a>
         @endif
 
         @if(auth()->user()->tieneRol('SUPERADMINISTRADOR', 'ADMINISTRADOR', 'TECNICO') && !auth()->user()->tieneRol('ADMINISTRADOR_NO_VIDENTE'))

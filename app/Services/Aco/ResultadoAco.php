@@ -11,6 +11,8 @@ namespace App\Services\Aco;
  */
 class ResultadoAco
 {
+    /** Telemetría real, observada sin intervenir en la selección ni en los depósitos. */
+    public array $pheromones = [];
     /**
      * Indica si el algoritmo logró encontrar una ruta válida desde el origen hasta el destino.
      * En caso de grafo desconectado o destino inalcanzable, toma el valor false sin provocar error fatal.
@@ -92,7 +94,8 @@ class ResultadoAco
         float $executionTimeMs = 0.0,
         int $bestFoundIteration = 0,
         int $convergenceIteration = 0,
-        array $bestCostHistory = []
+        array $bestCostHistory = [],
+        array $pheromones = []
     ) {
         $this->success = $success;
         $this->path = $path;
@@ -103,5 +106,6 @@ class ResultadoAco
         $this->bestFoundIteration = $bestFoundIteration;
         $this->convergenceIteration = $convergenceIteration;
         $this->bestCostHistory = $bestCostHistory;
+        $this->pheromones = $pheromones;
     }
 }

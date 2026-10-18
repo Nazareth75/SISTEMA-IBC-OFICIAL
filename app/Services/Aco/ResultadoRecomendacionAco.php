@@ -46,7 +46,10 @@ class ResultadoRecomendacionAco
         public array $geometriaMasCorta = [],
         public array $geometriaAlternativas = [],
         public array $bestCostHistory = [],
-        public array $metricas = []
+        public array $metricas = [],
+        public array $feromonasTramos = [],
+        public array $parametrosEjecucion = [],
+        public array $caminosCandidatos = []
     ) {
         $this->fechaCalculo = $this->fechaCalculo ?? now()->format('Y-m-d H:i:s');
     }
@@ -92,6 +95,21 @@ class ResultadoRecomendacionAco
             'geometria_alternativas'         => $this->geometriaAlternativas,
             'best_cost_history'              => $this->bestCostHistory,
             'metricas'                       => $this->metricas,
+            'feromonas_tramos'               => $this->feromonasTramos,
+            'parametros_ejecucion'           => $this->parametrosEjecucion,
+            'caminos_candidatos'              => $this->caminosCandidatos,
+            'camino_menor_distancia_tramos_ids' => $this->caminoMenorDistanciaTramosIds,
         ];
+    }
+
+    public static function desdeArray(array $datos): self
+    {
+        $resultado = new self();
+        $alias = ['m7' => 'm7_reduccion_riesgo', 'm8' => 'm8_incremento_distancia'];
+        foreach (array_keys(get_object_vars($resultado)) as $propiedad) {
+            $clave = $alias[$propiedad] ?? strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $propiedad));
+            if (array_key_exists($clave, $datos)) $resultado->$propiedad = $datos[$clave];
+        }
+        return $resultado;
     }
 }

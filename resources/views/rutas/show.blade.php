@@ -38,6 +38,19 @@
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
 
             {{-- ── FICHA GENERAL ─────────────────────────────────── --}}
+            @if($ruta->esDemo() && $ruta->ide_rut !== 'DEMO-RUT-LP-OSM')
+                <div class="border border-amber-400 bg-amber-50 rounded p-4" role="note">
+                    <strong>ESQUEMA SINTÉTICO HISTÓRICO</strong>
+                    <p>Sus coordenadas prueban la estructura del grafo y pueden no seguir calles. No representa un recorrido peatonal validado.</p>
+                    <a href="{{ route('rutas.index',['buscar'=>'DEMO-RUT-LP-OSM']) }}" class="underline font-bold">ABRIR LA DEMOSTRACIÓN CON GEOMETRÍA VIAL DE LA PAZ</a>
+                </div>
+            @endif
+            <section class="bg-white rounded-lg shadow p-4 uppercase" aria-label="Resumen hablado de ruta">
+                <button type="button" data-asistente-ruta="{{ route('rutas.asistente', $ruta) }}" style="background-color:#2d6a27;color:white" class="bg-green-800 text-white font-bold rounded px-5 py-3">INICIAR ASISTENTE</button>
+                <button type="button" data-detener-asistente class="border border-gray-700 rounded px-5 py-3">DETENER AUDIO</button>
+                <p id="estado-asistente-rutas" role="status" class="mt-3">RESUMEN DE LA RUTA Y OBSTÁCULOS ANTES DEL RECORRIDO.</p>
+            </section>
+            <script src="{{ asset('js/asistente-rutas.js') }}" defer></script>
             <div class="bg-white rounded-lg shadow p-6">
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
                     <div>
@@ -149,7 +162,7 @@
                 <div class="flex items-center justify-between gap-3 mb-3">
                     <h3 class="font-bold text-gray-700 uppercase">
                         <i class="fas fa-map-marked-alt mr-2" style="color:#2d6a27"></i>
-                        VISTA PREVIA DEL TRAYECTO
+                        CAMINOS ACO SOBRE LOS TRAMOS REGISTRADOS
                     </h3>
                     @if($trayectoDetalle && !empty($trayectoDetalle['distancia_metros']))
                         <span class="text-xs font-bold uppercase bg-green-100 text-green-700 px-2 py-1 rounded">
@@ -162,10 +175,10 @@
                     ORIGEN: {{ $ruta->ori_rut }} <span class="mx-1">→</span> DESTINO: {{ $ruta->dst_rut }}
                 </p>
 
-                @if($trayectoDetalle && !empty($trayectoDetalle['trayecto_coords']))
+                @if(!empty($analisisAco->aristas))
                     <div id="mapa-detalle-ruta" class="w-full rounded border border-green-100 h-[360px] lg:h-[460px]"></div>
                     <p class="text-[11px] text-green-700 font-semibold uppercase mt-2">
-                        EL TRAZO MOSTRADO CORRESPONDE A LA RUTA CALCULADA SOBRE RED VIAL.
+                        LA RECOMENDACIÓN Y CADA ALTERNATIVA SE FORMAN CON LOS MISMOS TRAMOS DEL GRAFO. ACTIVA CADA CAMINO EN EL SELECTOR DE CAPAS.
                     </p>
                 @else
                     <div class="rounded border border-yellow-200 bg-yellow-50 p-4 text-xs text-yellow-700 uppercase font-semibold">
@@ -176,7 +189,13 @@
             </div>
 
             {{-- ── 4. SECCIÓN ACO (Algoritmo de Colonia de Hormigas) ─────────── --}}
-            @include('rutas.partials.seccion_aco')
+            <details class="rounded border p-3">
+                <summary class="font-bold cursor-pointer">DETALLES TÉCNICOS ACO · PARÁMETROS Y MÉTRICAS</summary>
+                @include('rutas.partials.seccion_aco')
+            </details>
+            <div id="caminos-aco-lista" aria-label="Caminos completos del grafo"></div>
+            <p>REFERENCIA HISTÓRICA: GEO_RUT U OSRM. NO DEFINE LA RECOMENDACIÓN ACO. DISPONIBLE EN LAS CAPAS TÉCNICAS.</p>
+            <p class="text-sm text-purple-900 uppercase">MAYOR GROSOR = MAYOR REFUERZO DE FEROMONA OBTENIDO POR ACO, EN EL TRAZO COLOREADO. EL CONTORNO DORADO MÁS ANCHO DESTACA LA RECOMENDADA. LAS TARJETAS MUESTRAN DISTANCIA, RIESGO Y COSTO: LA SEGURIDAD NO SE DEDUCE SOLO DE LA FEROMONA.</p>
 
             {{-- ── TRAMOS ──────────────────────────────────────────── --}}
             <div>
@@ -524,6 +543,7 @@
     </div>
 
     @push('scripts')
+    <script src="{{ asset('js/mapa-aco.js') }}"></script>
     <script>
     function confirmarCambioEstado(id, estadoActual, transiciones, puedePublicar) {
         const opciones = transiciones.map(e => `<option value="${e}">${e}</option>`).join('');
@@ -657,13 +677,17 @@
                         weight: 4,
                         opacity: 0.6,
                         dashArray: '6, 6'
-                    }).addTo(map);
+                    });
+                    map._referenciasTecnicas = {'REFERENCIA HISTÓRICA / OSRM (NO ES EL CAMINO ACO)':line};
 
                     line.bindPopup('<div class="p-1 text-xs font-bold uppercase text-slate-700">TRAYECTORIA REGISTRADA</div><div class="text-[10px] text-slate-500">Trazo vial global de referencia.</div>');
                     allBounds.extend(line.getBounds());
                 }
             }
 
+            const capaTramosTecnicos = window.L.layerGroup();
+            map._referenciasTecnicas = map._referenciasTecnicas || {};
+            map._referenciasTecnicas['TRAMOS INDIVIDUALES (VISTA TÉCNICA)'] = capaTramosTecnicos;
             // 2. Dibujar tramos físicos registrados
             const paletaColores = ['#15803d', '#0284c7', '#7c3aed', '#d97706', '#dc2626', '#0d9488'];
             tramosDetalle.forEach((t, idx) => {
@@ -678,7 +702,8 @@
                             color: colorTramo,
                             weight: 5,
                             opacity: 0.85
-                        }).addTo(map);
+                        });
+                        capaTramosTecnicos.addLayer(polyTramo);
 
                         const popupHtml = `
                             <div class="p-1 text-xs">
@@ -707,12 +732,12 @@
             const origen = trayectoDetalle?.origen_coords;
             const destino = trayectoDetalle?.destino_coords;
 
-            if (origen && Number.isFinite(origen.lat) && Number.isFinite(origen.lng)) {
+            if (!window.recomendacionAcoData?.success && origen && Number.isFinite(origen.lat) && Number.isFinite(origen.lng)) {
                 window.L.marker([origen.lat, origen.lng]).addTo(map).bindPopup('<strong class="text-xs uppercase">ORIGEN DE LA RUTA</strong>');
                 allBounds.extend([origen.lat, origen.lng]);
             }
 
-            if (destino && Number.isFinite(destino.lat) && Number.isFinite(destino.lng)) {
+            if (!window.recomendacionAcoData?.success && destino && Number.isFinite(destino.lat) && Number.isFinite(destino.lng)) {
                 window.L.marker([destino.lat, destino.lng]).addTo(map).bindPopup('<strong class="text-xs uppercase">DESTINO DE LA RUTA</strong>');
                 allBounds.extend([destino.lat, destino.lng]);
             }
@@ -721,6 +746,7 @@
                 map.fitBounds(allBounds, { padding: [30, 30] });
             }
             setTimeout(() => map.invalidateSize(), 120);
+            if(window.recomendacionAcoData?.success) window.renderizarCaminosAco?.(map,window.recomendacionAcoData,{alternativas:true,tecnico:true});
         }).catch(() => {
             // No interrumpir la vista de detalle si falla la carga del mapa.
         });

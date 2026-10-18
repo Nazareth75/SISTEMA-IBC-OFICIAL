@@ -66,6 +66,12 @@
                         <td class="px-4 py-3">
                             <div class="flex items-center justify-center gap-1.5 flex-wrap">
                                 {{-- VER --}}
+                                <button type="button" data-asistente-ruta="{{ route('rutas.asistente', $ruta) }}"
+                                    data-nombre-ruta="{{ $ruta->nom_rut }}. Desde {{ $ruta->ori_rut }} hasta {{ $ruta->dst_rut }}"
+                                    aria-label="Iniciar asistente para {{ $ruta->nom_rut }}"
+                                    style="background-color:#2d6a27;color:white" class="bg-green-800 text-white font-bold px-4 py-3 rounded uppercase">
+                                    INICIAR ASISTENTE
+                                </button>
                                 <a href="{{ route('rutas.show', $ruta) }}"
                                     title="Consultar ficha, mapa, tramos y recomendación ACO"
                                     class="inline-flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-bold px-2 py-1 rounded shadow-sm transition">

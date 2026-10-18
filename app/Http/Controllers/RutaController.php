@@ -38,6 +38,7 @@ class RutaController extends Controller
             'filtros'        => compact('buscar', 'estado'),
             'estados'        => array_keys(Ruta::ESTADOS),
             'constructorAco' => $constructorAco,
+            'demoGeografica' => Ruta::where('ide_rut', 'DEMO-RUT-LP-OSM')->first(),
         ]);
     }
 
@@ -116,12 +117,12 @@ class RutaController extends Controller
         if ($analisisAco->esOptimizable) {
             try {
                 // Si la recomendación está desactualizada y no hay recálculo previo, calculamos nueva
-                $recomendacionAco = $recomendadorAco->recomendar($ruta);
+                $recomendacionAco = app(\App\Services\AsistenteRutaService::class)->obtenerResultado($ruta);
                 if ($recomendacionAco->success) {
-                    $estadoAcoService->guardarRecomendacion($ruta, $recomendacionAco);
                     $historialCambioAco = $estadoAcoService->obtenerHistorialCambio($ruta);
                 }
             } catch (\Throwable $e) {
+                report($e);
                 $recomendacionAco = null;
             }
         }

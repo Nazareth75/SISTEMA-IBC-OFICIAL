@@ -28,6 +28,7 @@ class ConstructorGrafoRuta
      * En entornos urbanos peatonales permite enlazar segmentos concurrentes en esquinas sin fusionar esquinas distintas.
      */
     public const TOLERANCIA_METROS = 8.0;
+    private float $toleranciaMetros = self::TOLERANCIA_METROS;
 
     /**
      * Radio medio volumétrico de la Tierra en metros para el cálculo geodésico Haversine.
@@ -54,6 +55,11 @@ class ConstructorGrafoRuta
      */
     public function analizar(Ruta $ruta): AnalisisAcoRuta
     {
+        // OSM puede representar extremos distintos de un cruce a menos de 8 m.
+        // Una tolerancia explícita preserva esos nodos sin cambiar la base histórica.
+        $tolerancia = data_get($ruta->geo_rut, 'tolerancia_topologica_m', self::TOLERANCIA_METROS);
+        $this->toleranciaMetros = is_numeric($tolerancia) && $tolerancia > 0 && $tolerancia <= self::TOLERANCIA_METROS
+            ? (float) $tolerancia : self::TOLERANCIA_METROS;
         // 1. Cargar tramos ordenados desde la relación N:M
         $tramos = $ruta->tramos;
 
@@ -337,7 +343,7 @@ class ConstructorGrafoRuta
     {
         foreach ($nodos as $id => $nodo) {
             $distancia = $this->haversineMetros($lat, $lng, (float) $nodo['lat'], (float) $nodo['lng']);
-            if ($distancia <= self::TOLERANCIA_METROS) {
+            if ($distancia <= $this->toleranciaMetros) {
                 return $id;
             }
         }

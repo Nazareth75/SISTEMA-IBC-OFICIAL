@@ -314,41 +314,24 @@
                     <h5 class="text-xs font-bold text-slate-800 uppercase mb-2 flex items-center gap-1.5">
                         <i class="fas fa-atom text-slate-500"></i> PARÁMETROS DEL MOTOR METAHEURÍSTICO
                     </h5>
-                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 text-center text-xs">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-center text-xs">
+                        @forelse(($recomendacionAco?->parametrosEjecucion ?? []) as $nombreParametro => $valorParametro)
                         <div class="p-2.5 rounded border border-slate-200 bg-slate-50">
-                            <span class="text-[9px] font-bold text-slate-400 uppercase">ALFA (FEROMONA)</span>
-                            <p class="font-mono font-bold text-slate-800 text-sm mt-0.5">1.0</p>
+                            <span class="font-bold uppercase">{{ str_replace('_', ' ', $nombreParametro) }}</span>
+                            <p class="font-mono">{{ $valorParametro ?? 'ALEATORIA' }}</p>
                         </div>
-                        <div class="p-2.5 rounded border border-slate-200 bg-slate-50">
-                            <span class="text-[9px] font-bold text-slate-400 uppercase">BETA (HEURÍSTICA)</span>
-                            <p class="font-mono font-bold text-slate-800 text-sm mt-0.5">2.0</p>
-                        </div>
-                        <div class="p-2.5 rounded border border-slate-200 bg-slate-50">
-                            <span class="text-[9px] font-bold text-slate-400 uppercase">RHO (EVAPORACIÓN)</span>
-                            <p class="font-mono font-bold text-slate-800 text-sm mt-0.5">0.20</p>
-                        </div>
-                        <div class="p-2.5 rounded border border-slate-200 bg-slate-50">
-                            <span class="text-[9px] font-bold text-slate-400 uppercase">Q (DEPÓSITO)</span>
-                            <p class="font-mono font-bold text-slate-800 text-sm mt-0.5">100.0</p>
-                        </div>
-                        <div class="p-2.5 rounded border border-slate-200 bg-slate-50">
-                            <span class="text-[9px] font-bold text-slate-400 uppercase">HORMIGAS</span>
-                            <p class="font-mono font-bold text-slate-800 text-sm mt-0.5">20</p>
-                        </div>
-                        <div class="p-2.5 rounded border border-slate-200 bg-slate-50">
-                            <span class="text-[9px] font-bold text-slate-400 uppercase">ITERACIONES</span>
-                            <p class="font-mono font-bold text-slate-800 text-sm mt-0.5">25</p>
-                        </div>
+                        @empty
+                            <p>PARÁMETROS NO DISPONIBLES: RECALCULA LA RECOMENDACIÓN.</p>
+                        @endforelse
                     </div>
                 </div>
-
                 {{-- Función de Costo Canónica --}}
                 <div class="bg-slate-50 p-3 rounded border border-slate-200 text-xs">
                     <p class="font-bold text-slate-800 uppercase mb-1">
                         FUNCIÓN CANÓNICA DE COSTO MULTIOBJETIVO
                     </p>
                     <p class="font-mono text-slate-700">
-                        C(e) = wD · D_norm(e) + wR · R_norm(e) &nbsp;|&nbsp; wD = 0.50, wR = 0.50
+                        C(e) = wD · D_norm(e) + wR · R_norm(e) &nbsp;|&nbsp; wD = {{ $recomendacionAco?->parametrosEjecucion['peso_distancia'] ?? '—' }}, wR = {{ $recomendacionAco?->parametrosEjecucion['peso_riesgo'] ?? '—' }}
                     </p>
                     <p class="text-[11px] text-slate-500 mt-1">
                         Garantía metodológica: El algoritmo determinista de referencia (Dijkstra) ejecuta exactamente la misma función de costo.
@@ -485,146 +468,8 @@
     window.capaObstaculosResueltos = null;
 
     function renderizarCapasCartograficasAco(data) {
-        if (!window.leafletMap || !data) return;
-
-        // Limpiar capas previas si existen
-        if (window.capaRecomendadaAco) window.leafletMap.removeLayer(window.capaRecomendadaAco);
-        if (window.capaMasCortaAco) window.leafletMap.removeLayer(window.capaMasCortaAco);
-        if (window.capasAlternativasAco && window.capasAlternativasAco.length) {
-            window.capasAlternativasAco.forEach(l => window.leafletMap.removeLayer(l));
-            window.capasAlternativasAco = [];
-        }
-        if (window.capaObstaculosActivos) window.leafletMap.removeLayer(window.capaObstaculosActivos);
-        if (window.capaObstaculosResueltos) window.leafletMap.removeLayer(window.capaObstaculosResueltos);
-
-        const bounds = window.L.latLngBounds([]);
-
-        // 1. Alternativas neutras de fondo (líneas finas grises)
-        if (Array.isArray(data.geometria_alternativas)) {
-            data.geometria_alternativas.forEach(geo => {
-                if (Array.isArray(geo) && geo.length >= 2) {
-                    const pts = geo.map(p => [p.lat, p.lng]);
-                    const l = window.L.polyline(pts, {
-                        color: '#94a3b8',
-                        weight: 3,
-                        opacity: 0.45
-                    }).addTo(window.leafletMap);
-                    l.bindPopup('<div class="p-1 text-xs"><strong>TRAMO ALTERNATIVO</strong><br><span class="text-[10px] text-slate-500">Red topológica analizada</span></div>');
-                    window.capasAlternativasAco.push(l);
-                    bounds.extend(l.getBounds());
-                }
-            });
-        }
-
-        // 2. Ruta más corta (línea discontinua ámbar/roja)
-        if (Array.isArray(data.geometria_mas_corta)) {
-            const cortoPuntos = [];
-            data.geometria_mas_corta.forEach(geo => {
-                if (Array.isArray(geo)) {
-                    geo.forEach(p => cortoPuntos.push([p.lat, p.lng]));
-                }
-            });
-            if (cortoPuntos.length >= 2) {
-                window.capaMasCortaAco = window.L.polyline(cortoPuntos, {
-                    color: '#d97706',
-                    weight: 4,
-                    dashArray: '8, 8',
-                    opacity: 0.85
-                }).addTo(window.leafletMap);
-                window.capaMasCortaAco.bindPopup(
-                    `<div class="p-1 text-xs font-bold text-amber-900">
-                        CAMINO DE MENOR DISTANCIA<br>
-                        <span class="text-[11px] font-normal text-slate-700">Distancia: <strong>${data.distancia_camino_corto} M</strong> · Riesgo acumulado: <strong>${data.riesgo_camino_corto}</strong></span>
-                    </div>`
-                );
-                bounds.extend(window.capaMasCortaAco.getBounds());
-            }
-        }
-
-        // 3. RUTA RECOMENDADA ACO (Línea gruesa esmeralda destacada)
-        if (Array.isArray(data.geometria_recomendada)) {
-            const recoPuntos = [];
-            data.geometria_recomendada.forEach(geo => {
-                if (Array.isArray(geo)) {
-                    geo.forEach(p => recoPuntos.push([p.lat, p.lng]));
-                }
-            });
-            if (recoPuntos.length >= 2) {
-                window.capaRecomendadaAco = window.L.polyline(recoPuntos, {
-                    color: '#059669',
-                    weight: 8,
-                    opacity: 0.95
-                }).addTo(window.leafletMap);
-                window.capaRecomendadaAco.bindPopup(
-                    `<div class="p-1 text-xs">
-                        <strong class="text-emerald-900 uppercase">━━━ RUTA RECOMENDADA (ACO)</strong><br>
-                        <span class="text-[11px] text-slate-700">Distancia: <strong>${data.distancia_total} M</strong> · Riesgo: <strong>${data.nivel_riesgo_estimado}</strong></span><br>
-                        <span class="text-[10px] text-slate-500 italic mt-1 block">"${data.motivo_recomendacion}"</span>
-                    </div>`
-                );
-                bounds.extend(window.capaRecomendadaAco.getBounds());
-            }
-        }
-
-        // 4. Marcadores de Obstáculos Activos y Resueltos
-        const obstaculos = data.obstaculos_detalle || [];
-        const activosMarkers = [];
-        const resueltosMarkers = [];
-
-        obstaculos.forEach(obs => {
-            if (obs.lat && obs.lng) {
-                if (obs.es_activo) {
-                    const m = window.L.circleMarker([obs.lat, obs.lng], {
-                        radius: 7,
-                        color: '#b91c1c',
-                        fillColor: '#ef4444',
-                        fillOpacity: 0.9,
-                        weight: 2
-                    }).bindPopup(
-                        `<div class="p-1 text-xs">
-                            <strong class="text-rose-800 uppercase">● OBSTÁCULO ACTIVO</strong><br>
-                            <span class="font-bold text-slate-800">${obs.tipo}:</span> ${obs.descripcion}<br>
-                            <span class="text-[10px] text-slate-500 uppercase mt-0.5 block">Tramo: ${obs.tramo_nom}</span>
-                        </div>`
-                    );
-                    activosMarkers.push(m);
-                    bounds.extend([obs.lat, obs.lng]);
-                } else {
-                    const m = window.L.circleMarker([obs.lat, obs.lng], {
-                        radius: 6,
-                        color: '#047857',
-                        fillColor: '#10b981',
-                        fillOpacity: 0.8,
-                        weight: 1
-                    }).bindPopup(
-                        `<div class="p-1 text-xs">
-                            <strong class="text-emerald-800 uppercase">✓ OBSTÁCULO RESUELTO</strong><br>
-                            <span class="font-bold text-slate-800">${obs.tipo}:</span> ${obs.descripcion}<br>
-                            <span class="text-[10px] text-slate-500 uppercase mt-0.5 block">Estado: RESUELTO (no afecta riesgo vigente)</span>
-                        </div>`
-                    );
-                    resueltosMarkers.push(m);
-                }
-            }
-        });
-
-        if (activosMarkers.length) {
-            window.capaObstaculosActivos = window.L.featureGroup(activosMarkers).addTo(window.leafletMap);
-        }
-
-        if (resueltosMarkers.length) {
-            window.capaObstaculosResueltos = window.L.featureGroup(resueltosMarkers);
-            const chk = document.getElementById('chk-capa-resueltos');
-            if (chk && chk.checked) {
-                window.capaObstaculosResueltos.addTo(window.leafletMap);
-            }
-        }
-
-        if (bounds.isValid()) {
-            window.leafletMap.fitBounds(bounds, { padding: [40, 40] });
-        }
+        window.renderizarCaminosAco?.(window.leafletMap,data,{alternativas:true,tecnico:true});
     }
-
     function toggleCapaObstaculosResueltos(mostrar) {
         if (!window.leafletMap || !window.capaObstaculosResueltos) return;
         if (mostrar) {

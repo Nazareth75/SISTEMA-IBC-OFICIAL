@@ -87,13 +87,13 @@
     <div class="md:col-span-2 rounded-lg border border-green-200 bg-green-50 p-4 lg:p-5">
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <p class="text-sm font-bold text-green-800 uppercase">
-                ASISTENTE DE RUTA SEGURA: ORIGEN → DESTINO → VISTA PREVIA
+                EDITOR DE PUNTOS: ORIGEN → DESTINO → VISTA PREVIA
             </p>
             <div class="flex flex-wrap gap-2 items-center">
                 <button type="button" id="btn-iniciar-asistente"
                     class="bg-green-600 hover:bg-green-700 text-white font-bold px-4 py-2 rounded uppercase text-xs shadow"
                     title="INICIA EL FLUJO GUIADO: PRIMERO ORIGEN Y LUEGO DESTINO">
-                    <i class="fas fa-play-circle mr-1"></i> INICIAR ASISTENTE
+                    <i class="fas fa-map-pin mr-1"></i> INICIAR SELECCIÓN DE PUNTOS
                 </button>
                 <button type="button" id="btn-seleccionar-origen"
                     class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold px-3 py-2 rounded uppercase text-xs shadow"
@@ -118,6 +118,17 @@
                 </button>
             </div>
         </div>
+
+        <p class="mt-3 text-sm">ESTA VISTA PREVIA ESTIMA UN TRAYECTO. ACO COMPARA LOS CAMINOS DE LOS TRAMOS GUARDADOS EN LA FICHA DE LA RUTA.</p>
+        @if(isset($ruta) && $ruta->exists)
+            <div class="mt-3 flex flex-wrap gap-3" aria-label="Asistente hablado y caminos ACO">
+                <button type="button" data-asistente-ruta="{{ route('rutas.asistente',$ruta) }}" style="background:#166534;color:white;padding:14px;border-radius:8px">INICIAR ASISTENTE DE VOZ</button>
+                <button type="button" data-detener-asistente class="border rounded p-3">DETENER AUDIO</button>
+                <a href="{{ route('rutas.show',$ruta) }}#mapa-detalle-ruta" class="underline p-3">VER CAMINOS ACO Y TRAMOS GUARDADOS</a>
+            </div>
+            <p id="estado-asistente-rutas" role="status" aria-live="polite" class="mt-2">ESCUCHA LA RECOMENDACIÓN Y LOS OBSTÁCULOS DE LA RUTA GUARDADA.</p>
+            <script src="{{ asset('js/asistente-rutas.js') }}" defer></script>
+        @endif
 
         <div class="mt-3 grid grid-cols-1 lg:grid-cols-3 gap-2" id="pasos-ruta">
             <div id="paso-origen" class="rounded border border-yellow-200 bg-yellow-50 px-3 py-2">

@@ -147,8 +147,9 @@
                     <h4 class="text-xs font-bold text-gray-600 uppercase mb-3">
                         <i class="fas fa-plus-circle mr-1" style="color:#2d6a27"></i> AGREGAR NUEVO TRAMO
                     </h4>
-                    <form action="{{ route('rutas.tramos.store', $ruta) }}" method="POST">
+                    <form id="form-nuevo-tramo" action="{{ route('rutas.tramos.store', $ruta) }}" method="POST">
                         @csrf
+                        @include('rutas.partials.editor_tramo_mapa')
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
                             <div class="md:col-span-2">
                                 <input type="text" name="nom_ctr" required maxlength="150"

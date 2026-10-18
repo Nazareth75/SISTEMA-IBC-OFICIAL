@@ -341,7 +341,8 @@ class ServicioAco
             executionTimeMs: $execTime,
             bestFoundIteration: $bestFoundIteration,
             convergenceIteration: $convergenceIteration > 0 ? $convergenceIteration : $bestFoundIteration,
-            bestCostHistory: $bestCostHistory
+            bestCostHistory: $bestCostHistory,
+            pheromones: $pheromones
         );
     }
 }

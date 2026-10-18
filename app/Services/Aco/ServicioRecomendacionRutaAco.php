@@ -64,7 +64,8 @@ class ServicioRecomendacionRutaAco
         ?CalculadorRiesgoTramoAco $calculadorRiesgo = null
     ): ResultadoRecomendacionAco {
         $calcRiesgo = $calculadorRiesgo ?? $this->calculadorRiesgo;
-        $cfg = $config ?? new ConfiguracionAco();
+        $cfg = $config ?? ($ruta->ide_rut === 'DEMO-RUT-LP-OSM'
+            ? new ConfiguracionAco(...config('movilidad.aco_demo_la_paz')) : new ConfiguracionAco());
 
         // 1. Análisis topológico preliminar
         $analisis = $this->constructorGrafo->analizar($ruta);
@@ -287,16 +288,16 @@ class ServicioRecomendacionRutaAco
             'M5' => [
                 'clave'       => 'M5_tasa_exito',
                 'nombre'      => 'Tasa de éxito',
-                'valor'       => 100.0,
+                'valor'       => null,
                 'unidad'      => '%',
-                'descripcion' => 'Porcentaje de ejecuciones que encontraron un camino factible.',
+                'descripcion' => 'No evaluada: requiere un conjunto de ejecuciones experimentales.',
             ],
             'M6' => [
                 'clave'       => 'M6_estabilidad',
                 'nombre'      => 'Estabilidad del costo',
-                'valor'       => round($resAco->totalCost, 4),
+                'valor'       => null,
                 'unidad'      => 'costo',
-                'descripcion' => 'Mejor costo alcanzado en la sesión.',
+                'descripcion' => 'No evaluada: requiere media, desviación y CV de varias ejecuciones.',
             ],
             'M7' => [
                 'clave'       => 'M7_reduccion_riesgo',
@@ -346,7 +347,15 @@ class ServicioRecomendacionRutaAco
             geometriaMasCorta: $geometriaMasCorta,
             geometriaAlternativas: $geometriaAlternativas,
             bestCostHistory: $resAco->bestCostHistory,
-            metricas: $metricas
+            metricas: $metricas,
+            feromonasTramos: array_map(fn ($arista) => [
+                'tramo_id' => $arista['tramo_id'], 'geo' => $arista['geo'],
+                'tau' => $resAco->pheromones[$arista['origen'].'->'.$arista['destino']] ?? null,
+            ], $aristasRuta),
+            parametrosEjecucion: ['alpha'=>$cfg->alpha,'beta'=>$cfg->beta,'rho'=>$cfg->rho,'Q'=>$cfg->Q,
+                'hormigas'=>$cfg->ants,'iteraciones'=>$cfg->iterations,'semilla'=>$cfg->seed,
+                'peso_distancia'=>$cfg->wDistance,'peso_riesgo'=>$cfg->wRisk],
+            caminosCandidatos: (new CaminosVisualesAco())->generar($analisis,$grafo,$resAco,$cfg)
         );
     }
 

@@ -27,6 +27,10 @@ use App\Http\Controllers\BackupController;
 
 
 
+Route::middleware(['auth'])->group(function () {
+    Route::get('navegacion', [\App\Http\Controllers\NavegacionAccesibleController::class, 'index'])->name('navegacion.index');
+    Route::get('navegacion/rutas/{ruta}', [\App\Http\Controllers\NavegacionAccesibleController::class, 'show'])->name('navegacion.ruta');
+});
 Route::get('/', function () {
     return view('welcome');
 });
@@ -246,6 +250,11 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::middleware(['role:SUPERADMINISTRADOR,ADMINISTRADOR,TECNICO'])->group(function () {
+        Route::get('api/rutas/{ruta}/asistente', [\App\Http\Controllers\AsistenteRutaController::class, 'show'])
+            ->middleware('throttle:30,1')->name('rutas.asistente');
+        Route::get('eventos-baston', [\App\Http\Controllers\EventoBastonController::class, 'index'])->name('rutas.eventos');
+        Route::post('eventos-baston/{evento}/reportar', [\App\Http\Controllers\EventoBastonController::class, 'reportar'])->name('rutas.eventos.reportar');
+
         Route::resource('rutas', RutaController::class)
             ->parameters(['rutas' => 'ruta']);
 
