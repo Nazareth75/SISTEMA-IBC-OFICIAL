@@ -14,7 +14,7 @@ use App\Services\Aco\ServicioAco;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
-class ConstructorGrafoRutaTest extends TestCase
+class ConstructorGrafoRuta_Test extends TestCase
 {
     use DatabaseTransactions;
 

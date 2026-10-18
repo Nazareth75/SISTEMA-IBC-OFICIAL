@@ -8,7 +8,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
-class RutaAcoUiTest extends TestCase
+class RutaVisualizacionAco_Test extends TestCase
 {
     use DatabaseTransactions;
 
@@ -18,7 +18,6 @@ class RutaAcoUiTest extends TestCase
     {
         parent::setUp();
 
-        // Obtener o crear usuario con permisos para visualizar rutas
         $this->adminUser = User::first() ?? User::create([
             'nom_usu'  => 'ADMINISTRADOR TEST',
             'email'    => 'admin_test@ibc.org',
@@ -69,9 +68,9 @@ class RutaAcoUiTest extends TestCase
     }
 
     /**
-     * Test 3: rutas.show siempre muestra la sección 'OPTIMIZACIÓN DE RUTA CON ACO' para cualquier ruta.
+     * Test 3: rutas.show muestra la sección 'RUTA RECOMENDADA' y los acordeones técnicos para administradores.
      */
-    public function test_detalle_ruta_siempre_muestra_seccion_aco(): void
+    public function test_detalle_ruta_muestra_seccion_aco_y_detalles_tecnicos(): void
     {
         $ruta = Ruta::create([
             'ide_rut'              => 'RUT-UI-02',
@@ -85,13 +84,14 @@ class RutaAcoUiTest extends TestCase
         $response = $this->actingAs($this->adminUser)->get(route('rutas.show', $ruta));
 
         $response->assertStatus(200);
-        $response->assertSee('OPTIMIZACIÓN DE RUTA CON ACO');
-        $response->assertSee('CHECKLIST DE PREPARACIÓN PARA OPTIMIZACIÓN ACO');
-        $response->assertSee('EJECUTAR ACO (DESHABILITADO)');
+        $response->assertSee('RUTA RECOMENDADA');
+        $response->assertSee('VER DETALLES TÉCNICOS Y BENCHMARKING DE ACO');
+        $response->assertSee('LEYENDA:');
+        $response->assertSee('Ruta recomendada');
     }
 
     /**
-     * Test 4: Una nueva ruta sin tramos muestra la indicación 'SIGUIENTE PASO: CONFIGURAR TRAMOS'.
+     * Test 4: Una nueva ruta sin tramos muestra la indicación 'OPTIMIZACIÓN ACO NO DISPONIBLE'.
      */
     public function test_ruta_sin_tramos_muestra_indicacion_siguiente_paso(): void
     {
@@ -107,18 +107,18 @@ class RutaAcoUiTest extends TestCase
         $response = $this->actingAs($this->adminUser)->get(route('rutas.show', $ruta));
 
         $response->assertStatus(200);
-        $response->assertSee('SIGUIENTE PASO: CONFIGURAR TRAMOS DE LA RUTA');
-        $response->assertSee('AGREGAR O ASOCIAR TRAMOS EN EDICIÓN');
+        $response->assertSee('OPTIMIZACIÓN ACO NO DISPONIBLE ACTUALMENTE PARA ESTA RUTA');
+        $response->assertSee('La ruta no posee tramos viales asociados.');
     }
 
     /**
-     * Test 5: Una ruta con tramos muestra la tabla detallada de tramos con conexiones de nodos y 'SIN DATOS'.
+     * Test 5 (SECCIÓN 19): Tramo sin datos muestra 'RIESGO NO EVALUADO' y NUNCA 'Sin riesgo'.
      */
-    public function test_ruta_con_tramos_muestra_tabla_con_conexiones_y_sin_datos(): void
+    public function test_tramo_sin_datos_muestra_riesgo_no_evaluado_y_nunca_sin_riesgo(): void
     {
         $ruta = Ruta::create([
             'ide_rut'              => 'RUT-UI-04',
-            'nom_rut'              => 'RUTA CON TRAMOS LINEALES',
+            'nom_rut'              => 'RUTA CON TRAMOS LINEALES SIN DATOS',
             'ori_rut'              => 'PUNTO A',
             'dst_rut'              => 'PUNTO B',
             'est_rut'              => 'BORRADOR',
@@ -126,7 +126,7 @@ class RutaAcoUiTest extends TestCase
         ]);
 
         $tramo = CalleTramo::create([
-            'nom_ctr' => 'SEGMENTO TEST UI',
+            'nom_ctr' => 'SEGMENTO TEST UI SIN DATOS',
             'tip_ctr' => 'ACERA',
             'lon_ctr' => 180.50,
             'geo_ctr' => [
@@ -140,13 +140,10 @@ class RutaAcoUiTest extends TestCase
         $response = $this->actingAs($this->adminUser)->get(route('rutas.show', $ruta));
 
         $response->assertStatus(200);
-        $response->assertSee('TRAMOS DE LA RUTA Y CONEXIONES TOPOLÓGICAS');
-        $response->assertSee('SEGMENTO TEST UI');
-        $response->assertSee('180.5 M');
-        $response->assertSee('N0');
-        $response->assertSee('N1');
-        $response->assertSee('SIN DATOS');
-        $response->assertSee('Sin riesgo');
-        $response->assertSee('EJECUTAR ACO (DESHABILITADO)');
+        $response->assertSee('TABLA DE TRAMOS Y RIESGO VIAL');
+        $response->assertSee('SEGMENTO TEST UI SIN DATOS');
+        $response->assertSee('SIN_DATOS');
+        $response->assertSee('RIESGO NO EVALUADO');
+        $response->assertDontSee('Sin riesgo');
     }
 }

@@ -97,6 +97,16 @@ class Grafo
         return $this;
     }
 
+    public function agregarArista(Arista $edge): self
+    {
+        return $this->addEdge($edge);
+    }
+
+    public function agregarNodo(string $node): self
+    {
+        return $this->addNode($node);
+    }
+
     /**
      * Verifica si un nodo existe dentro de la topología del grafo.
      *

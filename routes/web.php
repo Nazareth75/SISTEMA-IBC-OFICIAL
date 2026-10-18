@@ -258,6 +258,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('rutas/{ruta}/cambiar-estado', [RutaController::class, 'cambiarEstado'])
             ->name('rutas.cambiar-estado');
 
+        Route::post('rutas/{ruta}/aco/recalcular', [RutaController::class, 'recalcularAco'])
+            ->name('rutas.aco.recalcular');
+
         Route::post('rutas/{ruta}/tramos', [TramoController::class, 'store'])
             ->name('rutas.tramos.store');
         Route::patch('rutas/{ruta}/tramos/reordenar', [TramoController::class, 'reordenar'])
