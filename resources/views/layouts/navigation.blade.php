@@ -109,7 +109,7 @@
 
         @if(auth()->user()->tieneRol('SUPERADMINISTRADOR', 'ADMINISTRADOR', 'TECNICO') && !auth()->user()->tieneRol('ADMINISTRADOR_NO_VIDENTE'))
         <div class="px-5 pt-4 pb-2 text-[11px] font-bold uppercase tracking-widest text-gray-400">
-            Módulo 7
+            Rutas y Navegación
         </div>
 
         <a href="{{ route('rutas.index') }}"
@@ -121,7 +121,13 @@
         <a href="{{ route('obstaculos.index') }}"
            class="ibc-sidebar-link {{ request()->routeIs('obstaculos.*') ? 'ibc-sidebar-active' : '' }}">
             <span class="material-symbols-outlined">warning</span>
-            <span>Obstáculos</span>
+            <span>Obstáculos en Tramos</span>
+        </a>
+
+        <a href="{{ route('verificaciones.bandeja') }}"
+           class="ibc-sidebar-link {{ request()->routeIs('verificaciones.*') ? 'ibc-sidebar-active' : '' }}">
+            <span class="material-symbols-outlined">fact_check</span>
+            <span>Verificaciones</span>
         </a>
 
         @endif
@@ -135,7 +141,7 @@
         <a href="{{ route('reportes-obstaculos.index') }}"
            class="ibc-sidebar-link {{ request()->routeIs('reportes-obstaculos.index', 'reportes-obstaculos.show') ? 'ibc-sidebar-active' : '' }}">
             <span class="material-symbols-outlined">visibility</span>
-            <span>Obstáculos Urbanos</span>
+            <span>Reportes de Obstáculos</span>
         </a>
         @endif
 
@@ -143,7 +149,7 @@
         <a href="{{ route('reportes-obstaculos.mapa-monitoreo') }}"
            class="ibc-sidebar-link {{ request()->routeIs('reportes-obstaculos.mapa-monitoreo') ? 'ibc-sidebar-active' : '' }}">
             <span class="material-symbols-outlined">map</span>
-            <span>Mapa de Riesgo</span>
+            <span>Mapa de Monitoreo</span>
         </a>
 
         <a href="{{ route('reportes-obstaculos.create') }}"

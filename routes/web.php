@@ -325,6 +325,22 @@ Route::middleware(['auth'])->group(function () {
             ->name('reportes-obstaculos.mis-reportes');
         Route::get('mapa-monitoreo', [ReporteObstaculoController::class, 'mapaMonitoreo'])
             ->name('reportes-obstaculos.mapa-monitoreo');
+
+        // Verificación colaborativa por voluntarios (Fase 5D)
+        Route::get('obstaculos/{obstaculo}/verificar', [\App\Http\Controllers\VerificacionObstaculoController::class, 'create'])
+            ->name('obstaculos.verificar');
+        Route::post('obstaculos/{obstaculo}/verificar', [\App\Http\Controllers\VerificacionObstaculoController::class, 'store'])
+            ->name('obstaculos.verificar.store');
+    });
+
+    Route::middleware(['role:SUPERADMINISTRADOR,ADMINISTRADOR,TECNICO'])->group(function () {
+        // Bandeja de decisiones técnicas sobre consenso colaborativo (Fase 5D)
+        Route::get('verificaciones-pendientes', [\App\Http\Controllers\VerificacionObstaculoController::class, 'bandejaTecnico'])
+            ->name('verificaciones.bandeja');
+        Route::post('verificaciones/{obstaculo}/confirmar-resolucion', [\App\Http\Controllers\VerificacionObstaculoController::class, 'confirmarResolucion'])
+            ->name('verificaciones.confirmar');
+        Route::post('verificaciones/{obstaculo}/mantener-activo', [\App\Http\Controllers\VerificacionObstaculoController::class, 'mantenerActivo'])
+            ->name('verificaciones.mantener');
     });
 });
 
