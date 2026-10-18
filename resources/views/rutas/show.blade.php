@@ -171,6 +171,11 @@
                 <p>Esta ficha corresponde a {{ $ruta->ide_rut }}. Para ver exactamente los caminos y tramos enviados a la app, abre el mapa compartido.</p>
                 <a href="{{ route('rutas.previa-merced') }}" class="inline-block rounded text-white font-bold px-5 py-3 mt-2" style="background:#166534">VER EL MISMO MAPA DE LA APP</a>
             </section>
+            @if($ruta->esDemo())
+                @include('rutas.partials.mapa_compartido')
+                <details class="border rounded p-3">
+                    <summary class="font-bold cursor-pointer">FICHA TECNICA HISTORICA DE {{ $ruta->ide_rut }} (NO ES LA RUTA DEL CELULAR)</summary>
+            @endif
             {{-- ── VISTA PREVIA DEL TRAYECTO ───────────────────── --}}
             <div class="bg-white rounded-lg shadow p-6">
                 <div class="flex items-center justify-between gap-3 mb-3">
@@ -211,6 +216,7 @@
             <p>REFERENCIA HISTÓRICA: GEO_RUT U OSRM. NO DEFINE LA RECOMENDACIÓN ACO. DISPONIBLE EN LAS CAPAS TÉCNICAS.</p>
             <p class="text-sm text-purple-900 uppercase">MAYOR GROSOR = MAYOR REFUERZO DE FEROMONA OBTENIDO POR ACO, EN EL TRAZO COLOREADO. EL CONTORNO BLANCO DESTACA LA RECOMENDADA. LAS TARJETAS MUESTRAN DISTANCIA, RIESGO Y COSTO: LA SEGURIDAD NO SE DEDUCE SOLO DE LA FEROMONA.</p>
 
+            @if($ruta->esDemo())</details>@endif
             {{-- ── TRAMOS ──────────────────────────────────────────── --}}
             <div>
                 <h3 class="font-bold text-gray-700 uppercase mb-3">

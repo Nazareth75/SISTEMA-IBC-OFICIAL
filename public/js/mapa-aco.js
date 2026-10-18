@@ -45,7 +45,8 @@ window.renderizarCaminosAco = function(map, data, opciones = {}) {
         }
     });
     const recomendada = caminos.find(c => c.recomendada);
-    if(recomendada)overlays[recomendada.nombre]?.bringToFront();
+    if(opciones.celular) [...caminos].sort((a,b)=>(Number(a.recomendada)-Number(b.recomendada)) || (a.refuerzo_relativo-b.refuerzo_relativo)).forEach(c=>overlays[c.nombre]?.bringToFront());
+    else if(recomendada)overlays[recomendada.nombre]?.bringToFront();
     if(recomendada && L.circleMarker) {
         recomendada.geometria.forEach((geo,i) => {
             if(!geo.length)return;

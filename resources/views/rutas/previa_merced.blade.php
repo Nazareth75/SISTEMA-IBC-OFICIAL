@@ -14,19 +14,6 @@
             });
             </script>
         @endif
-        <p class="font-bold my-3">VERDE: RECOMENDADA ACO. AZUL: ALTERNATIVAS. T: TRAMOS. MISMA GEOMETRIA Y REFUERZO QUE RECIBE EL CELULAR.</p>
-        <div id="mapa-previa" style="height:620px"></div>
-        <div id="caminos-previa"></div>
-        <p>Circulos blancos: limites de tramos. Pulsa un tramo para consultar su calle. Ancho: refuerzo real de feromona ACO.</p>
+        @include('rutas.partials.mapa_compartido')
     </div>
-    @push('styles')<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">@endpush
-    @push('scripts')
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="{{ asset('js/mapa-aco.js') }}?v=celular4"></script>
-    <script>
-        const mapaPrevia=L.map('mapa-previa').setView([-16.49,-68.13],14);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'OpenStreetMap contributors'}).addTo(mapaPrevia);
-        window.renderizarCaminosAco(mapaPrevia,@json($previa),{alternativas:true,celular:true,panel:'caminos-previa'});
-    </script>
-    @endpush
 </x-app-layout>

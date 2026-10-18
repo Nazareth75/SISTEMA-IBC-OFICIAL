@@ -38,7 +38,7 @@
 @endif
             <a href="{{ route('rutas.eventos') }}" class="underline inline-block mb-4">VER EVENTOS Y SOS DEL BASTÓN</a>
             @include('rutas.partials.tabla')
-            @include('rutas.partials.mapa_catalogo')
+            @include('rutas.partials.mapa_compartido')
         </div>
     </div>
     @if(strtoupper(Auth::user()->role?->nom_rol ?? '') === 'ADMINISTRADOR_NO_VIDENTE')
