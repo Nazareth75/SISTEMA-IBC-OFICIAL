@@ -41,7 +41,19 @@ class MovilidadController extends Controller
             $q->where(fn($p)=>$p->where('est_rut','PUBLICADA')->where('ide_rut','not like','DEMO-%'));
             if ($demo) $q->orWhere('ide_rut', 'DEMO-RUT-LP-OSM');
         })->orderBy('nom_rut')->paginate(10, ['cod_rutas','nom_rut','ori_rut','dst_rut','ide_rut','est_rut']);
+        if (config('movilidad.permitir_vista_previa') && $rutas->currentPage() === 1) {
+            $rutas->setCollection($rutas->getCollection()->prepend([
+                'cod_rutas'=>\App\Services\VistaPreviaMerced::ID,'nom_rut'=>'VISTA PREVIA: IBC a Hospital La Merced',
+                'ori_rut'=>'IBC - Calle Colombia','dst_rut'=>'Hospital La Merced','ide_rut'=>'PREVIA-MERCED','est_rut'=>'SIN VALIDAR',
+            ]));
+        }
         return response()->json($rutas);
+    }
+
+    public function previaMerced(Request $request) {
+        $this->activo($request);
+        abort_unless(config('movilidad.permitir_vista_previa'),404);
+        return response()->json(app(\App\Services\VistaPreviaMerced::class)->obtener());
     }
 
     public function show(Request $request, Ruta $ruta, AsistenteRutaService $asistente)

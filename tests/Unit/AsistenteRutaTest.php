@@ -66,6 +66,9 @@ class AsistenteRutaTest extends TestCase
             }
             $this->get(route('rutas.index'))->assertSee('VER EVENTOS Y SOS DEL BASTÓN')->assertSee('mapa-catalogo-rutas');
             $this->get(route('rutas.edit', $ruta))->assertSee('VER CAMINOS ACO Y TRAMOS GUARDADOS');
+            $previa = $this->get(route('rutas.previa-merced'))->assertOk();
+            if ($visible) $previa->assertSee('id="leer-previa"', false);
+            else $previa->assertDontSee('id="leer-previa"', false);
         }
         $salida=storage_path('framework/testing');
         if(!is_dir($salida))mkdir($salida,0775,true);

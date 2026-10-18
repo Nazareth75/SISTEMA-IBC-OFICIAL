@@ -14,6 +14,7 @@ import 'geometria.dart';
 import 'sesion_segura.dart';
 import 'almacen_movilidad.dart';
 import 'configuracion.dart';
+import 'caminos_mapa.dart';
 
 void main() => runApp(
   const MaterialApp(home: Movilidad(), debugShowCheckedModeBanner: false),
@@ -44,6 +45,7 @@ class _MovilidadState extends State<Movilidad> {
   List<ScanResult> dispositivos = [];
   Map<String, dynamic>? ruta;
   List<List<LatLng>> trazos = [];
+  List<CaminoMapa> caminosMapa = [];
   StreamSubscription<Position>? gps;
   StreamSubscription<List<int>>? datosBaston;
   StreamSubscription<BluetoothConnectionState>? conexion;
@@ -238,6 +240,15 @@ class _MovilidadState extends State<Movilidad> {
   void mostrarRuta(Map<String, dynamic> data) {
     setState(() {
       ruta = data;
+      caminosMapa =
+          ((data['caminos_candidatos'] ?? []) as List)
+              .map((c) => CaminoMapa(Map<String, dynamic>.from(c)))
+              .toList()
+            ..sort(
+              (a, b) => a.recomendada == b.recomendada
+                  ? a.refuerzo.compareTo(b.refuerzo)
+                  : (a.recomendada ? 1 : -1),
+            );
       estado = data['resumen_audio'];
       trazos = (data['geometria_recomendada'] as List)
           .map(
@@ -540,7 +551,8 @@ class _MovilidadState extends State<Movilidad> {
       'tipo': tipo,
       'origen': origen,
       'fecha_evento': DateTime.now().toUtc().toIso8601String(),
-      if (ruta != null) 'ruta_id': ruta!['ruta_id'],
+      if (ruta != null && ruta!['vista_previa'] != true)
+        'ruta_id': ruta!['ruta_id'],
       'distancias_cm': ?distancias,
       if (coordenadas.length == 2) ...{
         'latitud': coordenadas[0],
@@ -750,6 +762,15 @@ class _MovilidadState extends State<Movilidad> {
               ],
             ),
             if (ruta != null) ...[
+              const Text(
+                'Ancho proporcional al refuerzo real de ACO. Verde: recomendada. Azul: alternativas.',
+              ),
+              for (final camino in caminosMapa)
+                Text(
+                  '${camino.nombre}. Refuerzo ${(camino.refuerzo * 100).toStringAsFixed(1)} por ciento. Tramos ${camino.tramos.join(', ')}.',
+                ),
+              if (ruta!['vista_previa'] == true)
+                Text(ruta!['advertencia'] as String),
               if (ruta!['demostracion'] == true)
                 const Text(
                   'DATOS SIMULADOS · NO VALIDADOS EN CAMPO',
@@ -800,18 +821,47 @@ class _MovilidadState extends State<Movilidad> {
                         userAgentPackageName: 'bo.ibc.ibc_movilidad',
                       ),
                       PolylineLayer(
-                        polylines: trazos
-                            .map(
-                              (p) => Polyline(
-                                points: p,
-                                color: Colors.green.shade800,
-                                strokeWidth: 6,
+                        polylines: [
+                          for (final camino in caminosMapa)
+                            for (final segmento in camino.geometria)
+                              Polyline(
+                                points: segmento,
+                                color: camino.recomendada
+                                    ? Colors.green.shade800
+                                    : Colors.blue.shade600.withValues(
+                                        alpha: 0.65,
+                                      ),
+                                strokeWidth: camino.grosor,
                               ),
-                            )
-                            .toList(),
+                        ],
                       ),
                       MarkerLayer(
                         markers: [
+                          for (final camino in caminosMapa.where(
+                            (c) => c.recomendada,
+                          ))
+                            for (var i = 0; i < camino.geometria.length; i++)
+                              if (camino.geometria[i].isNotEmpty)
+                                Marker(
+                                  point: camino.geometria[i].first,
+                                  width: 72,
+                                  height: 28,
+                                  child: Semantics(
+                                    label:
+                                        'Tramo ${camino.tramos[i]}: ${camino.nombresTramos[i]}',
+                                    child: Container(
+                                      color: Colors.white,
+                                      child: Text(
+                                        'T${camino.tramos[i]}',
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
                           Marker(
                             point: trazos.first.first,
                             child: Semantics(

@@ -255,6 +255,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('eventos-baston', [\App\Http\Controllers\EventoBastonController::class, 'index'])->name('rutas.eventos');
         Route::post('eventos-baston/{evento}/reportar', [\App\Http\Controllers\EventoBastonController::class, 'reportar'])->name('rutas.eventos.reportar');
 
+        Route::get('rutas/previa-merced', fn () => view('rutas.previa_merced', ['previa'=>app(\App\Services\VistaPreviaMerced::class)->obtener()]))->name('rutas.previa-merced');
+
         Route::resource('rutas', RutaController::class)
             ->parameters(['rutas' => 'ruta']);
 

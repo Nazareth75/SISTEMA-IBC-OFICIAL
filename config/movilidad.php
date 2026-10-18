@@ -1,5 +1,6 @@
 <?php
 return [
+    'permitir_vista_previa' => (bool) env('MOVILIDAD_VISTA_PREVIA',false),
     'identificacion_prototipo' => (bool) env('MOVILIDAD_IDENTIFICACION_PROTOTIPO',false),
     'permitir_demo' => (bool) env('MOVILIDAD_PERMITIR_DEMO',false),
     'tolerancia_gps_m' => (float) env('MOVILIDAD_TOLERANCIA_GPS_M',20),

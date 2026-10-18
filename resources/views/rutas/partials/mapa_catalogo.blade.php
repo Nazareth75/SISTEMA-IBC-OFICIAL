@@ -13,7 +13,7 @@
 @endif
     <div id="mapa-catalogo-rutas" style="height:360px" aria-label="Mapa de la ruta recomendada"></div>
     <p id="estado-mapa-catalogo" role="status"></p>
-    <p>MAYOR GROSOR = MAYOR REFUERZO DE FEROMONA OBTENIDO POR ACO, EN EL TRAZO COLOREADO. CONTORNO DORADO = RECOMENDADA. COMPARA TAMBIÉN RIESGO Y COSTO EN LAS TARJETAS.</p>
+    <p>MAYOR GROSOR = MAYOR REFUERZO DE FEROMONA OBTENIDO POR ACO, EN EL TRAZO COLOREADO. CONTORNO BLANCO = RECOMENDADA. COMPARA TAMBIÉN RIESGO Y COSTO EN LAS TARJETAS.</p>
     <div id="caminos-catalogo-lista" aria-label="Comparación de caminos completos"></div>
 </section>
 @push('styles')<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">@endpush
