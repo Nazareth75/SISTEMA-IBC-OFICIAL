@@ -39,6 +39,85 @@
 
     <div class="p-6 space-y-6">
 
+        {{-- Alerta Reactiva: Recomendación Desactualizada por Cambio en Obstáculos --}}
+        @if(!empty($recomendacionDesactualizada))
+            <div class="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-xl shadow-sm" id="alerta-desactualizada-aco">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-exclamation-triangle text-amber-500 text-lg mt-0.5"></i>
+                        <div>
+                            <h5 class="text-xs font-black uppercase text-amber-900 tracking-wide flex items-center gap-1.5">
+                                RECOMENDACIÓN DESACTUALIZADA
+                                <span class="bg-amber-200 text-amber-900 text-[10px] px-1.5 py-0.2 rounded font-bold">Cambio detectado</span>
+                            </h5>
+                            <p class="text-xs text-amber-800 mt-0.5" id="texto-motivo-desactualizacion">
+                                {{ $infoDesactualizacion['motivo'] ?? 'Se actualizó la información de riesgo de uno o más tramos de la ruta.' }}
+                            </p>
+                        </div>
+                    </div>
+                    @if(Auth::user()->tieneRol('SUPERADMINISTRADOR', 'ADMINISTRADOR', 'TECNICO'))
+                        <button type="button"
+                            onclick="ejecutarRecalculoAco()"
+                            class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold text-white shadow uppercase bg-amber-600 hover:bg-amber-700 transition self-start sm:self-auto">
+                            <i class="fas fa-sync-alt"></i> Recalcular Ahora
+                        </button>
+                    @endif
+                </div>
+            </div>
+        @endif
+
+        {{-- Historial de Trazabilidad: Último Cambio de Recomendación --}}
+        @if(!empty($historialCambioAco) && !empty($historialCambioAco['hay_cambio']))
+            <div class="bg-indigo-50/70 border border-indigo-200 rounded-xl p-4 shadow-sm" id="seccion-historial-cambio-aco">
+                <div class="flex items-center justify-between gap-2 border-b border-indigo-100 pb-2 mb-3">
+                    <span class="text-xs font-black uppercase tracking-wider text-indigo-900 flex items-center gap-2">
+                        <i class="fas fa-history text-indigo-600"></i> ÚLTIMO CAMBIO DE RECOMENDACIÓN
+                    </span>
+                    <span class="text-[10px] font-semibold text-indigo-600 bg-indigo-100 px-2.5 py-0.5 rounded-full" id="aco-historial-fecha">
+                        {{ $historialCambioAco['fecha_cambio'] ?? now()->format('Y-m-d H:i') }}
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs mb-2">
+                    <div class="bg-white p-3 rounded-lg border border-slate-200">
+                        <p class="font-bold text-slate-500 uppercase text-[10px]">RECOMENDACIÓN ANTERIOR</p>
+                        <p class="font-bold text-slate-800 mt-1" id="aco-historial-ant-camino">
+                            Nodos: {{ implode(' → ', $historialCambioAco['anterior']['nodos'] ?? []) }}
+                        </p>
+                        <div class="flex items-center gap-3 mt-1.5 text-slate-600 font-mono text-[11px]">
+                            <span>Distancia: <strong id="aco-historial-ant-dist">{{ $historialCambioAco['anterior']['distancia'] ?? 0 }} m</strong></span>
+                            <span>Riesgo: <strong id="aco-historial-ant-riesgo">{{ $historialCambioAco['anterior']['riesgo'] ?? 0 }}</strong></span>
+                            <span>Costo: <strong id="aco-historial-ant-costo">{{ $historialCambioAco['anterior']['costo'] ?? 0 }}</strong></span>
+                        </div>
+                    </div>
+
+                    <div class="bg-emerald-50/80 p-3 rounded-lg border border-emerald-200">
+                        <div class="flex items-center justify-between">
+                            <p class="font-bold text-emerald-800 uppercase text-[10px]">RECOMENDACIÓN ACTUAL</p>
+                            @if(!empty($historialCambioAco['cambio_ruta_efectivo']))
+                                <span class="bg-emerald-200 text-emerald-900 px-1.5 py-0.2 rounded font-black text-[9px] uppercase tracking-wide">
+                                    ¡NUEVA TRAYECTORIA ÓPTIMA!
+                                </span>
+                            @endif
+                        </div>
+                        <p class="font-bold text-slate-900 mt-1" id="aco-historial-act-camino">
+                            Nodos: {{ implode(' → ', $historialCambioAco['actual']['nodos'] ?? []) }}
+                        </p>
+                        <div class="flex items-center gap-3 mt-1.5 text-slate-700 font-mono text-[11px]">
+                            <span>Distancia: <strong id="aco-historial-act-dist">{{ $historialCambioAco['actual']['distancia'] ?? 0 }} m</strong></span>
+                            <span>Riesgo: <strong id="aco-historial-act-riesgo">{{ $historialCambioAco['actual']['riesgo'] ?? 0 }}</strong></span>
+                            <span>Costo: <strong id="aco-historial-act-costo">{{ $historialCambioAco['actual']['costo'] ?? 0 }}</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="text-[11px] text-slate-600 italic mt-1.5" id="aco-historial-motivo">
+                    <i class="fas fa-info-circle text-indigo-500 mr-1"></i>
+                    Motivo: "{{ $historialCambioAco['motivo'] ?? 'Se actualizó la información de riesgo de uno o más tramos tras la resolución de obstáculos.' }}"
+                </p>
+            </div>
+        @endif
+
         {{-- ── 1. VISTA PRINCIPAL PARA EL ADMINISTRADOR ──────────────────────── --}}
         @if($recomendacionAco && $recomendacionAco->success)
             <div class="bg-gradient-to-r from-emerald-50 via-teal-50 to-white border-2 border-emerald-500/40 rounded-xl p-5 shadow-sm" id="tarjeta-recomendacion-activa">
@@ -599,6 +678,41 @@
 
                 const elFecha = document.getElementById('aco-fecha-calculo');
                 if (elFecha) elFecha.textContent = data.recomendacion.fecha_calculo;
+
+                // Ocultar alerta de desactualización si existía
+                const alertaDesact = document.getElementById('alerta-desactualizada-aco');
+                if (alertaDesact) alertaDesact.style.display = 'none';
+
+                // Actualizar o mostrar historial de cambio reactivo
+                if (data.historial_cambio && data.historial_cambio.hay_cambio) {
+                    const seccionHist = document.getElementById('seccion-historial-cambio-aco');
+                    if (seccionHist) {
+                        seccionHist.style.display = 'block';
+                        const h = data.historial_cambio;
+                        const elHFecha = document.getElementById('aco-historial-fecha');
+                        if (elHFecha) elHFecha.textContent = h.fecha_cambio || '';
+                        const elHAntCamino = document.getElementById('aco-historial-ant-camino');
+                        if (elHAntCamino) elHAntCamino.textContent = 'Nodos: ' + (h.anterior?.nodos || []).join(' → ');
+                        const elHAntDist = document.getElementById('aco-historial-ant-dist');
+                        if (elHAntDist) elHAntDist.textContent = (h.anterior?.distancia || 0) + ' m';
+                        const elHAntRiesgo = document.getElementById('aco-historial-ant-riesgo');
+                        if (elHAntRiesgo) elHAntRiesgo.textContent = h.anterior?.riesgo || 0;
+                        const elHAntCosto = document.getElementById('aco-historial-ant-costo');
+                        if (elHAntCosto) elHAntCosto.textContent = h.anterior?.costo || 0;
+
+                        const elHActCamino = document.getElementById('aco-historial-act-camino');
+                        if (elHActCamino) elHActCamino.textContent = 'Nodos: ' + (h.actual?.nodos || []).join(' → ');
+                        const elHActDist = document.getElementById('aco-historial-act-dist');
+                        if (elHActDist) elHActDist.textContent = (h.actual?.distancia || 0) + ' m';
+                        const elHActRiesgo = document.getElementById('aco-historial-act-riesgo');
+                        if (elHActRiesgo) elHActRiesgo.textContent = h.actual?.riesgo || 0;
+                        const elHActCosto = document.getElementById('aco-historial-act-costo');
+                        if (elHActCosto) elHActCosto.textContent = h.actual?.costo || 0;
+
+                        const elHMotivo = document.getElementById('aco-historial-motivo');
+                        if (elHMotivo) elHMotivo.innerHTML = '<i class="fas fa-info-circle text-indigo-500 mr-1"></i> Motivo: "' + (h.motivo || '') + '"';
+                    }
+                }
 
                 // Actualizar métricas técnicas
                 if (data.recomendacion.metricas) {
