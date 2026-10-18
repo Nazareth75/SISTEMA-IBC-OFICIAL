@@ -132,6 +132,11 @@ class Obstaculo extends Model
         return $this->hasMany(ReporteObstaculo::class, 'cod_obstaculos_rpo', 'cod_obstaculos');
     }
 
+    public function verificaciones(): HasMany
+    {
+        return $this->hasMany(\App\Models\VerificacionObstaculo::class, 'cod_obstaculo', 'cod_obstaculos');
+    }
+
     // ─── Helpers ─────────────────────────────────────────────
 
     public function colorEstado(): string

@@ -283,4 +283,9 @@ class User extends Authenticatable
     {
         return $this->esAdministrador();
     }
+
+    public function puedeVerificarObstaculos(): bool
+    {
+        return $this->esVoluntario() || $this->esTecnico() || $this->esAdministrador();
+    }
 }
