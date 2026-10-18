@@ -23,8 +23,8 @@
     </x-slot>
 
     @php 
-        $editable = in_array($ruta->est_rut, ['BORRADOR','DESACTUALIZADA']) && Auth::user()->puedeEditarRuta();
-        $levantamientoPermitido = in_array($ruta->est_rut, ['BORRADOR','EN REVISIÓN','DESACTUALIZADA']) && Auth::user()->puedeEditarRuta();
+        $editable = $ruta->puedeSerEditada();
+        $levantamientoPermitido = (in_array($ruta->est_rut, ['BORRADOR','EN REVISIÓN','DESACTUALIZADA']) || $ruta->esDemo()) && Auth::user()->puedeEditarRuta();
     @endphp
 
     {{-- Formulario oculto para cambio de estado --}}
@@ -92,37 +92,47 @@
 
                 {{-- Botones de acción --}}
                 <div class="mt-4 pt-4 border-t flex flex-wrap gap-2">
-                    @if($editable)
+                    @if(Auth::user()?->puedeEditarRuta())
                         <a href="{{ route('rutas.edit', $ruta) }}"
-                            class="inline-flex items-center gap-1 bg-yellow-100 hover:bg-yellow-200 text-yellow-700 text-sm font-bold px-4 py-2 rounded uppercase">
+                            class="inline-flex items-center gap-1.5 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 text-sm font-bold px-4 py-2 rounded uppercase shadow-sm transition">
                             <i class="fas fa-pencil-alt"></i> EDITAR
                         </a>
+                    @else
+                        <span title="Requiere rol con permisos de edición para modificar rutas."
+                            class="inline-flex items-center gap-1.5 bg-gray-100 text-gray-400 border border-gray-200 text-sm font-semibold px-4 py-2 rounded uppercase cursor-not-allowed select-none">
+                            <i class="fas fa-pencil-alt"></i> EDITAR
+                        </span>
                     @endif
 
                     @php
                         $transiciones = collect($ruta->transicionesPosibles())->filter(function($t) {
-                            if (in_array($t, ['APROBADA','PUBLICADA','ARCHIVADA'])) return Auth::user()->puedeAprobarRuta();
-                            return Auth::user()->puedeEnviarRutaARevision();
+                            if (in_array($t, ['APROBADA','PUBLICADA','ARCHIVADA'])) return Auth::user()?->puedeAprobarRuta();
+                            return Auth::user()?->puedeEnviarRutaARevision();
                         })->values()->toArray();
                     @endphp
                     @if(!empty($transiciones))
                         <button type="button"
                             onclick="confirmarCambioEstado({{ $ruta->getKey() }}, '{{ $ruta->est_rut }}', {{ json_encode($transiciones) }}, {{ $puedePublicarse === false ? 'false' : 'true' }})"
-                            class="inline-flex items-center gap-1 text-white text-sm font-bold px-4 py-2 rounded uppercase"
+                            class="inline-flex items-center gap-1.5 text-white text-sm font-bold px-4 py-2 rounded uppercase shadow-sm transition"
                             style="background-color:#2d6a27">
                             <i class="fas fa-exchange-alt"></i> CAMBIAR ESTADO
                         </button>
                     @endif
 
-                    @if(Auth::user()->puedeEliminarRuta() && $ruta->est_rut === 'BORRADOR')
+                    @if(Auth::user()?->puedeEliminarRuta())
                         <button type="button"
                             onclick="confirmarEliminar({{ $ruta->getKey() }}, '{{ addslashes($ruta->nom_rut) }}')"
-                            class="inline-flex items-center gap-1 bg-red-100 hover:bg-red-200 text-red-700 text-sm font-bold px-4 py-2 rounded uppercase">
+                            class="inline-flex items-center gap-1.5 bg-red-100 hover:bg-red-200 text-red-700 text-sm font-bold px-4 py-2 rounded uppercase shadow-sm transition">
                             <i class="fas fa-trash-alt"></i> ELIMINAR
                         </button>
                         <form id="form-eliminar-ruta" action="{{ route('rutas.destroy', $ruta) }}" method="POST" class="hidden">
                             @csrf @method('DELETE')
                         </form>
+                    @else
+                        <span title="Requiere rol de Administrador para eliminar rutas."
+                            class="inline-flex items-center gap-1.5 bg-gray-100 text-gray-400 border border-gray-200 text-sm font-semibold px-4 py-2 rounded uppercase cursor-not-allowed select-none">
+                            <i class="fas fa-trash-alt"></i> ELIMINAR
+                        </span>
                     @endif
                 </div>
 

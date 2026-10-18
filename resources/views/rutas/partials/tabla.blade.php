@@ -64,50 +64,70 @@
                             </span>
                         </td>
                         <td class="px-4 py-3">
-                            <div class="flex items-center justify-center gap-1 flex-wrap">
+                            <div class="flex items-center justify-center gap-1.5 flex-wrap">
                                 {{-- VER --}}
                                 <a href="{{ route('rutas.show', $ruta) }}"
-                                    title="VER DETALLE"
-                                    class="inline-flex items-center gap-1 bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs font-bold px-2 py-1 rounded uppercase">
-                                    <i class="fas fa-eye"></i>
+                                    title="Consultar ficha, mapa, tramos y recomendación ACO"
+                                    class="inline-flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-bold px-2 py-1 rounded shadow-sm transition">
+                                    <i class="fas fa-eye text-[11px]"></i>
+                                    <span>VER</span>
                                 </a>
 
-                                {{-- EDITAR (solo BORRADOR o DESACTUALIZADA + permiso) --}}
-                                @if(in_array($ruta->est_rut, ['BORRADOR','DESACTUALIZADA']) && Auth::user()->puedeEditarRuta())
+                                {{-- EDITAR --}}
+                                @if(Auth::user()?->puedeEditarRuta())
                                     <a href="{{ route('rutas.edit', $ruta) }}"
-                                        title="EDITAR RUTA"
-                                        class="inline-flex items-center gap-1 bg-yellow-100 hover:bg-yellow-200 text-yellow-700 text-xs font-bold px-2 py-1 rounded uppercase">
-                                        <i class="fas fa-pencil-alt"></i>
+                                        title="Editar metadatos, tramos y geometría de la ruta"
+                                        class="inline-flex items-center gap-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 text-xs font-bold px-2 py-1 rounded shadow-sm transition">
+                                        <i class="fas fa-pencil-alt text-[11px]"></i>
+                                        <span>EDITAR</span>
                                     </a>
+                                @else
+                                    <span title="Requiere rol con permisos de edición para modificar rutas."
+                                        class="inline-flex items-center gap-1 bg-gray-100 text-gray-400 border border-gray-200 text-xs font-semibold px-2 py-1 rounded cursor-not-allowed select-none">
+                                        <i class="fas fa-pencil-alt text-[11px]"></i>
+                                        <span>EDITAR</span>
+                                    </span>
                                 @endif
 
                                 {{-- CAMBIAR ESTADO --}}
-                                @php $transiciones = $ruta->transicionesPosibles(); @endphp
-                                @if(!empty($transiciones))
-                                    @php
-                                        $transPermitidas = collect($transiciones)->filter(function($t) {
-                                            if (in_array($t, ['APROBADA','PUBLICADA','ARCHIVADA'])) return Auth::user()->puedeAprobarRuta();
-                                            return Auth::user()->puedeEnviarRutaARevision();
-                                        })->values()->toArray();
-                                    @endphp
-                                    @if(!empty($transPermitidas))
-                                        <button type="button"
-                                            title="CAMBIAR ESTADO"
-                                            onclick="confirmarCambioEstado({{ $ruta->getKey() }}, '{{ $ruta->est_rut }}', {{ json_encode($transPermitidas) }})"
-                                            class="inline-flex items-center gap-1 bg-purple-100 hover:bg-purple-200 text-purple-700 text-xs font-bold px-2 py-1 rounded uppercase">
-                                            <i class="fas fa-exchange-alt"></i>
-                                        </button>
-                                    @endif
+                                @php
+                                    $transiciones = $ruta->transicionesPosibles();
+                                    $transPermitidas = collect($transiciones)->filter(function($t) {
+                                        if (in_array($t, ['APROBADA','PUBLICADA','ARCHIVADA'])) return Auth::user()?->puedeAprobarRuta();
+                                        return Auth::user()?->puedeEnviarRutaARevision();
+                                    })->values()->toArray();
+                                @endphp
+                                @if(!empty($transPermitidas))
+                                    <button type="button"
+                                        title="Cambiar estado operacional de la ruta"
+                                        onclick="confirmarCambioEstado({{ $ruta->getKey() }}, '{{ $ruta->est_rut }}', {{ json_encode($transPermitidas) }})"
+                                        class="inline-flex items-center gap-1 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 text-xs font-bold px-2 py-1 rounded shadow-sm transition">
+                                        <i class="fas fa-exchange-alt text-[11px]"></i>
+                                        <span>ESTADO</span>
+                                    </button>
+                                @else
+                                    <span title="No hay transiciones de estado disponibles para su rol en el estado actual"
+                                        class="inline-flex items-center gap-1 bg-gray-100 text-gray-400 border border-gray-200 text-xs font-semibold px-2 py-1 rounded cursor-not-allowed select-none">
+                                        <i class="fas fa-exchange-alt text-[11px]"></i>
+                                        <span>ESTADO</span>
+                                    </span>
                                 @endif
 
-                                {{-- ELIMINAR (solo Admin + BORRADOR) --}}
-                                @if($ruta->est_rut === 'BORRADOR' && Auth::user()->puedeEliminarRuta())
+                                {{-- ELIMINAR --}}
+                                @if(Auth::user()?->puedeEliminarRuta())
                                     <button type="button"
-                                        title="ELIMINAR RUTA"
+                                        title="Eliminar ruta de forma segura (desvincula tramos sin destruirlos)"
                                         onclick="confirmarEliminar({{ $ruta->getKey() }}, '{{ addslashes($ruta->nom_rut) }}')"
-                                        class="inline-flex items-center gap-1 bg-red-100 hover:bg-red-200 text-red-700 text-xs font-bold px-2 py-1 rounded uppercase">
-                                        <i class="fas fa-trash-alt"></i>
+                                        class="inline-flex items-center gap-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold px-2 py-1 rounded shadow-sm transition">
+                                        <i class="fas fa-trash-alt text-[11px]"></i>
+                                        <span>ELIMINAR</span>
                                     </button>
+                                @else
+                                    <span title="Requiere rol de Administrador para eliminar rutas."
+                                        class="inline-flex items-center gap-1 bg-gray-100 text-gray-400 border border-gray-200 text-xs font-semibold px-2 py-1 rounded cursor-not-allowed select-none">
+                                        <i class="fas fa-trash-alt text-[11px]"></i>
+                                        <span>ELIMINAR</span>
+                                    </span>
                                 @endif
                             </div>
                         </td>

@@ -145,8 +145,8 @@ class RutaController extends Controller
     public function edit(Ruta $ruta): View
     {
         abort_unless(Auth::user()?->puedeEditarRuta(), 403);
-        abort_unless(in_array($ruta->est_rut, ['BORRADOR', 'DESACTUALIZADA']), 403,
-            'SOLO SE PUEDEN EDITAR RUTAS EN ESTADO BORRADOR O DESACTUALIZADA.');
+        abort_unless($ruta->puedeSerEditada(), 403,
+            'NO TIENE PERMISOS PARA EDITAR ESTA RUTA.');
 
         $ruta->load('tramos');
 
@@ -172,7 +172,20 @@ class RutaController extends Controller
             $data['geo_rut'] = $this->normalizarGeoDesdeEstimacion($estimacion);
         }
 
+        $cambioEstructural = (
+            (isset($data['ori_rut']) && $data['ori_rut'] !== $ruta->ori_rut) ||
+            (isset($data['dst_rut']) && $data['dst_rut'] !== $ruta->dst_rut) ||
+            (isset($data['geo_rut']) && $data['geo_rut'] != $ruta->geo_rut)
+        );
+
         $ruta->update($data);
+
+        if ($cambioEstructural) {
+            app(\App\Services\Aco\ServicioEstadoRecomendacionAco::class)->marcarDesactualizadaPorModificacion(
+                $ruta,
+                'Se modificó el trazado geométrico, origen o destino de la ruta.'
+            );
+        }
 
         return redirect()->route('rutas.show', $ruta)
             ->with('success', 'RUTA ACTUALIZADA CORRECTAMENTE.');
@@ -254,11 +267,14 @@ class RutaController extends Controller
     {
         abort_unless(Auth::user()?->puedeEliminarRuta(), 403);
 
-        if ($ruta->tramos()->exists()) {
-            return redirect()->back()
-                ->with('error', 'NO SE PUEDE ELIMINAR UNA RUTA CON TRAMOS REGISTRADOS.');
-        }
+        // Desvincular de los tramos asociados en ruta_calles_tramos
+        // (Los tramos físicos en calles_tramos y su reutilización en otras rutas se preservan intactos)
+        $ruta->tramos()->detach();
 
+        // 5. Purgar caché y estado ACO de la ruta
+        app(\App\Services\Aco\ServicioEstadoRecomendacionAco::class)->limpiarEstado($ruta);
+
+        // 6. Eliminación lógica mediante SoftDeletes
         $ruta->delete();
 
         return redirect()->route('rutas.index')

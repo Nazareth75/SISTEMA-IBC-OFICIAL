@@ -10,6 +10,7 @@ use App\Models\Obstaculo;
 use App\Models\ReporteObstaculo;
 use App\Models\Ruta;
 use App\Models\User;
+use App\Models\VerificacionObstaculo;
 use App\Models\ZonaRiesgo;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -52,6 +53,11 @@ class DatosDemostracionIbcSeeder extends Seeder
     public static function limpiarDemo(): void
     {
         DB::transaction(function () {
+            // 0. Verificaciones de obstáculos demo
+            VerificacionObstaculo::whereHas('obstaculo', function ($q) {
+                $q->where('des_obs', 'like', self::PREFIJO_ETIQUETA . '%');
+            })->orWhere('observacion', 'like', self::PREFIJO_ETIQUETA . '%')->delete();
+
             // 1. Reportes de obstáculos demo
             ReporteObstaculo::where('codigo', 'like', self::PREFIJO_REPORTE_COD . '%')->delete();
 
@@ -84,6 +90,9 @@ class DatosDemostracionIbcSeeder extends Seeder
 
             // 8. Rutas demo
             Ruta::where('ide_rut', 'like', self::PREFIJO_RUTA_IDE . '%')->forceDelete();
+
+            // 9. Usuario voluntario demo sintético si fue creado
+            User::where('ide_usu', 'DEMO-USU-VOL')->delete();
         });
     }
 
@@ -147,58 +156,58 @@ class DatosDemostracionIbcSeeder extends Seeder
 
             // Grupo C: Tramos para Ruta Lineal con Información COMPLETA (3 tramos lineales)
             $tLin1 = CalleTramo::create([
-                'nom_ctr' => 'DEMO — TRAMO LINEAL COMPLETO 1',
+                'nom_ctr' => 'DEMO — TRAMO LINEAL COMPLETO 1 (CALLE ROSENDO GUTIÉRREZ)',
                 'tip_ctr' => 'ACERA',
                 'lon_ctr' => 111.20,
                 'geo_ctr' => [['lat' => -16.520000, 'lng' => -68.130000], ['lat' => -16.521000, 'lng' => -68.130000]],
                 'act_ctr' => true,
             ]);
             $tLin2 = CalleTramo::create([
-                'nom_ctr' => 'DEMO — TRAMO LINEAL COMPLETO 2',
+                'nom_ctr' => 'DEMO — TRAMO LINEAL COMPLETO 2 (CALLE ECUADOR)',
                 'tip_ctr' => 'CALLE',
                 'lon_ctr' => 111.20,
                 'geo_ctr' => [['lat' => -16.521000, 'lng' => -68.130000], ['lat' => -16.522000, 'lng' => -68.130000]],
                 'act_ctr' => true,
             ]);
             $tLin3 = CalleTramo::create([
-                'nom_ctr' => 'DEMO — TRAMO LINEAL COMPLETO 3',
+                'nom_ctr' => 'DEMO — TRAMO LINEAL COMPLETO 3 (CALLE ASPIAZU)',
                 'tip_ctr' => 'PASO PEATONAL',
                 'lon_ctr' => 111.20,
                 'geo_ctr' => [['lat' => -16.522000, 'lng' => -68.130000], ['lat' => -16.523000, 'lng' => -68.130000]],
                 'act_ctr' => true,
             ]);
 
-            // Grupo D: Red de Grafo Topológico ACO (Bifurcaciones, caminos alternativos)
-            // N0: [-16.500000, -68.130000]
-            // N1: [-16.501000, -68.130000]
-            // N2: [-16.502000, -68.130000] (Camino A: Corto / Riesgoso)
-            // N3: [-16.502000, -68.127000] (Camino B: Largo / Seguro)
-            // N6: [-16.502000, -68.132500] (Camino C: Intermedio)
-            // N4: [-16.503000, -68.130000] (Confluencia)
-            // N5: [-16.504000, -68.130000] (Destino)
+            // Grupo D: Red de Grafo Topológico ACO (Bifurcaciones, caminos alternativos en Sopocachi)
+            // N0: [-16.500000, -68.130000] Salida Plaza Abaroa
+            // N1: [-16.501000, -68.130000] Intersección Sánchez Lima
+            // N2: [-16.502000, -68.130000] (Camino A: Corto / Riesgoso por Sánchez Lima)
+            // N3: [-16.502000, -68.127000] (Camino B: Largo / Seguro por Pedro Salazar y 20 de Octubre)
+            // N6: [-16.502000, -68.132500] (Camino C: Intermedio por Pasaje Medinaceli)
+            // N4: [-16.503000, -68.130000] (Confluencia hacia Belisario Salinas)
+            // N5: [-16.504000, -68.130000] (Acceso Sede Central IBC en Guachalla)
             $tAcoComun1 = CalleTramo::create([
-                'nom_ctr' => 'DEMO — TRAMO ACO COMÚN INICIAL (N0-N1)',
+                'nom_ctr' => 'DEMO — Salida Plaza Abaroa por Calle Sánchez Lima [ACO Común Inicial]',
                 'tip_ctr' => 'ACERA',
                 'lon_ctr' => 111.20,
                 'geo_ctr' => [['lat' => -16.500000, 'lng' => -68.130000], ['lat' => -16.501000, 'lng' => -68.130000]],
                 'act_ctr' => true,
             ]);
             $tAcoA1 = CalleTramo::create([
-                'nom_ctr' => 'DEMO — TRAMO ACO A1 (CORTO/RIESGOSO N1-N2)',
+                'nom_ctr' => 'DEMO — Acera Norte Sánchez Lima hacia Aspiazu [ACO A1 - Corto/Riesgoso]',
                 'tip_ctr' => 'CALLE',
                 'lon_ctr' => 111.20,
                 'geo_ctr' => [['lat' => -16.501000, 'lng' => -68.130000], ['lat' => -16.502000, 'lng' => -68.130000]],
                 'act_ctr' => true,
             ]);
             $tAcoA2 = CalleTramo::create([
-                'nom_ctr' => 'DEMO — TRAMO ACO A2 (CORTO/RIESGOSO N2-N4)',
+                'nom_ctr' => 'DEMO — Cruce Peatonal Calzada Sánchez Lima y Salinas [ACO A2 - Corto/Riesgoso]',
                 'tip_ctr' => 'CRUCE',
                 'lon_ctr' => 111.20,
                 'geo_ctr' => [['lat' => -16.502000, 'lng' => -68.130000], ['lat' => -16.503000, 'lng' => -68.130000]],
                 'act_ctr' => true,
             ]);
             $tAcoB1 = CalleTramo::create([
-                'nom_ctr' => 'DEMO — TRAMO ACO B1 (LARGO/SEGURO N1-N3)',
+                'nom_ctr' => 'DEMO — Acera Sur Calle Pedro Salazar hacia 20 de Octubre [ACO B1 - Largo/Seguro]',
                 'tip_ctr' => 'ACERA',
                 'lon_ctr' => 340.50,
                 'geo_ctr' => [
@@ -209,7 +218,7 @@ class DatosDemostracionIbcSeeder extends Seeder
                 'act_ctr' => true,
             ]);
             $tAcoB2 = CalleTramo::create([
-                'nom_ctr' => 'DEMO — TRAMO ACO B2 (LARGO/SEGURO N3-N4)',
+                'nom_ctr' => 'DEMO — Paso Peatonal Señalizado Av. 20 de Octubre [ACO B2 - Largo/Seguro]',
                 'tip_ctr' => 'PASO PEATONAL',
                 'lon_ctr' => 340.50,
                 'geo_ctr' => [
@@ -220,7 +229,7 @@ class DatosDemostracionIbcSeeder extends Seeder
                 'act_ctr' => true,
             ]);
             $tAcoC1 = CalleTramo::create([
-                'nom_ctr' => 'DEMO — TRAMO ACO C1 (INTERMEDIO N1-N6)',
+                'nom_ctr' => 'DEMO — Rampa Peatonal Pasaje Medinaceli [ACO C1 - Intermedio]',
                 'tip_ctr' => 'RAMPA',
                 'lon_ctr' => 285.30,
                 'geo_ctr' => [
@@ -231,7 +240,7 @@ class DatosDemostracionIbcSeeder extends Seeder
                 'act_ctr' => true,
             ]);
             $tAcoC2 = CalleTramo::create([
-                'nom_ctr' => 'DEMO — TRAMO ACO C2 (INTERMEDIO N6-N4)',
+                'nom_ctr' => 'DEMO — Paso Peatonal Escalinatas hacia Salinas [ACO C2 - Intermedio]',
                 'tip_ctr' => 'ESCALERA',
                 'lon_ctr' => 285.30,
                 'geo_ctr' => [
@@ -242,7 +251,7 @@ class DatosDemostracionIbcSeeder extends Seeder
                 'act_ctr' => true,
             ]);
             $tAcoComun2 = CalleTramo::create([
-                'nom_ctr' => 'DEMO — TRAMO ACO COMÚN FINAL (N4-N5)',
+                'nom_ctr' => 'DEMO — Acceso Peatonal Final a Sede IBC Guachalla [ACO Común Final]',
                 'tip_ctr' => 'ACERA',
                 'lon_ctr' => 111.20,
                 'geo_ctr' => [['lat' => -16.503000, 'lng' => -68.130000], ['lat' => -16.504000, 'lng' => -68.130000]],
@@ -251,7 +260,7 @@ class DatosDemostracionIbcSeeder extends Seeder
 
             // Grupo E: Tramo adicional para demostrar modelo N:M reusable
             $tComp1 = CalleTramo::create([
-                'nom_ctr' => 'DEMO — TRAMO CONECTOR COMPARTIDO (MIRAFLORES)',
+                'nom_ctr' => 'DEMO — Tramo Conector Compartido (Av. Arce hacia Miraflores)',
                 'tip_ctr' => 'ACERA',
                 'lon_ctr' => 180.00,
                 'geo_ctr' => [['lat' => -16.502000, 'lng' => -68.127000], ['lat' => -16.503500, 'lng' => -68.127000]],
@@ -260,11 +269,11 @@ class DatosDemostracionIbcSeeder extends Seeder
 
             // ─── 2. CREACIÓN DE RUTAS DEMOSTRATIVAS ──────────────────────────
 
-            // RUTA 1: Sin tramos
+            // RUTA 1: Sin tramos (Demostración de Ruta Eliminable sin dependencias)
             $r1 = Ruta::create([
                 'ide_rut'              => 'DEMO-RUT-001',
-                'nom_rut'              => 'DEMO — RUTA SIN TRAMOS ASOCIADOS',
-                'des_rut'              => 'Ruta de prueba representativa de una ruta recién creada sin segmentos viales vinculados.',
+                'nom_rut'              => 'DEMO — RUTA SIN TRAMOS ASOCIADOS (PRUEBA ELIMINABLE)',
+                'des_rut'              => '[DATOS SIMULADOS DE DEMOSTRACIÓN] Ruta de prueba representativa de una ruta recién creada sin segmentos viales vinculados, completamente eliminable para pruebas.',
                 'ori_rut'              => 'Plaza del Estudiante',
                 'dst_rut'              => 'Edificio Central IBC',
                 'dis_rut'              => 0.00,
@@ -276,7 +285,7 @@ class DatosDemostracionIbcSeeder extends Seeder
             $r2 = Ruta::create([
                 'ide_rut'              => 'DEMO-RUT-002',
                 'nom_rut'              => 'DEMO — RUTA CON TRAMOS SIN EVALUACIÓN',
-                'des_rut'              => 'Ruta lineal con geometría y tramos asociados pero sin datos de evaluaciones, condiciones, zonas ni obstáculos.',
+                'des_rut'              => '[DATOS SIMULADOS DE DEMOSTRACIÓN] Ruta lineal con geometría y tramos asociados pero sin datos de evaluaciones, condiciones, zonas ni obstáculos.',
                 'ori_rut'              => 'Av. 20 de Octubre',
                 'dst_rut'              => 'Plaza Abaroa',
                 'dis_rut'              => 333.60,
@@ -293,7 +302,7 @@ class DatosDemostracionIbcSeeder extends Seeder
             $r3 = Ruta::create([
                 'ide_rut'              => 'DEMO-RUT-003',
                 'nom_rut'              => 'DEMO — RUTA CON COBERTURA PARCIAL',
-                'des_rut'              => 'Ruta de demostración donde los tramos cuentan con evaluaciones y condiciones pero carecen de zonas u obstáculos.',
+                'des_rut'              => '[DATOS SIMULADOS DE DEMOSTRACIÓN] Ruta de demostración donde los tramos cuentan con evaluaciones y condiciones pero carecen de zonas u obstáculos.',
                 'ori_rut'              => 'Plaza España',
                 'dst_rut'              => 'Calle Belisario Salinas',
                 'dis_rut'              => 222.40,
@@ -305,11 +314,11 @@ class DatosDemostracionIbcSeeder extends Seeder
                 $tPar2->cod_calles_tramos => ['ord_rct' => 2],
             ]);
 
-            // RUTA 4: Lineal con información COMPLETA
+            // RUTA 4: Lineal con información COMPLETA (Trayectoria Única)
             $r4 = Ruta::create([
                 'ide_rut'              => 'DEMO-RUT-004',
                 'nom_rut'              => 'DEMO — RUTA LINEAL CON INFORMACIÓN COMPLETA',
-                'des_rut'              => 'Ruta lineal con cobertura total en sus 4 dimensiones de riesgo, demostrando estado no optimizable por trayectoria única.',
+                'des_rut'              => '[DATOS SIMULADOS DE DEMOSTRACIÓN] Ruta lineal con cobertura total en sus 4 dimensiones de riesgo, demostrando estado no optimizable por trayectoria única.',
                 'ori_rut'              => 'Calle Rosendo Gutiérrez',
                 'dst_rut'              => 'Calle Aspiazu',
                 'dis_rut'              => 333.60,
@@ -327,12 +336,12 @@ class DatosDemostracionIbcSeeder extends Seeder
             // RUTA 5: Topología de Grafo ACO con alternativas
             $r5 = Ruta::create([
                 'ide_rut'              => 'DEMO-RUT-005',
-                'nom_rut'              => 'DEMO ACO — RED CON BIFURCACIÓN Y ALTERNATIVAS',
-                'des_rut'              => 'Red vial peatonal demostrativa para ACO con tramo común inicial, bifurcación en 3 caminos alternativos y confluencia final.',
-                'ori_rut'              => 'Nodo N0 (Acceso Principal Norte)',
-                'dst_rut'              => 'Nodo N5 (Acceso IBC Sur)',
+                'nom_rut'              => 'DEMO ACO — RED CON BIFURCACIÓN Y ALTERNATIVAS (SOPOCACHI)',
+                'des_rut'              => '[DATOS SIMULADOS DE DEMOSTRACIÓN] Red peatonal para ACO en Sopocachi con salida Plaza Abaroa, bifurcación en 3 caminos alternativos y confluencia en Calle Guachalla (Sede IBC).',
+                'ori_rut'              => 'Plaza Abaroa (Sopocachi)',
+                'dst_rut'              => 'Sede Central IBC (Calle Guachalla)',
                 'dis_rut'              => 1700.40,
-                'est_rut'              => 'EN REVISIÓN',
+                'est_rut'              => 'BORRADOR',
                 'cod_usuarios_rut_cre' => $usuarioId,
             ]);
             $r5->tramos()->attach([
@@ -349,9 +358,9 @@ class DatosDemostracionIbcSeeder extends Seeder
             // RUTA 6: Demostración de tramos reutilizados (N:M)
             $r6 = Ruta::create([
                 'ide_rut'              => 'DEMO-RUT-006',
-                'nom_rut'              => 'DEMO — RUTA ALTERNA CON TRAMOS COMPARTIDOS',
-                'des_rut'              => 'Ruta que reutiliza tramos de la red ACO (B1 y B2) demostrando la relación N:M entre rutas y tramos.',
-                'ori_rut'              => 'Nodo N1 (Bifurcación Este)',
+                'nom_rut'              => 'DEMO — RUTA ALTERNA CON TRAMOS COMPARTIDOS (SOPOCACHI-MIRAFLORES)',
+                'des_rut'              => '[DATOS SIMULADOS DE DEMOSTRACIÓN] Ruta que reutiliza tramos compartidos de la red ACO (Pedro Salazar B1 y B2) demostrando la relación N:M.',
+                'ori_rut'              => 'Calle Pedro Salazar (Bifurcación Este)',
                 'dst_rut'              => 'Miraflores Conector',
                 'dis_rut'              => 861.00,
                 'est_rut'              => 'BORRADOR',
@@ -556,6 +565,55 @@ class DatosDemostracionIbcSeeder extends Seeder
                     'cod_usuarios_obs'      => $usuarioId,
                 ]);
                 $obstaculosCreados[] = $ob;
+            }
+
+            // ─── 6.1. VERIFICACIONES COLABORATIVAS DE DEMOSTRACIÓN ───────────
+            // Se asocian al obstáculo activo en el tramo A1 de DEMO-RUT-005 para evidenciar
+            // el consenso comunitario ("POSIBLEMENTE_RESUELTO") y la bandeja de confirmación técnica.
+            if (isset($obstaculosCreados[5])) {
+                $obConsenso = $obstaculosCreados[5];
+                $usuariosExistentes = User::take(2)->pluck('cod_usuarios')->all();
+                $usu1Id = $usuariosExistentes[0] ?? $usuarioId;
+                $usu2Id = $usuariosExistentes[1] ?? null;
+
+                if (!$usu2Id) {
+                    $rolVol = \App\Models\Role::where('nom_rol', 'VOLUNTARIO')->value('cod_roles') ?? 3;
+                    $segundoUsu = User::create([
+                        'ide_usu'       => 'DEMO-USU-VOL',
+                        'nom_usu'       => 'DANIELA',
+                        'ape_usu'       => 'CHOQUE ROJAS',
+                        'cii_usu'       => '7890123',
+                        'cor_usu'       => 'voluntario.demo@ibc.bo',
+                        'con_usu'       => bcrypt('password'),
+                        'cod_roles_usu' => $rolVol,
+                        'est_usu'       => true,
+                    ]);
+                    $usu2Id = $segundoUsu->cod_usuarios;
+                }
+
+                VerificacionObstaculo::create([
+                    'cod_obstaculo' => $obConsenso->cod_obstaculos,
+                    'cod_usuario'   => $usu1Id,
+                    'respuesta'     => 'YA_NO_ESTA',
+                    'latitud'       => -16.501100,
+                    'longitud'      => -68.130000,
+                    'precision_gps' => 4.2,
+                    'observacion'   => '[DEMO] Evidencia colaborativa: acera despejada y obstáculo retirado.',
+                    'canal'         => 'APP',
+                    'created_at'    => now()->subHours(2),
+                ]);
+
+                VerificacionObstaculo::create([
+                    'cod_obstaculo' => $obConsenso->cod_obstaculos,
+                    'cod_usuario'   => $usu2Id,
+                    'respuesta'     => 'YA_NO_ESTA',
+                    'latitud'       => -16.501120,
+                    'longitud'      => -68.130010,
+                    'precision_gps' => 3.5,
+                    'observacion'   => '[DEMO] Verificación en campo: paso libre sin impedimento para bastón.',
+                    'canal'         => 'WEB',
+                    'created_at'    => now()->subHour(),
+                ]);
             }
 
             // ─── 7. REPORTES DE INCIDENCIAS / BASTÓN (20 a 40 registros) ─────

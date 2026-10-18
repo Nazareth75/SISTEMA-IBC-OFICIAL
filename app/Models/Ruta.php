@@ -237,4 +237,42 @@ class Ruta extends Model
     {
         return app(\App\Services\Aco\ConstructorGrafoRuta::class)->analizar($this);
     }
+
+    /**
+     * Determina si la ruta es un registro simulado de demostración.
+     */
+    public function esDemo(): bool
+    {
+        return str_starts_with((string) $this->ide_rut, 'DEMO-')
+            || str_starts_with((string) $this->nom_rut, 'DEMO')
+            || str_contains((string) $this->des_rut, '[DATOS SIMULADOS DE DEMOSTRACIÓN]');
+    }
+
+    /**
+     * Determina si la ruta es una de las rutas canónicas oficiales protegidas del IBC.
+     */
+    public function esOficialProtegida(): bool
+    {
+        return in_array($this->ide_rut, ['RUT-001', 'RUT-002', 'RUT-003']);
+    }
+
+    /**
+     * Determina si la ruta puede ser editada según las reglas de negocio y rol actual.
+     * Todas las rutas pueden ser editadas por un usuario autorizado (Administrador o Técnico).
+     */
+    public function puedeSerEditada(?User $usuario = null): bool
+    {
+        $usuario = $usuario ?? \Illuminate\Support\Facades\Auth::user();
+        return (bool) ($usuario && $usuario->puedeEditarRuta());
+    }
+
+    /**
+     * Determina si la ruta puede ser eliminada de forma segura según las reglas de negocio y rol actual.
+     * Todas las rutas pueden ser eliminadas lógicamente (SoftDeletes) por el Administrador, desvinculando tramos.
+     */
+    public function puedeSerEliminada(?User $usuario = null): bool
+    {
+        $usuario = $usuario ?? \Illuminate\Support\Facades\Auth::user();
+        return (bool) ($usuario && $usuario->puedeEliminarRuta());
+    }
 }

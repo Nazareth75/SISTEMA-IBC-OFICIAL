@@ -65,6 +65,32 @@ class ServicioEstadoRecomendacionAco
     }
 
     /**
+     * Invalida la recomendación vigente de una ruta debido a modificaciones estructurales (origen, destino, geometría, tramos).
+     */
+    public function marcarDesactualizadaPorModificacion(Ruta $ruta, string $motivo): void
+    {
+        $rutaId = (int) $ruta->getKey();
+        Cache::put($this->cacheKeyDesactualizada($rutaId), [
+            'desactualizada' => true,
+            'motivo'         => $motivo,
+            'fecha'          => now()->format('Y-m-d H:i:s'),
+            'tipo'           => 'MODIFICACION_ESTRUCTURAL',
+        ], self::TTL_SEGUNDOS);
+    }
+
+    /**
+     * Purga todas las entradas de caché asociadas a la ruta dada (actual, anterior, desactualizada, historial).
+     */
+    public function limpiarEstado(Ruta $ruta): void
+    {
+        $rutaId = (int) $ruta->getKey();
+        Cache::forget($this->cacheKeyActual($rutaId));
+        Cache::forget($this->cacheKeyAnterior($rutaId));
+        Cache::forget($this->cacheKeyDesactualizada($rutaId));
+        Cache::forget($this->cacheKeyHistorial($rutaId));
+    }
+
+    /**
      * Consulta si la recomendación actual de la ruta requiere recálculo por cambios en los tramos.
      */
     public function estaDesactualizada(Ruta $ruta): bool

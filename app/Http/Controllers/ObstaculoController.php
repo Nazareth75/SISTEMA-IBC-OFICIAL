@@ -148,6 +148,16 @@ class ObstaculoController extends Controller
                 ->with('error', 'SOLO SE PUEDEN RECHAZAR OBSTÁCULOS EN ESTADO REPORTADO.');
         }
 
+        if ($obstaculo->verificaciones()->exists()) {
+            return redirect()->back()
+                ->with('error', 'NO SE PUEDE ELIMINAR O RECHAZAR UN OBSTÁCULO CON VERIFICACIONES REGISTRADAS.');
+        }
+
+        if ($obstaculo->reportes()->exists()) {
+            return redirect()->back()
+                ->with('error', 'NO SE PUEDE ELIMINAR O RECHAZAR UN OBSTÁCULO CON REPORTES ASOCIADOS.');
+        }
+
         // Eliminar foto si existe
         if ($obstaculo->fot_obs) {
             Storage::disk('public')->delete($obstaculo->fot_obs);

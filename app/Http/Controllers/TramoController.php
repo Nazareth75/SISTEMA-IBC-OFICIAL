@@ -90,6 +90,11 @@ class TramoController extends Controller
             'ord_rct' => $ordRct,
         ]);
 
+        app(\App\Services\Aco\ServicioEstadoRecomendacionAco::class)->marcarDesactualizadaPorModificacion(
+            $ruta,
+            'Se agregó un nuevo tramo a la ruta.'
+        );
+
         return redirect()->route('rutas.edit', $ruta)
             ->with('success', 'TRAMO AGREGADO CORRECTAMENTE.');
     }
@@ -163,6 +168,11 @@ class TramoController extends Controller
             $tramo->delete();
         }
 
+        app(\App\Services\Aco\ServicioEstadoRecomendacionAco::class)->marcarDesactualizadaPorModificacion(
+            $ruta,
+            'Se eliminó un tramo de la ruta.'
+        );
+
         return redirect()->route('rutas.edit', $ruta)
             ->with('success', 'TRAMO ELIMINADO CORRECTAMENTE.');
     }
@@ -182,6 +192,11 @@ class TramoController extends Controller
         foreach ($request->input('orden') as $posicion => $tramoId) {
             $ruta->tramos()->updateExistingPivot($tramoId, ['ord_rct' => $posicion + 1]);
         }
+
+        app(\App\Services\Aco\ServicioEstadoRecomendacionAco::class)->marcarDesactualizadaPorModificacion(
+            $ruta,
+            'Se reordenaron los tramos de la ruta.'
+        );
 
         return response()->json(['ok' => true, 'mensaje' => 'ORDEN ACTUALIZADO CORRECTAMENTE.']);
     }

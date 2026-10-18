@@ -3,9 +3,9 @@
         <div class="flex justify-between items-center">
             <div>
                 <h2 class="font-bold text-xl text-gray-800 uppercase">
-                    <i class="fas fa-exclamation-triangle mr-2" style="color:#f0b429"></i> GESTIÓN DE OBSTÁCULOS
+                    <i class="fas fa-exclamation-triangle mr-2" style="color:#f0b429"></i> OBSTÁCULOS EN TRAMOS
                 </h2>
-                <p class="text-sm text-gray-500 mt-1 uppercase">VALIDACIÓN Y SEGUIMIENTO DE OBSTÁCULOS REPORTADOS</p>
+                <p class="text-sm text-gray-500 mt-1 uppercase">OBSTÁCULOS REGISTRADOS EN SEGMENTOS DE RUTAS Y SU IMPACTO EN RIESGO/ACO</p>
             </div>
             <a href="{{ route('rutas.index') }}"
                 class="inline-flex items-center gap-1 bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-bold px-4 py-2 rounded uppercase">
@@ -83,7 +83,10 @@
                         </thead>
                         <tbody class="divide-y divide-gray-100">
                             @foreach($obstaculos as $ob)
-                                @php $obColor = \App\Models\Obstaculo::COLORES_ESTADO[$ob->est_obs] ?? 'bg-gray-100 text-gray-800'; @endphp
+                                @php
+                                    $obColor = \App\Models\Obstaculo::COLORES_ESTADO[$ob->est_obs] ?? 'bg-gray-100 text-gray-800';
+                                    $tieneEvidencias = $ob->verificaciones()->exists() || $ob->reportes()->exists();
+                                @endphp
                                 <tr class="hover:bg-gray-50">
                                     <td class="px-4 py-3 font-semibold uppercase text-gray-800">{{ $ob->tip_obs }}</td>
                                     <td class="px-4 py-3 text-gray-600 uppercase">{{ Str::limit($ob->des_obs, 50) }}</td>
@@ -104,42 +107,61 @@
                                         {{ $ob->fcr_obs?->format('d/m/Y') }}
                                     </td>
                                     <td class="px-4 py-3">
-                                        <div class="flex justify-center gap-1 flex-wrap">
+                                        <div class="flex justify-center gap-1.5 flex-wrap">
                                             @if($ob->tramo?->ruta)
                                                 <a href="{{ route('rutas.show', $ob->tramo->ruta) }}"
-                                                    title="VER RUTA"
-                                                    class="bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs font-bold px-2 py-1 rounded uppercase">
-                                                    <i class="fas fa-eye"></i>
+                                                    title="Ver ruta asociada, mapa y recomendación ACO"
+                                                    class="inline-flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-bold px-2 py-1 rounded uppercase shadow-sm transition">
+                                                    <i class="fas fa-eye text-[11px]"></i> VER
                                                 </a>
                                             @endif
                                             @if($ob->est_obs === 'REPORTADO')
                                                 <form action="{{ route('obstaculos.confirmar', $ob) }}" method="POST">
                                                     @csrf @method('PATCH')
                                                     <button type="submit" title="CONFIRMAR — MARCAR ACTIVO"
-                                                        class="bg-red-100 hover:bg-red-200 text-red-700 text-xs font-bold px-2 py-1 rounded uppercase">
-                                                        <i class="fas fa-check"></i> CONFIRMAR
+                                                        class="inline-flex items-center gap-1 bg-red-100 hover:bg-red-200 text-red-700 text-xs font-bold px-2 py-1 rounded uppercase shadow-sm transition">
+                                                        <i class="fas fa-check text-[11px]"></i> CONFIRMAR
                                                     </button>
                                                 </form>
-                                                <button type="button"
-                                                    onclick="confirmarRechazar({{ $ob->getKey() }}, '{{ addslashes($ob->tip_obs) }}')"
-                                                    title="RECHAZAR REPORTE"
-                                                    class="bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-bold px-2 py-1 rounded uppercase">
-                                                    <i class="fas fa-times"></i> RECHAZAR
-                                                </button>
-                                                <form id="form-rechazar-{{ $ob->getKey() }}"
-                                                    action="{{ route('obstaculos.rechazar', $ob) }}" method="POST" class="hidden">
-                                                    @csrf @method('DELETE')
-                                                </form>
+                                                @if(!$tieneEvidencias)
+                                                    <button type="button"
+                                                        onclick="confirmarRechazar({{ $ob->getKey() }}, '{{ addslashes($ob->tip_obs) }}')"
+                                                        title="RECHAZAR REPORTE (ELIMINAR)"
+                                                        class="inline-flex items-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-bold px-2 py-1 rounded uppercase shadow-sm transition">
+                                                        <i class="fas fa-times text-[11px]"></i> RECHAZAR
+                                                    </button>
+                                                    <form id="form-rechazar-{{ $ob->getKey() }}"
+                                                        action="{{ route('obstaculos.rechazar', $ob) }}" method="POST" class="hidden">
+                                                        @csrf @method('DELETE')
+                                                    </form>
+                                                @else
+                                                    <span title="No puede eliminarse: posee reportes o verificaciones asociadas (use Resolver o Confirmar)"
+                                                        class="inline-flex items-center gap-1 bg-gray-100 text-gray-400 border border-gray-200 text-xs font-semibold px-2 py-1 rounded uppercase cursor-not-allowed select-none">
+                                                        <i class="fas fa-times text-[11px]"></i> RECHAZAR
+                                                    </span>
+                                                @endif
                                             @elseif($ob->est_obs === 'ACTIVO')
+                                                @php
+                                                    $consenso = app(\App\Services\Aco\ServicioConsensoVerificacionObstaculo::class)->evaluarConsenso($ob);
+                                                @endphp
+                                                @if(!empty($consenso['es_candidato_resolucion']))
+                                                    <a href="{{ route('verificaciones.bandeja') }}"
+                                                        title="Consenso colaborativo alcanzado: {{ $consenso['conteo_ya_no_esta'] }} votos indican que ya no está. Revisar en bandeja técnica."
+                                                        class="inline-flex items-center gap-1 bg-purple-100 hover:bg-purple-200 text-purple-800 border border-purple-300 text-xs font-bold px-2 py-1 rounded uppercase shadow-sm transition animate-pulse">
+                                                        <i class="fas fa-user-check text-[11px]"></i> CONSENSO
+                                                    </a>
+                                                @endif
                                                 <form action="{{ route('obstaculos.resolver', $ob) }}" method="POST">
                                                     @csrf @method('PATCH')
                                                     <button type="submit" title="MARCAR COMO RESUELTO"
-                                                        class="bg-green-100 hover:bg-green-200 text-green-700 text-xs font-bold px-2 py-1 rounded uppercase">
-                                                        <i class="fas fa-check-double"></i> RESOLVER
+                                                        class="inline-flex items-center gap-1 bg-green-100 hover:bg-green-200 text-green-700 text-xs font-bold px-2 py-1 rounded uppercase shadow-sm transition">
+                                                        <i class="fas fa-check-double text-[11px]"></i> RESOLVER
                                                     </button>
                                                 </form>
                                             @else
-                                                <span class="text-xs text-gray-400 uppercase">RESUELTO</span>
+                                                <span class="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded uppercase">
+                                                    <i class="fas fa-check-circle text-emerald-600 text-[11px]"></i> RESUELTO
+                                                </span>
                                             @endif
                                         </div>
                                     </td>

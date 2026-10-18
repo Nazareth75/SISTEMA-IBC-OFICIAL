@@ -8,6 +8,7 @@ use App\Models\EvaluacionRiesgo;
 use App\Models\Obstaculo;
 use App\Models\ReporteObstaculo;
 use App\Models\Ruta;
+use App\Models\VerificacionObstaculo;
 use App\Models\ZonaRiesgo;
 use App\Services\Aco\ConstructorGrafoRuta;
 use App\Services\Aco\EstadoAcoRuta;
@@ -21,7 +22,7 @@ use Tests\TestCase;
  *
  * Se ejecutan bajo transacciones estrictamente sobre la base de datos de testing.
  */
-class DemostracionIbcTest extends TestCase
+class SeederDatosDemostracion_Test extends TestCase
 {
     use DatabaseTransactions;
 
@@ -73,6 +74,10 @@ class DemostracionIbcTest extends TestCase
         $reportesCount = ReporteObstaculo::where('codigo', 'like', 'DEMO-REP-%')->count();
         $this->assertGreaterThanOrEqual(20, $reportesCount);
         $this->assertLessThanOrEqual(40, $reportesCount);
+
+        // Verificaciones colaborativas demo
+        $verificacionesCount = VerificacionObstaculo::where('observacion', 'like', '%DEMO%')->count();
+        $this->assertGreaterThanOrEqual(2, $verificacionesCount);
     }
 
     public function test_b_escenarios_obligatorios_rutas_y_coberturas(): void
@@ -184,6 +189,7 @@ class DemostracionIbcTest extends TestCase
         $this->assertSame(0, ZonaRiesgo::where('nom_zri', 'like', 'DEMO — %')->count());
         $this->assertSame(0, Obstaculo::where('des_obs', 'like', '[DEMO]%')->count());
         $this->assertSame(0, ReporteObstaculo::where('codigo', 'like', 'DEMO-REP-%')->count());
+        $this->assertSame(0, VerificacionObstaculo::where('observacion', 'like', '%DEMO%')->count());
 
         // Volver a sembrar de forma idempotente
         DatosDemostracionIbcSeeder::sembrarDemo();
