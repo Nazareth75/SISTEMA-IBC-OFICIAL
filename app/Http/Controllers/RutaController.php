@@ -84,7 +84,8 @@ class RutaController extends Controller
         Ruta $ruta,
         RutaEstimacionService $estimador,
         ConstructorGrafoRuta $constructorAco,
-        ServicioRecomendacionRutaAco $recomendadorAco
+        ServicioRecomendacionRutaAco $recomendadorAco,
+        \App\Services\Aco\ServicioEstadoRecomendacionAco $estadoAcoService
     ): View {
         $ruta->load([
             'creador',
@@ -108,16 +109,35 @@ class RutaController extends Controller
 
         $analisisAco = $constructorAco->analizar($ruta);
         $recomendacionAco = null;
+        $recomendacionDesactualizada = $estadoAcoService->estaDesactualizada($ruta);
+        $infoDesactualizacion = $estadoAcoService->obtenerInfoDesactualizacion($ruta);
+        $historialCambioAco = $estadoAcoService->obtenerHistorialCambio($ruta);
 
         if ($analisisAco->esOptimizable) {
             try {
+                // Si la recomendación está desactualizada y no hay recálculo previo, calculamos nueva
                 $recomendacionAco = $recomendadorAco->recomendar($ruta);
+                if ($recomendacionAco->success) {
+                    $estadoAcoService->guardarRecomendacion($ruta, $recomendacionAco);
+                    $historialCambioAco = $estadoAcoService->obtenerHistorialCambio($ruta);
+                }
             } catch (\Throwable $e) {
                 $recomendacionAco = null;
             }
         }
 
-        return view('rutas.show', compact('ruta', 'nivelGeneral', 'transiciones', 'puedePublicarse', 'trayectoDetalle', 'analisisAco', 'recomendacionAco'));
+        return view('rutas.show', compact(
+            'ruta',
+            'nivelGeneral',
+            'transiciones',
+            'puedePublicarse',
+            'trayectoDetalle',
+            'analisisAco',
+            'recomendacionAco',
+            'recomendacionDesactualizada',
+            'infoDesactualizacion',
+            'historialCambioAco'
+        ));
     }
 
     // ─── Editar ───────────────────────────────────────────────
@@ -371,7 +391,8 @@ class RutaController extends Controller
     public function recalcularAco(
         Request $request,
         Ruta $ruta,
-        ServicioRecomendacionRutaAco $recomendadorAco
+        ServicioRecomendacionRutaAco $recomendadorAco,
+        \App\Services\Aco\ServicioEstadoRecomendacionAco $estadoAcoService
     ): JsonResponse {
         abort_unless(Auth::user()?->tieneRol('SUPERADMINISTRADOR', 'ADMINISTRADOR', 'TECNICO'), 403);
 
@@ -401,10 +422,17 @@ class RutaController extends Controller
 
             $resultado = $recomendadorAco->recomendar($ruta, $config);
 
+            if ($resultado->success) {
+                $estadoAcoService->guardarRecomendacion($ruta, $resultado);
+            }
+
+            $historial = $estadoAcoService->obtenerHistorialCambio($ruta);
+
             return response()->json([
-                'success'       => $resultado->success,
-                'mensaje'       => $resultado->mensajeError,
-                'recomendacion' => $resultado->toArray(),
+                'success'          => $resultado->success,
+                'mensaje'          => $resultado->mensajeError,
+                'recomendacion'    => $resultado->toArray(),
+                'historial_cambio' => $historial,
             ]);
         } catch (\Throwable $e) {
             return response()->json([

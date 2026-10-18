@@ -85,6 +85,33 @@ class Obstaculo extends Model
                     $ruta->desactualizar();
                 }
             }
+
+            event(new \App\Events\ObstaculoCambioEstado(
+                $obstaculo,
+                '',
+                (string) $obstaculo->est_obs,
+                $obstaculo->cod_usuarios_obs
+            ));
+        });
+
+        static::updated(function (Obstaculo $obstaculo) {
+            if ($obstaculo->wasChanged('est_obs')) {
+                event(new \App\Events\ObstaculoCambioEstado(
+                    $obstaculo,
+                    (string) $obstaculo->getOriginal('est_obs'),
+                    (string) $obstaculo->est_obs,
+                    \Illuminate\Support\Facades\Auth::id()
+                ));
+            }
+        });
+
+        static::deleted(function (Obstaculo $obstaculo) {
+            event(new \App\Events\ObstaculoCambioEstado(
+                $obstaculo,
+                (string) $obstaculo->est_obs,
+                'ELIMINADO',
+                \Illuminate\Support\Facades\Auth::id()
+            ));
         });
     }
 
