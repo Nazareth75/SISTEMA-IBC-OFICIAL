@@ -6,6 +6,8 @@ class IdentificacionRequerida implements Exception {}
 
 class SinConexion implements Exception {}
 
+class RecomendacionNoDisponible implements Exception {}
+
 class MovilidadApi {
   MovilidadApi(String base, {http.Client? client})
     : base = base.replaceAll(RegExp(r'/$'), ''),
@@ -35,6 +37,9 @@ class MovilidadApi {
     }
     if (response.statusCode == 204) return null;
     if (response.statusCode == 401) throw IdentificacionRequerida();
+    if (response.statusCode == 422 && path.startsWith('rutas/')) {
+      throw RecomendacionNoDisponible();
+    }
     final data = jsonDecode(response.body);
     if (response.statusCode >= 400) {
       throw Exception(

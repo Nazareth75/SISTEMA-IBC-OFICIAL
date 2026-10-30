@@ -52,6 +52,13 @@ void main() {
       expect(sinRed.token, 'recordada');
     },
   );
+  test('Una ruta que ya no puede recomendarse detiene su uso', () async {
+    final api = MovilidadApi(
+      'https://ibc.test',
+      client: MockClient((_) async => http.Response('{"success":false}', 422)),
+    );
+    await expectLater(api.ruta(1), throwsA(isA<RecomendacionNoDisponible>()));
+  });
   test(
     'Sesión usa el canal seguro y no guarda identificación personal',
     () async {

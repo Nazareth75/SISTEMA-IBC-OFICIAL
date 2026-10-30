@@ -14,14 +14,15 @@ import 'geometria.dart';
 import 'sesion_segura.dart';
 import 'almacen_movilidad.dart';
 import 'configuracion.dart';
-import 'caminos_mapa.dart';
+import 'actualizacion_ruta.dart';
 
 void main() => runApp(
   const MaterialApp(home: Movilidad(), debugShowCheckedModeBanner: false),
 );
 
 class Movilidad extends StatefulWidget {
-  const Movilidad({super.key});
+  const Movilidad({super.key, this.crearApi});
+  final MovilidadApi Function(String)? crearApi;
   @override
   State<Movilidad> createState() => _MovilidadState();
 }
@@ -45,7 +46,8 @@ class _MovilidadState extends State<Movilidad> {
   List<ScanResult> dispositivos = [];
   Map<String, dynamic>? ruta;
   List<List<LatLng>> trazos = [];
-  List<CaminoMapa> caminosMapa = [];
+  bool escuchando = false;
+  late final Future<void> audioListo;
   StreamSubscription<Position>? gps;
   StreamSubscription<List<int>>? datosBaston;
   StreamSubscription<BluetoothConnectionState>? conexion;
@@ -64,10 +66,29 @@ class _MovilidadState extends State<Movilidad> {
   @override
   void initState() {
     super.initState();
-    audio.inicializar().catchError((Object e) {
+    audioListo = audio.inicializar().catchError((Object e) {
       if (mounted) setState(() => estado = 'Audio no disponible: $e');
     });
-    Future.microtask(() => tarea(restaurar));
+    SesionSegura.canal.setMethodCallHandler((call) async {
+      if (call.method == 'volumeUp' &&
+          mounted &&
+          api != null &&
+          !ocupado &&
+          !escuchando) {
+        await tarea(decirDestino);
+      }
+    });
+    Future.microtask(
+      () => tarea(() async {
+        await audioListo;
+        await restaurar();
+        if (api == null) {
+          await audio.decir(
+            'Bienvenido a IBC Movilidad. Vamos a configurar tu acceso. Escribe tu carnet de identidad y nombre registrado.',
+          );
+        }
+      }),
+    );
     sincronizador = Timer.periodic(
       const Duration(seconds: 20),
       (_) => sincronizar(),
@@ -83,21 +104,33 @@ class _MovilidadState extends State<Movilidad> {
       await limpiarSesion();
       if (mounted) {
         setState(() => estado = 'Identifícate nuevamente para continuar.');
+        await audio.decir(estado);
       }
     } catch (e) {
-      if (mounted) setState(() => estado = 'Error: $e');
+      if (mounted) {
+        setState(
+          () => estado =
+              'No se pudo completar la acción. Reintenta o solicita ayuda al IBC.',
+        );
+      }
+      await audio.decir(
+        'No se pudo completar la acción. Reintenta o solicita ayuda al IBC.',
+      );
     } finally {
       if (mounted) setState(() => ocupado = false);
     }
   }
 
+  MovilidadApi clientePara(String base) =>
+      widget.crearApi?.call(base) ?? MovilidadApi(base);
+
   Future<void> entrar() async {
     if (!ConfiguracionMovil.urlValida(servidor.text.trim())) {
       throw Exception(
-        'Introduce un servidor válido. Producción requiere HTTPS.',
+        'El servicio no está configurado. Solicita ayuda al IBC.',
       );
     }
-    final cliente = MovilidadApi(servidor.text.trim())..demostracion = demo;
+    final cliente = clientePara(servidor.text.trim())..demostracion = demo;
     nombreAfiliado = await cliente.login(
       carnet.text.trim(),
       nombre.text.trim(),
@@ -120,15 +153,24 @@ class _MovilidadState extends State<Movilidad> {
     almacen.datos['validada'] = DateTime.now().toUtc().toIso8601String();
     await almacen.guardar();
     await catalogo();
+    await bienvenida();
   }
 
   Future<void> restaurar() async {
     try {
       final guardada = await sesionSegura.leer();
       if (guardada == null) return;
+      // Una compilación nueva nunca envía el token a otro servidor.
+      if (!ConfiguracionMovil.herramientasDesarrollo &&
+          guardada['servidor'] != ConfiguracionMovil.baseUrl) {
+        await sesionSegura.borrar();
+        await almacen.borrar();
+        return;
+      }
       servidor.text = guardada['servidor'];
-      demo = guardada['demo'] == true;
-      final cliente = MovilidadApi(servidor.text)
+      demo =
+          ConfiguracionMovil.herramientasDesarrollo && guardada['demo'] == true;
+      final cliente = clientePara(servidor.text)
         ..token = guardada['token']
         ..demostracion = demo;
       await almacen.abrir(cliente.token!);
@@ -154,6 +196,7 @@ class _MovilidadState extends State<Movilidad> {
         if (ultima != null) mostrarRuta(ultima);
         await marcarSinConexion();
       }
+      if (api != null) await bienvenida();
     } finally {
       if (mounted) setState(() => restaurando = false);
     }
@@ -161,6 +204,7 @@ class _MovilidadState extends State<Movilidad> {
 
   Future<void> limpiarSesion() async {
     sesionGeneracion++;
+    await SesionSegura.canal.invokeMethod('volumeShortcut', false);
     await parar();
     await datosBaston?.cancel();
     await conexion?.cancel();
@@ -240,15 +284,6 @@ class _MovilidadState extends State<Movilidad> {
   void mostrarRuta(Map<String, dynamic> data) {
     setState(() {
       ruta = data;
-      caminosMapa =
-          ((data['caminos_candidatos'] ?? []) as List)
-              .map((c) => CaminoMapa(Map<String, dynamic>.from(c)))
-              .toList()
-            ..sort(
-              (a, b) => a.recomendada == b.recomendada
-                  ? a.refuerzo.compareTo(b.refuerzo)
-                  : (a.recomendada ? 1 : -1),
-            );
       estado = data['resumen_audio'];
       trazos = (data['geometria_recomendada'] as List)
           .map(
@@ -285,25 +320,44 @@ class _MovilidadState extends State<Movilidad> {
       final recuperada = sinConexion;
       sinConexion = false;
       await enviarPendientes();
-      if (recuperada && generacion == sesionGeneracion) {
-        await catalogo();
+      if (generacion == sesionGeneracion) {
+        if (recuperada) await catalogo();
         if (ruta != null) {
           final nueva = await api!.ruta(ruta!['ruta_id']);
+          if (generacion != sesionGeneracion || !mounted) return;
           await almacen.guardarRuta(nueva);
-          if (jsonEncode(nueva['tramos_seleccionados_ids']) !=
-              jsonEncode(ruta!['tramos_seleccionados_ids'])) {
+          if (recomendacionCambio(ruta!, nueva)) {
+            final seguir = navegando;
             await parar();
-            mostrarRuta(nueva);
             await audio.decir(
-              'La recomendación cambió. Revisa la ruta actualizada antes de reiniciar.',
+              'Las condiciones de la ruta cambiaron. Recalculando.',
             );
+            mostrarRuta(nueva);
+            ultimaIndicacion = nueva['resumen_audio'];
+            if (seguir) {
+              await iniciar(reanudando: true);
+            } else {
+              await audio.decir(ultimaIndicacion);
+            }
           }
         }
       }
+    } on RecomendacionNoDisponible {
+      await parar();
+      if (mounted) {
+        setState(
+          () => estado =
+              'Las condiciones cambiaron. No hay una recomendación disponible. Guía pausada. Solicita ayuda al IBC.',
+        );
+      }
+      await audio.decir(estado);
     } on SinConexion {
       await marcarSinConexion();
     } on IdentificacionRequerida {
-      if (generacion == sesionGeneracion) await limpiarSesion();
+      if (generacion == sesionGeneracion) {
+        await limpiarSesion();
+        await audio.decir('Tu acceso caducó. Verifica tus datos nuevamente.');
+      }
     } catch (_) {
       /* Un error de servidor no borra la ruta descargada. */
     } finally {
@@ -311,17 +365,93 @@ class _MovilidadState extends State<Movilidad> {
     }
   }
 
-  Future<void> decirDestino() async {
-    final texto = await SesionSegura.canal.invokeMethod<String>('voice');
-    if (texto != null && mounted) {
-      setState(() => buscarDestino.text = texto);
-      await audio.decir(
-        'Destino reconocido: $texto. Elige el resultado y busca la ruta segura.',
-      );
+  Future<void> bienvenida() async {
+    await SesionSegura.canal.invokeMethod('volumeShortcut', true);
+    await audio.decir(
+      'Bienvenido a IBC Movilidad. Presiona volumen arriba para indicar tu destino. También puedes tocar Decir destino.',
+    );
+    await reconectarBaston();
+  }
+
+  Future<void> reconectarBaston() async {
+    final id = almacen.datos['baston_id'];
+    if (id is! String || id.isEmpty) return;
+    try {
+      // Sin escaneo ni solicitud automática de nuevos permisos.
+      if (await FlutterBluePlus.adapterState.first.timeout(
+            const Duration(seconds: 3),
+          ) !=
+          BluetoothAdapterState.on) {
+        return;
+      }
+      await conectarDispositivo(BluetoothDevice.fromId(id));
+    } catch (_) {
+      if (mounted) {
+        setState(
+          () => estadoBaston =
+              'Desconectado. Toca Conectar bastón para reintentar.',
+        );
+      }
     }
   }
 
-  Future<void> iniciar() async {
+  Future<void> decirDestino() async {
+    if (escuchando || api == null) return;
+    escuchando = true;
+    final generacion = sesionGeneracion;
+    try {
+      await audio.decir('¿A dónde quieres ir?');
+      final texto = await SesionSegura.canal.invokeMethod<String>('voice');
+      if (texto == null || !mounted || generacion != sesionGeneracion) return;
+      setState(() {
+        buscarDestino.text = texto;
+        destinoElegido = null;
+      });
+      // Buscar en todo el catálogo publicado, no solo la página visible.
+      final candidatos = <dynamic>[];
+      var paginaVoz = 1;
+      var total = 1;
+      do {
+        final respuesta = await api!.catalogo(paginaVoz);
+        if (generacion != sesionGeneracion || !mounted) return;
+        candidatos.addAll(respuesta['data']);
+        total = respuesta['last_page'] as int;
+        paginaVoz++;
+      } while (paginaVoz <= total);
+      final encontrados = candidatos
+          .where((r) => coincideDestino(texto, r))
+          .toList();
+      if (encontrados.length != 1) {
+        setState(() => rutas = encontrados);
+        await audio.decir(
+          encontrados.isEmpty
+              ? 'No encontré ese destino. Intenta decir otro destino o escríbelo.'
+              : 'Encontré varias rutas. Selecciona el destino y origen con TalkBack y toca Buscar ruta segura.',
+        );
+        return;
+      }
+      final elegido = encontrados.single;
+      await audio.decir(
+        'Destino reconocido: ${elegido['dst_rut']}, desde ${elegido['ori_rut']}. ¿Es correcto? Di sí o no.',
+      );
+      final confirmacion = await SesionSegura.canal.invokeMethod<String>(
+        'voice',
+      );
+      if (!mounted || generacion != sesionGeneracion) return;
+      if (!respuestaAfirmativa(confirmacion)) {
+        await audio.decir(
+          'Búsqueda cancelada. Presiona volumen arriba para indicar otro destino.',
+        );
+        return;
+      }
+      setState(() => destinoElegido = elegido['cod_rutas']);
+      await elegir(destinoElegido!);
+    } finally {
+      escuchando = false;
+    }
+  }
+
+  Future<void> iniciar({bool reanudando = false}) async {
     if (ruta == null) return;
     // La geometría ya descargada permite iniciar sin volver a depender de red.
     if (!await Geolocator.isLocationServiceEnabled()) {
@@ -336,13 +466,35 @@ class _MovilidadState extends State<Movilidad> {
       throw Exception('Se necesita permiso de ubicación.');
     }
     instruccion = 1;
+    if (reanudando) {
+      final p = posicion;
+      final siguiente = p == null
+          ? null
+          : siguienteInstruccionActualizada(
+              ruta!,
+              LatLng(p.latitude, p.longitude),
+              p.accuracy,
+              p.timestamp,
+            );
+      if (siguiente == null) {
+        setState(
+          () => estado =
+              'Ruta actualizada. Guía pausada: no se ha podido enlazar tu ubicación con la nueva ruta. Solicita ayuda o reinicia desde el origen.',
+        );
+        await audio.decir(estado);
+        return;
+      }
+      instruccion = siguiente;
+    }
     anticipada = null;
     setState(() {
       navegando = true;
       estado = 'Guía aproximada activa. Esperando ubicación precisa.';
     });
     await audio.decir(
-      'Ruta segura iniciada. Guía aproximada. Mantén la aplicación abierta.',
+      reanudando
+          ? 'Ruta actualizada. Continuamos la guía desde tu ubicación.'
+          : 'Ruta segura iniciada. Guía aproximada. Mantén la aplicación abierta.',
     );
     gps =
         Geolocator.getPositionStream(
@@ -437,7 +589,10 @@ class _MovilidadState extends State<Movilidad> {
     await datosBaston?.cancel();
     await conexion?.cancel();
     await baston?.disconnect();
-    final device = resultado.device;
+    await conectarDispositivo(resultado.device);
+  }
+
+  Future<void> conectarDispositivo(BluetoothDevice device) async {
     await device.connect(
       license: License.nonprofit,
       timeout: const Duration(seconds: 15),
@@ -468,6 +623,8 @@ class _MovilidadState extends State<Movilidad> {
           dispositivos = [];
         });
       }
+      almacen.datos['baston_id'] = device.remoteId.str;
+      await almacen.guardar();
       await audio.decir('Bastón conectado.');
     } catch (_) {
       await device.disconnect();
@@ -629,6 +786,7 @@ class _MovilidadState extends State<Movilidad> {
 
   @override
   void dispose() {
+    SesionSegura.canal.setMethodCallHandler(null);
     sincronizador?.cancel();
     gps?.cancel();
     datosBaston?.cancel();
@@ -644,7 +802,7 @@ class _MovilidadState extends State<Movilidad> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('IBC · Movilidad')),
+    appBar: AppBar(title: const Text('IBC | RUTAS SEGURAS')),
     body: SafeArea(
       child: ListView(
         padding: const EdgeInsets.all(20),
@@ -657,12 +815,15 @@ class _MovilidadState extends State<Movilidad> {
               style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
             ),
             const Text(
-              'Identificación simplificada del prototipo. Escribe los datos con los que ya estás registrado en el IBC.',
+              'Vamos a configurar tu acceso. Escribe tu carnet de identidad y nombre registrado. Solo será necesario volver a verificarte si tu acceso caduca o se revoca.',
             ),
-            TextField(
-              controller: servidor,
-              decoration: const InputDecoration(labelText: 'Servidor Laravel'),
-            ),
+            if (ConfiguracionMovil.herramientasDesarrollo)
+              TextField(
+                controller: servidor,
+                decoration: const InputDecoration(
+                  labelText: 'Servidor Laravel',
+                ),
+              ),
             TextField(
               controller: carnet,
               decoration: const InputDecoration(
@@ -673,18 +834,15 @@ class _MovilidadState extends State<Movilidad> {
               controller: nombre,
               decoration: const InputDecoration(labelText: 'Nombre'),
             ),
-            SwitchListTile(
-              title: const Text('Datos de demostración'),
-              value: demo,
-              onChanged: (v) => setState(() => demo = v),
-            ),
+            if (ConfiguracionMovil.herramientasDesarrollo)
+              SwitchListTile(
+                title: const Text('Datos de demostración'),
+                value: demo,
+                onChanged: (v) => setState(() => demo = v),
+              ),
             FilledButton(
               onPressed: ocupado ? null : () => tarea(entrar),
               child: const Text('CONTINUAR'),
-            ),
-            TextButton(
-              onPressed: ocupado ? null : () => tarea(restaurar),
-              child: const Text('REINTENTAR SESIÓN GUARDADA'),
             ),
           ] else if (api != null) ...[
             Text('Hola, $nombreAfiliado', style: const TextStyle(fontSize: 24)),
@@ -707,7 +865,7 @@ class _MovilidadState extends State<Movilidad> {
             TextField(
               controller: buscarDestino,
               decoration: const InputDecoration(labelText: 'Buscar destino'),
-              onChanged: (_) => setState(() {}),
+              onChanged: (_) => setState(() => destinoElegido = null),
             ),
             for (final item in rutas.where(
               (r) => '${r['dst_rut']} ${r['nom_rut']}'.toLowerCase().contains(
@@ -762,13 +920,6 @@ class _MovilidadState extends State<Movilidad> {
               ],
             ),
             if (ruta != null) ...[
-              const Text(
-                'Ancho proporcional al refuerzo real de ACO. Verde: recomendada. Azul: alternativas.',
-              ),
-              for (final camino in caminosMapa)
-                Text(
-                  '${camino.nombre}. Refuerzo ${(camino.refuerzo * 100).toStringAsFixed(1)} por ciento. Tramos ${camino.tramos.join(', ')}.',
-                ),
               if (ruta!['vista_previa'] == true)
                 Text(ruta!['advertencia'] as String),
               if (ruta!['demostracion'] == true)
@@ -822,46 +973,16 @@ class _MovilidadState extends State<Movilidad> {
                       ),
                       PolylineLayer(
                         polylines: [
-                          for (final camino in caminosMapa)
-                            for (final segmento in camino.geometria)
-                              Polyline(
-                                points: segmento,
-                                color: camino.recomendada
-                                    ? Colors.green.shade800
-                                    : Colors.blue.shade600.withValues(
-                                        alpha: 0.65,
-                                      ),
-                                strokeWidth: camino.grosor,
-                              ),
+                          for (final segmento in trazos)
+                            Polyline(
+                              points: segmento,
+                              color: Colors.green.shade800,
+                              strokeWidth: 6,
+                            ),
                         ],
                       ),
                       MarkerLayer(
                         markers: [
-                          for (final camino in caminosMapa.where(
-                            (c) => c.recomendada,
-                          ))
-                            for (var i = 0; i < camino.geometria.length; i++)
-                              if (camino.geometria[i].isNotEmpty)
-                                Marker(
-                                  point: camino.geometria[i].first,
-                                  width: 72,
-                                  height: 28,
-                                  child: Semantics(
-                                    label:
-                                        'Tramo ${camino.tramos[i]}: ${camino.nombresTramos[i]}',
-                                    child: Container(
-                                      color: Colors.white,
-                                      child: Text(
-                                        'T${camino.tramos[i]}',
-                                        textAlign: TextAlign.center,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.black,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
                           Marker(
                             point: trazos.first.first,
                             child: Semantics(
@@ -924,7 +1045,7 @@ class _MovilidadState extends State<Movilidad> {
             ),
             OutlinedButton(
               onPressed: ocupado ? null : () => tarea(buscarBaston),
-              child: const Text('Buscar bastón BLE'),
+              child: const Text('CONECTAR BASTÓN'),
             ),
             if (pendientes.isNotEmpty)
               OutlinedButton(
@@ -937,10 +1058,9 @@ class _MovilidadState extends State<Movilidad> {
               ListTile(
                 title: Text(
                   d.device.platformName.isEmpty
-                      ? 'Dispositivo BLE'
+                      ? 'Bastón sin nombre'
                       : d.device.platformName,
                 ),
-                subtitle: Text(d.device.remoteId.str),
                 onTap: ocupado ? null : () => tarea(() => conectar(d)),
               ),
           ],

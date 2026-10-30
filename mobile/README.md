@@ -1,30 +1,33 @@
-# IBC · Movilidad
+# IBC Movilidad: operación y compilación
 
-App del afiliado: identificación de prototipo CI + nombre contra un registro existente con afiliación activa; no crea ni modifica el padrón. Token revocable de 30 días. No persiste CI ni nombre de identificación. Sesión, ruta y cola cifradas con AES-GCM y clave Android Keystore; backup deshabilitado.
+La app del afiliado usa el mismo Laravel, BD y recomendación de rutas registradas que la web. Flutter no ejecuta ACO ni decide caminos con OSRM. Dibuja la geometría recomendada recibida del servidor. Los candidatos, feromonas y métricas permanecen en la vista técnica web.
 
-## Servidor y compilación
+Primera apertura: bienvenida por voz, CI y nombre registrados, token revocable guardado con Android Keystore. Siguientes aperturas: valida el token y entra directamente. Al expirar o revocarse, vuelve a verificar. No persiste CI ni nombre del formulario; el nombre mostrado se conserva cifrado con los datos de sesión. Cambiar servidor entre builds requiere nueva vinculación.
 
-Configuración central: `lib/configuracion.dart`, variables `APP_ENV=DEVELOPMENT_LOCAL|REMOTE_DEMO|PRODUCTION` y `API_BASE`. Solo DEVELOPMENT_LOCAL admite HTTP. El campo Servidor permite cambiar la URL antes de identificarse. Cambiar de servidor requiere cerrar sesión.
+## Build
 
-```powershell
-flutter pub get
+```
 flutter analyze
 flutter test
-flutter build apk --debug --dart-define=APP_ENV=REMOTE_DEMO --dart-define=API_BASE=https://URL-REAL-DEL-TUNEL
+flutter build apk --release --dart-define=APP_ENV=PRODUCTION --dart-define=API_BASE_URL=https://DOMINIO-REAL
 ```
 
-Para LAN usar DEVELOPMENT_LOCAL y la IP actual del PC. No usar 127.0.0.1 en Android físico. Para release repetir con --release; la firma configurada aún es de prueba. No hay dominio de producción inventado.
+No hay URL de producción predeterminada. Sustituir DOMINIO-REAL por el backend desplegado. Release solo acepta HTTPS. La firma release actual sigue siendo de prueba: configurar firma de distribución antes de publicar.
 
-## Operación
+Desarrollo emulador: debug + APP_ENV=DEVELOPMENT_LOCAL + API_BASE_URL=http://10.0.2.2:8000. Solo debug con DEV_TOOLS=true habilita controles de servidor y demostración. API_BASE se admite como alias legado de compilación. Servidor local y túnel son herramientas de desarrollo; el afiliado no configura direcciones.
 
-Activar DEMO solo cuando el servidor de pruebas lo permita. Fixture controlado: CI `DEMO-MOVIL-001`, nombre `PERSONA DEMOSTRACION`. Nunca sembrar en BD oficial. Elegir o decir destino, seleccionar resultado, buscar ruta e iniciar navegación. La entrada de voz utiliza el reconocedor instalado en Android y puede necesitar Internet. TTS y TalkBack utilizan servicios/voces del dispositivo.
+## Uso sin visión
 
-Laravel ejecuta ACO. Flutter conserva exactamente geometría e instrucciones recibidas. La última ruta descargada permite guía GPS temporal sin Internet. No descarga mosaicos para uso offline. Mantener la app abierta: no se implementó servicio de navegación en segundo plano. Se parte del origen registrado, sin enlace automático desde cualquier posición.
+Con la app enfocada, una pulsación corta de volumen arriba o DECIR DESTINO pregunta el destino. Consulta el catálogo completo, confirma por voz «sí/no» y obtiene la ruta. Si existen varios resultados, elegir con TalkBack el destino y origen. Se conserva búsqueda escrita. El reconocimiento depende del servicio Android disponible y puede requerir Internet. No se usa AccessibilityService.
 
-La cola persistente conserva UUID y reintenta cada 20 segundos con la app abierta o manualmente. El servidor confirma antes de retirar evidencia. SOS sin red queda pendiente, nunca anuncia confirmación inexistente. Cerrar sesión borra datos locales y desconecta BLE: enviar pendientes antes de cambiar de persona. Una revocación se detecta al recuperar red. La reapertura offline permite uso temporal de la última sesión validada y su ruta, sin ejecutar ACO local.
+El mapa es apoyo visual; indicaciones y estados se comunican por voz y controles etiquetados. Pendiente prueba física con TalkBack, escalado de texto y usuarios del IBC; las pruebas automatizadas no certifican accesibilidad completa.
 
-## Bastón
+## Actualizaciones y bastón
 
-BLE: servicio `4fafc201-1fb5-459e-8fcc-c5c9c331914b`; característica `beb5483e-36e1-4688-b7f5-ea07361b26a8`. Canónico recomendado, con LF: `DIST:frente,izquierda,derecha` (cm), `SOS:latitud,longitud` o `SOS:Sin GPS`. Se admite DISTANCIAS, GPS y BPM del material auditado. Alertas BLE/audio/vibración funcionan sin depender de la API; la detección queda como evidencia para revisión técnica. No hay envío real a familiares. Firmware completo y prueba física ESP32 pendientes.
+Poll cada 20 segundos con la sesión activa. Registrar/validar o resolver un obstáculo invalida la recomendación del servidor. Flutter compara las condiciones, actualiza mapa y habla. Durante navegación enlaza únicamente una posición precisa/reciente sobre el nuevo recorrido; de otro modo pausa. Una recomendación rechazada por el backend pausa la guía. No se genera una ruta independiente desde la posición actual.
 
-Archivos: main.dart (BLE/GPS/UI/eventos), baston_protocol.dart (parser), audio.dart (TTS/prioridad), almacen_movilidad.dart (cola/ruta), sesion_segura.dart y MainActivity.kt (cifrado/voz).
+Primera vinculación BLE manual con permisos Android. Tras descubrir correctamente el servicio/característica existentes, recuerda el dispositivo cifrado e intenta reconectar en siguientes aperturas si Bluetooth está disponible. Protocolo y UUID intactos. Alertas locales no dependen de Internet; las detecciones se acumulan como evidencia. Dejar de detectar no confirma ausencia de obstáculo. SOS es un evento separado y no envía avisos automáticos a familiares.
+
+Ruta descargada y eventos pendientes se conservan cifrados, aislados por token. Sin conexión se usa la última ruta y no se pueden conocer nuevas condiciones. Mantener app abierta; no hay guía garantizada en segundo plano. Cerrar sesión desconecta y borra datos locales.
+
+Detalle de auditoría: docs/AUDITORIA_FLUJO_MOVIL.md, en la raíz del repositorio.

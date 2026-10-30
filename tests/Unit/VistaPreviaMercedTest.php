@@ -23,9 +23,9 @@ class VistaPreviaMercedTest extends TestCase {
   }
   $this->assertCount(count($d['tramos_seleccionados_ids']),$d['geometria_recomendada']);
   $this->assertNotEmpty($d['instrucciones']);
-  $request=\Illuminate\Http\Request::create('/api/movilidad/rutas');
+  $request=\Illuminate\Http\Request::create('/api/movilidad/rutas?demostracion=1');
   $request->attributes->set('afiliadoMovil', new \App\Models\PersonaNoVidente());
-  config(['movilidad.permitir_vista_previa'=>true]);
+  config(['movilidad.permitir_vista_previa'=>true,'movilidad.permitir_demo'=>true]);
   $respuesta=app(\App\Http\Controllers\MovilidadController::class)->previaMerced($request);
   $this->assertSame(200,$respuesta->getStatusCode());
   $this->assertSame($d['geometria_recomendada'],$respuesta->getData(true)['geometria_recomendada']);

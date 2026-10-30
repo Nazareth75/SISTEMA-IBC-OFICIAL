@@ -11,10 +11,23 @@ import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
+import android.view.KeyEvent
 import android.content.Intent
 import android.speech.RecognizerIntent
 
 class MainActivity : FlutterActivity() {
+    private var canalSesion: MethodChannel? = null
+    private var atajoVolumen = false
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (atajoVolumen && hasWindowFocus() && vozPendiente == null && event.keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
+            // Una pulsación corta; no capturar combinaciones ni pulsaciones largas de TalkBack.
+            if (event.action == KeyEvent.ACTION_UP && !event.isCanceled && event.eventTime - event.downTime < 500) {
+                canalSesion?.invokeMethod("volumeUp", null)
+            }
+        }
+        // Mantener volumen y accesibilidad del sistema operativos.
+        return super.dispatchKeyEvent(event)
+    }
     private var vozPendiente: MethodChannel.Result? = null
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
@@ -34,11 +47,13 @@ class MainActivity : FlutterActivity() {
     }
     override fun configureFlutterEngine(engine: FlutterEngine) {
         super.configureFlutterEngine(engine)
-        MethodChannel(engine.dartExecutor.binaryMessenger, "bo.ibc/session").setMethodCallHandler { call, result ->
+        canalSesion = MethodChannel(engine.dartExecutor.binaryMessenger, "bo.ibc/session")
+        canalSesion!!.setMethodCallHandler { call, result ->
             val local = call.method.endsWith("Local")
             val prefs = getSharedPreferences(if(local) alias+"_local" else alias, MODE_PRIVATE)
             try {
                 when (call.method) {
+                    "volumeShortcut" -> { atajoVolumen = call.arguments == true; result.success(null) }
                     "voice" -> {
                         check(vozPendiente == null) { "Reconocimiento ya activo" }
                         vozPendiente=result
