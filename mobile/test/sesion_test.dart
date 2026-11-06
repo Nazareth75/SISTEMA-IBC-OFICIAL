@@ -16,7 +16,7 @@ void main() {
         client: MockClient((req) async {
           llamadas++;
           if (llamadas == 1) {
-            expect(jsonDecode(req.body), {'ci': 'TEST-CI', 'nombre': 'MARÍA'});
+            expect(jsonDecode(req.body), {'ci': 'TEST-CI'});
             return http.Response(
               jsonEncode({'token': 'credencial', 'nombre': 'MARÍA'}),
               200,
@@ -28,7 +28,7 @@ void main() {
           return http.Response(jsonEncode({'nombre': 'MARÍA'}), 200);
         }),
       );
-      expect(await api.login('TEST-CI', 'MARÍA'), 'MARÍA');
+      expect(await api.login('TEST-CI'), 'MARÍA');
       await api.request('sesion');
       expect(llamadas, 2);
     },

@@ -19,6 +19,13 @@ class MovilidadAfiliadoTest extends TestCase
             'cod_tipos_afiliado_afi'=>DB::table('tipos_afiliado')->value('cod_tipos_afiliado'),'fia_afi'=>today(),'est_afi'=>'ACTIVA']);
         return $persona;
     }
+    public function test_carnet_solo_verifica_afiliacion_sin_pedir_nombre(): void {
+        $persona=$this->persona();
+        $this->postJson('/api/movilidad/login',['ci'=>' test-ci-9427 '])
+            ->assertOk()->assertJsonPath('nombre','MARÍA ELENA')->assertJsonStructure(['token']);
+        $persona->update(['est_pnv'=>'SUSPENDIDO']);
+        $this->postJson('/api/movilidad/login',['ci'=>'TEST-CI-9427'])->assertStatus(422);
+    }
     private function entrar(): string {
         return $this->postJson('/api/movilidad/login',['ci'=>' test-ci-9427 ','nombre'=>'  maría   elena '])->assertOk()->assertJsonPath('nombre','MARÍA ELENA')->json('token');
     }

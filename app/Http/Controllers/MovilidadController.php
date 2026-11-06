@@ -11,8 +11,8 @@ class MovilidadController extends Controller
     public function login(Request $request)
     {
         abort_unless(config('movilidad.identificacion_prototipo'),403,'Identificación de prototipo deshabilitada.');
-        $datos=$request->validate(['ci'=>'required|string|max:30','nombre'=>'required|string|max:255']);
-        $persona=app(\App\Services\IdentificacionMovil::class)->verificar($datos['ci'],$datos['nombre']);
+        $datos=$request->validate(['ci'=>'required|string|max:30','nombre'=>'sometimes|nullable|string|max:255']);
+        $persona=app(\App\Services\IdentificacionMovil::class)->verificar($datos['ci'],$datos['nombre'] ?? null);
         if(!$persona) return response()->json(['message'=>'No pudimos verificar tus datos. Solicita ayuda al IBC.'],422);
         $secreto=bin2hex(random_bytes(32));
         TokenMovilidad::create(['persona_id'=>$persona->getKey(),'token_hash'=>hash('sha256',$secreto),'expires_at'=>now()->addDays(30)]);

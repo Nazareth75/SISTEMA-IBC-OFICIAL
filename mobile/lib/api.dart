@@ -51,8 +51,8 @@ class MovilidadApi {
     return data;
   }
 
-  Future<String> login(String ci, String nombre) async {
-    final data = await request('login', body: {'ci': ci, 'nombre': nombre});
+  Future<String> login(String ci, [String? nombre]) async {
+    final data = await request('login', body: {'ci': ci, 'nombre': ?nombre});
     token = data['token'];
     return data['nombre'];
   }

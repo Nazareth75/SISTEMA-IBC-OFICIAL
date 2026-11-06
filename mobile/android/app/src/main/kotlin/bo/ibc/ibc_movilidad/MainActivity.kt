@@ -61,9 +61,9 @@ class MainActivity : FlutterActivity() {
                             startActivityForResult(Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
                                 putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
                                 putExtra(RecognizerIntent.EXTRA_LANGUAGE,"es-BO")
-                                putExtra(RecognizerIntent.EXTRA_PROMPT,"¿A dónde quieres ir?")
+                                putExtra(RecognizerIntent.EXTRA_PROMPT,call.arguments as? String ?: "Escuchando")
                             },8041)
-                        } catch(e: Exception) { vozPendiente=null;result.error("VOICE_UNAVAILABLE","Escribe el destino o activa el reconocimiento de voz de Android",null) }
+                        } catch(e: Exception) { vozPendiente=null;result.error("VOICE_UNAVAILABLE","Reconocimiento de voz no disponible. Revisa el servicio de voz de Android.",null) }
                     }
                     "save", "saveLocal" -> {
                         val cipher = Cipher.getInstance("AES/GCM/NoPadding").apply { init(Cipher.ENCRYPT_MODE, key()) }
@@ -84,7 +84,7 @@ class MainActivity : FlutterActivity() {
                     else -> result.notImplemented()
                 }
             } catch (e: Exception) {
-                prefs.edit().clear().commit()
+                if (call.method == "read" || call.method == "readLocal") prefs.edit().clear().commit()
                 result.error("SESSION_STORAGE", "No se pudo recuperar o guardar la sesión segura", null)
             }
         }

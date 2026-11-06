@@ -29,7 +29,7 @@ class Movilidad extends StatefulWidget {
 
 class _MovilidadState extends State<Movilidad> {
   final servidor = TextEditingController(text: ConfiguracionMovil.baseUrl);
-  final carnet = TextEditingController(), nombre = TextEditingController();
+  final carnet = TextEditingController();
   final sesionSegura = SesionSegura();
   final almacen = AlmacenMovilidad();
   Timer? sincronizador;
@@ -70,22 +70,17 @@ class _MovilidadState extends State<Movilidad> {
       if (mounted) setState(() => estado = 'Audio no disponible: $e');
     });
     SesionSegura.canal.setMethodCallHandler((call) async {
-      if (call.method == 'volumeUp' &&
-          mounted &&
-          api != null &&
-          !ocupado &&
-          !escuchando) {
-        await tarea(decirDestino);
+      if (call.method == 'volumeUp' && mounted && !ocupado && !escuchando) {
+        await tarea(() => api == null ? dictarCarnet() : comandoVoz());
       }
     });
     Future.microtask(
       () => tarea(() async {
         await audioListo;
+        await SesionSegura.canal.invokeMethod('volumeShortcut', true);
         await restaurar();
         if (api == null) {
-          await audio.decir(
-            'Bienvenido a IBC Movilidad. Vamos a configurar tu acceso. Escribe tu carnet de identidad y nombre registrado.',
-          );
+          await dictarCarnet();
         }
       }),
     );
@@ -131,10 +126,7 @@ class _MovilidadState extends State<Movilidad> {
       );
     }
     final cliente = clientePara(servidor.text.trim())..demostracion = demo;
-    nombreAfiliado = await cliente.login(
-      carnet.text.trim(),
-      nombre.text.trim(),
-    );
+    nombreAfiliado = await cliente.login(carnet.text.trim());
     try {
       await sesionSegura.guardar(cliente.base, cliente.token!, demo);
     } catch (_) {
@@ -144,7 +136,6 @@ class _MovilidadState extends State<Movilidad> {
       rethrow;
     }
     carnet.clear();
-    nombre.clear();
     api = cliente;
     await almacen.abrir(cliente.token!);
     pendientes.clear();
@@ -204,7 +195,7 @@ class _MovilidadState extends State<Movilidad> {
 
   Future<void> limpiarSesion() async {
     sesionGeneracion++;
-    await SesionSegura.canal.invokeMethod('volumeShortcut', false);
+    await SesionSegura.canal.invokeMethod('volumeShortcut', true);
     await parar();
     await datosBaston?.cancel();
     await conexion?.cancel();
@@ -215,7 +206,6 @@ class _MovilidadState extends State<Movilidad> {
     await sesionSegura.borrar();
     await almacen.borrar();
     carnet.clear();
-    nombre.clear();
     pendientes.clear();
     if (mounted) {
       setState(() {
@@ -367,10 +357,9 @@ class _MovilidadState extends State<Movilidad> {
 
   Future<void> bienvenida() async {
     await SesionSegura.canal.invokeMethod('volumeShortcut', true);
-    await audio.decir(
-      'Bienvenido a IBC Movilidad. Presiona volumen arriba para indicar tu destino. También puedes tocar Decir destino.',
-    );
+    await audio.decir('Bienvenido a IBC Movilidad, $nombreAfiliado.');
     await reconectarBaston();
+    if (!escuchando) await comandoVoz();
   }
 
   Future<void> reconectarBaston() async {
@@ -395,13 +384,128 @@ class _MovilidadState extends State<Movilidad> {
     }
   }
 
-  Future<void> decirDestino() async {
+  Future<String?> escuchar(String pregunta) async {
+    if (!mounted) return null;
+    await audio.decir(pregunta);
+    if (!mounted) return null;
+    setState(() => estado = 'Escuchando. Puedes cancelar con el botón Atrás.');
+    return SesionSegura.canal.invokeMethod<String>('voice', pregunta);
+  }
+
+  Future<void> dictarCarnet() async {
+    if (escuchando || api != null) return;
+    escuchando = true;
+    try {
+      final texto = await escuchar(
+        'Dicte su carnet de identidad. Diga los números uno por uno, y el complemento si tiene.',
+      );
+      if (texto == null || !mounted) return;
+      final ci = normalizarCarnetDictado(texto);
+      if (ci == null) {
+        await audio.decir(
+          'No comprendí el carnet. Presiona volumen arriba o toca Dictar carnet para reintentar.',
+        );
+        return;
+      }
+      final si = await escuchar(
+        'Escuché: ${ci.split('').join(' ')}. ¿Es correcto? Di sí o no.',
+      );
+      if (!mounted || !respuestaAfirmativa(si)) {
+        await audio.decir(
+          'Acceso cancelado. Presiona volumen arriba para volver a dictar.',
+        );
+        return;
+      }
+      carnet.text = ci;
+      try {
+        await entrar();
+      } catch (_) {
+        await audio.decir(
+          'No pudimos verificar el carnet o conectar con el IBC. Presiona volumen arriba para reintentar o solicita ayuda.',
+        );
+        return;
+      }
+    } finally {
+      escuchando = false;
+    }
+    if (api != null && mounted) await comandoVoz();
+  }
+
+  Future<void> comandoVoz() async {
+    if (escuchando || api == null) return;
+    escuchando = true;
+    String? respuesta;
+    try {
+      respuesta = await escuchar(
+        'Puedes decir: quiero ir a un destino, conectar bastón, iniciar navegación, repetir indicación o detener guía. ¿Qué quieres hacer?',
+      );
+    } finally {
+      escuchando = false;
+    }
+    if (!mounted || respuesta == null) return;
+    final orden = normalizarDestino(respuesta);
+    if (orden.contains('conectar') && orden.contains('baston')) {
+      await vincularBastonPorVoz();
+    } else if (orden.contains('iniciar') && orden.contains('navegacion')) {
+      if (ruta == null) {
+        await audio.decir('Primero indica un destino.');
+        return;
+      }
+      await iniciar();
+    } else if (orden.contains('repetir')) {
+      await audio.decir(
+        ultimaIndicacion.isEmpty
+            ? 'Primero indica un destino.'
+            : ultimaIndicacion,
+      );
+    } else if (orden.contains('detener') || orden == 'cancelar') {
+      await parar();
+      await audio.decir(
+        'Guía detenida. Presiona volumen arriba para otra opción.',
+      );
+    } else {
+      await decirDestino(textoInicial: respuesta);
+    }
+  }
+
+  Future<void> vincularBastonPorVoz() async {
+    await audio.decir('Buscando tu bastón. Debe estar encendido y cerca.');
+    await buscarBaston();
+    // Solo ofrecer dispositivos que anuncian el servicio del protocolo existente.
+    final compatibles = dispositivos
+        .where(
+          (d) => d.advertisementData.serviceUuids.contains(
+            Guid('4fafc201-1fb5-459e-8fcc-c5c9c331914b'),
+          ),
+        )
+        .toList();
+    if (compatibles.isEmpty) {
+      await audio.decir(
+        'No encontré un bastón que anuncie el servicio compatible. Revisa Bluetooth y permisos. Puedes seleccionar tu bastón en la lista con TalkBack.',
+      );
+      return;
+    }
+    for (final d in compatibles) {
+      final respuesta = await escuchar(
+        'Encontré ${d.device.platformName.isEmpty ? 'un bastón compatible' : d.device.platformName}. ¿Quieres conectarlo? Di sí o no.',
+      );
+      if (!mounted) return;
+      if (respuestaAfirmativa(respuesta)) {
+        await conectar(d);
+        return;
+      }
+    }
+    await audio.decir(
+      'No se conectó ningún bastón. Presiona volumen arriba para reintentar.',
+    );
+  }
+
+  Future<void> decirDestino({String? textoInicial}) async {
     if (escuchando || api == null) return;
     escuchando = true;
     final generacion = sesionGeneracion;
     try {
-      await audio.decir('¿A dónde quieres ir?');
-      final texto = await SesionSegura.canal.invokeMethod<String>('voice');
+      final texto = textoInicial ?? await escuchar('¿A dónde quieres ir?');
       if (texto == null || !mounted || generacion != sesionGeneracion) return;
       setState(() {
         buscarDestino.text = texto;
@@ -421,16 +525,31 @@ class _MovilidadState extends State<Movilidad> {
       final encontrados = candidatos
           .where((r) => coincideDestino(texto, r))
           .toList();
-      if (encontrados.length != 1) {
-        setState(() => rutas = encontrados);
+      if (encontrados.isEmpty) {
         await audio.decir(
-          encontrados.isEmpty
-              ? 'No encontré ese destino. Intenta decir otro destino o escríbelo.'
-              : 'Encontré varias rutas. Selecciona el destino y origen con TalkBack y toca Buscar ruta segura.',
+          'No tenemos una ruta registrada para ese destino. Presiona volumen arriba para intentar otro destino.',
         );
         return;
       }
-      final elegido = encontrados.single;
+      dynamic elegido;
+      if (encontrados.length == 1) {
+        elegido = encontrados.single;
+      } else {
+        for (final candidato in encontrados) {
+          final si = await escuchar(
+            'Ruta a ${candidato['dst_rut']} desde ${candidato['ori_rut']}. ¿Quieres esta ruta? Di sí o no.',
+          );
+          if (!mounted || generacion != sesionGeneracion) return;
+          if (respuestaAfirmativa(si)) {
+            elegido = candidato;
+            break;
+          }
+        }
+        if (elegido == null) {
+          await audio.decir('Búsqueda cancelada.');
+          return;
+        }
+      }
       await audio.decir(
         'Destino reconocido: ${elegido['dst_rut']}, desde ${elegido['ori_rut']}. ¿Es correcto? Di sí o no.',
       );
@@ -446,6 +565,14 @@ class _MovilidadState extends State<Movilidad> {
       }
       setState(() => destinoElegido = elegido['cod_rutas']);
       await elegir(destinoElegido!);
+      final iniciarAhora = await escuchar(
+        'Puedes iniciar la guía desde el origen registrado. ¿Quieres iniciar navegación? Di sí o no.',
+      );
+      if (mounted &&
+          generacion == sesionGeneracion &&
+          respuestaAfirmativa(iniciarAhora)) {
+        await iniciar();
+      }
     } finally {
       escuchando = false;
     }
@@ -795,7 +922,6 @@ class _MovilidadState extends State<Movilidad> {
     audio.detener();
     servidor.dispose();
     carnet.dispose();
-    nombre.dispose();
     buscarDestino.dispose();
     super.dispose();
   }
@@ -815,7 +941,7 @@ class _MovilidadState extends State<Movilidad> {
               style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
             ),
             const Text(
-              'Vamos a configurar tu acceso. Escribe tu carnet de identidad y nombre registrado. Solo será necesario volver a verificarte si tu acceso caduca o se revoca.',
+              'Dicte su carnet de identidad. Presione volumen arriba o toque el botón para hablar.',
             ),
             if (ConfiguracionMovil.herramientasDesarrollo)
               TextField(
@@ -824,15 +950,12 @@ class _MovilidadState extends State<Movilidad> {
                   labelText: 'Servidor Laravel',
                 ),
               ),
-            TextField(
-              controller: carnet,
-              decoration: const InputDecoration(
-                labelText: 'Carnet de identidad',
+            FilledButton(
+              onPressed: ocupado ? null : () => tarea(dictarCarnet),
+              child: const Padding(
+                padding: EdgeInsets.all(20),
+                child: Text('DICTAR CARNET DE IDENTIDAD'),
               ),
-            ),
-            TextField(
-              controller: nombre,
-              decoration: const InputDecoration(labelText: 'Nombre'),
             ),
             if (ConfiguracionMovil.herramientasDesarrollo)
               SwitchListTile(
@@ -840,10 +963,6 @@ class _MovilidadState extends State<Movilidad> {
                 value: demo,
                 onChanged: (v) => setState(() => demo = v),
               ),
-            FilledButton(
-              onPressed: ocupado ? null : () => tarea(entrar),
-              child: const Text('CONTINUAR'),
-            ),
           ] else if (api != null) ...[
             Text('Hola, $nombreAfiliado', style: const TextStyle(fontSize: 24)),
             TextButton(
@@ -1044,7 +1163,7 @@ class _MovilidadState extends State<Movilidad> {
               'SOS registra un evento en el IBC. No envía avisos automáticos a familiares ni servicios de emergencia.',
             ),
             OutlinedButton(
-              onPressed: ocupado ? null : () => tarea(buscarBaston),
+              onPressed: ocupado ? null : () => tarea(vincularBastonPorVoz),
               child: const Text('CONECTAR BASTÓN'),
             ),
             if (pendientes.isNotEmpty)

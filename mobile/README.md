@@ -2,7 +2,7 @@
 
 La app del afiliado usa el mismo Laravel, BD y recomendación de rutas registradas que la web. Flutter no ejecuta ACO ni decide caminos con OSRM. Dibuja la geometría recomendada recibida del servidor. Los candidatos, feromonas y métricas permanecen en la vista técnica web.
 
-Primera apertura: bienvenida por voz, CI y nombre registrados, token revocable guardado con Android Keystore. Siguientes aperturas: valida el token y entra directamente. Al expirar o revocarse, vuelve a verificar. No persiste CI ni nombre del formulario; el nombre mostrado se conserva cifrado con los datos de sesión. Cambiar servidor entre builds requiere nueva vinculación.
+Primera apertura: bienvenida por voz, carnet dictado dígito a dígito y confirmación hablada, token revocable guardado con Android Keystore. Siguientes aperturas: valida el token y entra directamente. Al expirar o revocarse, vuelve a verificar. No persiste CI ni nombre del formulario; el nombre mostrado se conserva cifrado con los datos de sesión. Cambiar servidor entre builds requiere nueva vinculación.
 
 ## Build
 
@@ -31,3 +31,14 @@ Primera vinculación BLE manual con permisos Android. Tras descubrir correctamen
 Ruta descargada y eventos pendientes se conservan cifrados, aislados por token. Sin conexión se usa la última ruta y no se pueden conocer nuevas condiciones. Mantener app abierta; no hay guía garantizada en segundo plano. Cerrar sesión desconecta y borra datos locales.
 
 Detalle de auditoría: docs/AUDITORIA_FLUJO_MOVIL.md, en la raíz del repositorio.
+
+
+## Rama conectar-con-la-app: acceso hablado
+
+Al abrir sin sesión se dice «Dicte su carnet de identidad» y se abre el reconocedor Android. Se repite el carnet y se requiere «sí» antes de enviarlo. Se exige un único afiliado activo; el nombre ya no es obligatorio para login. Se mantiene compatibilidad con clientes anteriores que envían CI + nombre. Carnet solo es identificación de prototipo y no prueba identidad.
+
+Después de entrar/restaurar se explica el menú y se abre una escucha de comando. Volumen arriba funciona también antes del acceso. Se admiten «quiero ir a/al ...», «conectar bastón», «iniciar navegación», «repetir indicación» y «detener guía». El micrófono se activa por turnos, con el reconocedor Android visible; cancelar/silencio vuelve al botón o volumen arriba. No escucha indefinidamente ni en segundo plano.
+
+El servidor de prueba puede ser accesible por HTTPS temporal para usar datos móviles. No obliga a Wi-Fi en la calle; la misma Wi-Fi solo corresponde a una compilación LAN. La laptop/servidor/túnel deben permanecer activos. Para operación permanente hace falta HTTPS estable. GPS = ubicación del teléfono; BLE = bastón; Internet = rutas y cambios vigentes.
+
+No publicar rutas en borrador o en revisión para habilitar una prueba callejera. Una ruta registrada no equivale a validación de accesibilidad peatonal en campo.

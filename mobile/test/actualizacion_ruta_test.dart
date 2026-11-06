@@ -3,6 +3,22 @@ import 'package:latlong2/latlong.dart';
 import 'package:ibc_movilidad/actualizacion_ruta.dart';
 
 void main() {
+  test('Carnet hablado requiere dígitos claros y conserva complemento', () {
+    expect(
+      normalizarCarnetDictado('uno dos tres cuatro cinco seis siete'),
+      '1234567',
+    );
+    expect(normalizarCarnetDictado('1234567 1 A'), '12345671A');
+    expect(normalizarCarnetDictado('un millón doscientos'), isNull);
+    expect(normalizarCarnetDictado(''), isNull);
+    expect(
+      coincideDestino('quiero ir al Hospital La Merced', {
+        'dst_rut': 'Hospital La Merced',
+      }),
+      isTrue,
+    );
+  });
+
   test('Resolver cambia condiciones aunque conserve los tramos ganadores', () {
     final a = <String, dynamic>{
       'tramos_seleccionados_ids': [1, 2],

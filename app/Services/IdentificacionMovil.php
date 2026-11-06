@@ -17,11 +17,12 @@ class IdentificacionMovil
             && $persona->afiliaciones()->where('est_afi','ACTIVA')->whereNull('fbj_afi')
                 ->whereDate('fia_afi','<=',today())->where(fn($q)=>$q->whereNull('fve_afi')->orWhereDate('fve_afi','>=',today()))->exists();
     }
-    public function verificar(string $ci, string $nombre): ?PersonaNoVidente {
+    public function verificar(string $ci, ?string $nombre = null): ?PersonaNoVidente {
         $candidatas=PersonaNoVidente::whereNull('fbj_pnv')
             ->whereRaw("REPLACE(UPPER(TRIM(cii_pnv)), ' ', '') = ?", [self::ci($ci)])->limit(2)->get();
         if($candidatas->count() !== 1) return null;
         $persona=$candidatas->first();
+        if ($nombre === null) return $this->habilitada($persona) ? $persona : null;
         $n=self::nombre($nombre);
         return $this->habilitada($persona) && in_array($n,[self::nombre($persona->nom_pnv),self::nombre($persona->nombre_completo)],true)
             ? $persona : null;

@@ -14,7 +14,11 @@ String normalizarDestino(String texto) {
 }
 
 bool coincideDestino(String texto, dynamic ruta) {
-  final q = normalizarDestino(texto);
+  final q = normalizarDestino(texto).replaceFirst(
+    RegExp(r'^(?:quiero ir a|quiero ir al|ir a|llevame a|destino)\s+'),
+    '',
+  );
+
   return q.isNotEmpty &&
       (normalizarDestino('${ruta['dst_rut']}').contains(q) ||
           normalizarDestino('${ruta['nom_rut']}').contains(q));
@@ -77,4 +81,28 @@ int? siguienteInstruccionActualizada(
     if ((instrucciones[i]['distancia_m'] as num) >= avance) return i;
   }
   return null;
+}
+
+/// Carnet dictado dígito a dígito. No adivina números ni elimina complementos.
+String? normalizarCarnetDictado(String texto) {
+  var s = normalizarDestino(texto);
+  const digitos = {
+    'cero': '0',
+    'uno': '1',
+    'un': '1',
+    'dos': '2',
+    'tres': '3',
+    'cuatro': '4',
+    'cinco': '5',
+    'seis': '6',
+    'siete': '7',
+    'ocho': '8',
+    'nueve': '9',
+  };
+  final partes = s.split(' ').where((p) => p.isNotEmpty).toList();
+  if (partes.isEmpty) return null;
+  final salida = partes.map((p) => digitos[p] ?? p).join().toUpperCase();
+  return RegExp(r'^[0-9]{4,15}(?:[A-Z]{1,2}|[0-9][A-Z])?$').hasMatch(salida)
+      ? salida
+      : null;
 }
