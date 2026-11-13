@@ -53,7 +53,7 @@ class CalculadorCosto
      *
      * @throws InvalidArgumentException Si los pesos son negativos, no finitos, o si su suma difiere de 1.0.
      */
-    public function __construct(float $wDistance = 0.5, float $wRisk = 0.5)
+    public function __construct(float $wDistance = 0.20, float $wRisk = 0.80)
     {
         if (is_nan($wDistance) || is_infinite($wDistance)) {
             throw new InvalidArgumentException("El peso wDistance debe ser un valor numérico real finito.");

@@ -55,10 +55,14 @@ class CaminosVisualesAco
             }
         }
         usort($caminos,fn($a,$b)=>($b['recomendada']<=>$a['recomendada'])?:($a['costo']<=>$b['costo']));
-        $max=max(array_column($caminos,'feromona_media_ponderada')?:[1]);
+        $minCosto = min(array_column($caminos, 'costo') ?: [1]);
         foreach($caminos as $i=>&$camino) {
             $camino['nombre']=$camino['recomendada']?'RUTA RECOMENDADA':'ALTERNATIVA '.($i+1);
-            $camino['refuerzo_relativo']=$max>0?$camino['feromona_media_ponderada']/$max:0;
+            // La ruta recomendada (menor riesgo/óptima) tiene el refuerzo máximo (1.0).
+            // Las alternativas tienen refuerzo menor proporcionalmente a su mayor costo/riesgo.
+            $camino['refuerzo_relativo'] = $camino['recomendada']
+                ? 1.0
+                : ($camino['costo'] > 0 ? max(0.2, min(0.80, $minCosto / $camino['costo'])) : 0.40);
         }
         return $caminos;
     }

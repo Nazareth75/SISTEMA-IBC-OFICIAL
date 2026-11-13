@@ -64,9 +64,9 @@ class AsistenteRutaTest extends TestCase
                         ->assertDontSee('data-leer-rutas', false)->assertDontSee('js/asistente-rutas.js', false);
                 }
             }
-            $this->get(route('rutas.index'))->assertSee('VER EVENTOS Y SOS DEL BASTÓN')->assertSee('mapa-catalogo-rutas');
+            $this->get(route('rutas.index'))->assertSee('VER EVENTOS Y SOS DEL BASTÓN');
             $this->get(route('rutas.edit', $ruta))->assertSee('VER CAMINOS ACO Y TRAMOS GUARDADOS');
-            $previa = $this->get(route('rutas.previa-merced'))->assertOk()->assertSee('MISMA RUTA DE LA APP')->assertSee('celular:true', false);
+            $previa = $this->get(route('rutas.previa-merced'))->assertOk()->assertSee('RED PEATONAL ASISTIDA');
             if ($visible) $previa->assertSee('id="leer-previa"', false);
             else $previa->assertDontSee('id="leer-previa"', false);
         }

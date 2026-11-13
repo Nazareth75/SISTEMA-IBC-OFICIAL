@@ -242,8 +242,8 @@ class ReporteObstaculoController extends Controller
 
     public function misReportes()
     {
-        if (!auth()->user()->puedeReportarObstaculos()) {
-            abort(403, 'No tiene permiso para ver sus reportes.');
+        if (auth()->user()->esVoluntario() || !auth()->user()->puedeReportarObstaculos()) {
+            abort(403, 'No tiene permiso para ver reportes.');
         }
 
         $query = ReporteObstaculo::where('reportado_por', auth()->id());
@@ -263,6 +263,11 @@ class ReporteObstaculoController extends Controller
 
     public function mapaMonitoreo()
     {
+        $rol = strtoupper(auth()->user()->role?->nom_rol ?? '');
+        if (!in_array($rol, ['SUPERADMINISTRADOR', 'ADMINISTRADOR', 'TECNICO'], true)) {
+            abort(403, 'El mapa de monitoreo solo está disponible para administradores y personal técnico.');
+        }
+
         $reportes = ReporteObstaculo::with('reportadoPor', 'validadoPor')
             ->orderBy('created_at', 'desc')
             ->get();

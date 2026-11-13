@@ -47,10 +47,10 @@ class AsistenteRutaService
 
     public function resumir(Ruta $ruta, array $resultado): string
     {
-        $texto = $ruta->esDemo() ? 'Datos simulados de demostración. ' : '';
-        $texto .= "Ruta {$ruta->nom_rut}. Desde {$ruta->ori_rut} hasta {$ruta->dst_rut}. ";
+        $prefijo = str_starts_with(mb_strtolower($ruta->nom_rut), 'ruta') ? '' : 'Ruta ';
+        $texto = ($ruta->esDemo() ? 'Datos simulados. ' : '') . "{$prefijo}{$ruta->nom_rut}. Desde {$ruta->ori_rut} hasta {$ruta->dst_rut}. ";
         $nombres = array_values(array_unique(array_map(fn ($nombre) => trim(preg_replace(
-            ['/^DEMO — LP \d+ — /u', '/\[.*?\]/u'], '', $nombre
+            ['/^DEMO — LP \d+ — /u', '/^DEMO — /u', '/\[.*?\]/u'], '', $nombre
         )), $resultado['tramos_seleccionados_nombres'])));
         $texto .= 'Se comparan '.$resultado['cantidad_alternativas'].' caminos. La recomendación pasa por '.
             implode(', ', array_slice($nombres,0,3)).(count($nombres)>3 ? ' y otros tramos. ' : '. ');
@@ -64,13 +64,14 @@ class AsistenteRutaService
             $tipos = $tramo->obstaculos->filter(fn ($o) => in_array(
                 $o->est_obs, TramoRiskService::ESTADOS_OBSTACULO_VIGENTES, true
             ))->pluck('tip_obs')->unique()->implode(', ');
-            $texto .= "En {$tramo->nom_ctr} se reportan {$tipos}. ";
+            $nomLimpio = trim(preg_replace(['/^DEMO — LP \d+ — /u', '/^DEMO — /u', '/\[.*?\]/u'], '', $tramo->nom_ctr));
+            $texto .= "En {$nomLimpio} se reportan {$tipos}. ";
         }
         if ($afectados->count()>2) $texto .= 'Además, otros '.($afectados->count()-2).' tramos tienen obstáculos reportados. ';
         $cuenta = $afectados->filter(fn ($t) => in_array($t->getKey(), $elegidos))->count();
         $texto .= $cuenta ? "La recomendación incluye {$cuenta} tramos con obstáculos reportados. " :
             'En los tramos recomendados no constan obstáculos activos. ';
-        $texto .= 'Resumen previo al recorrido. La navegación del celular utiliza la ubicación durante el trayecto.';
+        $texto .= 'Resumen previo al recorrido. La navegación asistida utiliza la ubicación durante el trayecto.';
         return $texto;
     }
 }

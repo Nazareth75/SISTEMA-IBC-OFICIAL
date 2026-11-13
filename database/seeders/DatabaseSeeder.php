@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             RolesSeeder::class,
             AdminUserSeeder::class,
             PersonaNoVidenteSeeder::class,
+            RutaLaMercedSeeder::class,
         ]);
     }
 }

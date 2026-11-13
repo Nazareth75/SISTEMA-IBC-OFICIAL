@@ -38,7 +38,7 @@ class RutaController extends Controller
             'filtros'        => compact('buscar', 'estado'),
             'estados'        => array_keys(Ruta::ESTADOS),
             'constructorAco' => $constructorAco,
-            'demoGeografica' => Ruta::where('ide_rut', 'DEMO-RUT-LP-OSM')->first(),
+            'demoGeografica' => null,
         ]);
     }
 

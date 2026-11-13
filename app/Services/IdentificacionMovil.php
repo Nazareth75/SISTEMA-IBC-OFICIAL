@@ -3,7 +3,7 @@ namespace App\Services;
 
 use App\Models\PersonaNoVidente;
 
-/** Identificación de prototipo: no crea ni cambia personas, usuarios o roles. */
+/** Identificación de prototipo: solo permite el acceso a afiliados habilitados en el sistema. */
 class IdentificacionMovil
 {
     public static function nombre(string $valor): string {

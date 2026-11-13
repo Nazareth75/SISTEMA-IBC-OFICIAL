@@ -125,8 +125,8 @@ class ConfiguracionAco
         float $convergenceEpsilon = 1e-4,
         int $convergencePatience = 10,
         ?int $seed = null,
-        float $wDistance = 0.5,
-        float $wRisk = 0.5
+        float $wDistance = 0.20,
+        float $wRisk = 0.80
     ) {
         if (is_nan($alpha) || is_infinite($alpha) || $alpha < 0.0) {
             throw new InvalidArgumentException(

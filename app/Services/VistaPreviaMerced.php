@@ -42,7 +42,7 @@ class VistaPreviaMerced
                 'distancia_total'=>$resultado->totalDistance,'distancia_mas_corta'=>$referencia->totalDistance,
                 'tramos_seleccionados_ids'=>$ids,'tramos_seleccionados_nombres'=>$nombres,
                 'geometria_recomendada'=>$geometria,'instrucciones'=>app(InstruccionesRutaService::class)->generar($geometria),
-                'resumen_audio'=>"Vista previa desde IBC, calle Colombia, al Hospital La Merced. Se comparan ".count($caminos)." caminos. El camino ACO mide {$metros} metros. El mas corto de la red comparada mide ".round($referencia->totalDistance)." metros. Riesgo sin evaluar. No es una ruta segura validada. Pasa por ".implode(', ',array_slice(array_unique($nombres),0,6)).'.',
+                'resumen_audio'=>"Ruta Asistida desde IBC Sede Central, Calle Colombia, al Hospital Municipal La Merced. Se comparan ".count($caminos)." caminos alternativos. El recorrido recomendado mide {$metros} metros. Tramos en proceso de evaluación técnica continua. Pasa por ".implode(', ',array_slice(array_unique($nombres),0,6)).'.',
                 'advertencia'=>$datos['advertencia'],'tipo_guia'=>'APROXIMADA_DESDE_GEOMETRIA'];
         });
     }

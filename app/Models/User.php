@@ -133,7 +133,7 @@ class User extends Authenticatable
 
     public function esVoluntario(): bool
     {
-        return $this->tieneRol('VOLUNTARIO');
+        return strtoupper($this->role?->nom_rol ?? '') === 'VOLUNTARIO';
     }
 
 

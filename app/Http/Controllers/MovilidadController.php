@@ -30,36 +30,42 @@ class MovilidadController extends Controller
 
     private function permiteDemo(Request $request): bool
     {
-        return $request->boolean('demostracion') && config('movilidad.permitir_demo') && app()->environment(['local','testing']);
+        $flag = $request->boolean('demostracion') || config('movilidad.permitir_vista_previa');
+        return $flag && config('movilidad.permitir_demo') && app()->environment(['local','testing']);
     }
 
     public function index(Request $request)
     {
         $this->activo($request);
-        $demo = $this->permiteDemo($request);
-        $rutas = Ruta::activas()->where(function ($q) use ($demo) {
-            $q->where(fn($p)=>$p->whereIn('est_rut',['PUBLICADA','DESACTUALIZADA'])->where('ide_rut','not like','DEMO-%'));
-            if ($demo) $q->orWhere('ide_rut', 'DEMO-RUT-LP-OSM');
-        })->orderBy('nom_rut')->paginate(10, ['cod_rutas','nom_rut','ori_rut','dst_rut','ide_rut','est_rut']);
-        if ($demo && config('movilidad.permitir_vista_previa') && $rutas->currentPage() === 1) {
-            $rutas->setCollection($rutas->getCollection()->prepend([
-                'cod_rutas'=>\App\Services\VistaPreviaMerced::ID,'nom_rut'=>'VISTA PREVIA: IBC a Hospital La Merced',
-                'ori_rut'=>'IBC - Calle Colombia','dst_rut'=>'Hospital La Merced','ide_rut'=>'PREVIA-MERCED','est_rut'=>'SIN VALIDAR',
-            ]));
-        }
+        $rutas = Ruta::activas()
+            ->whereIn('est_rut', ['PUBLICADA', 'DESACTUALIZADA', 'APROBADA'])
+            ->orderBy('nom_rut')
+            ->paginate(15, ['cod_rutas', 'nom_rut', 'ori_rut', 'dst_rut', 'ide_rut', 'est_rut']);
+
         return response()->json($rutas);
     }
 
     public function previaMerced(Request $request) {
         $this->activo($request);
-        abort_unless($this->permiteDemo($request) && config('movilidad.permitir_vista_previa'),404);
+        abort_unless($this->permiteDemo($request) && config('movilidad.permitir_vista_previa'), 404);
+        $rutaMerced = Ruta::where('ide_rut', 'RUT-004')
+            ->orWhere('nom_rut', 'like', '%HOSPITAL%MERCED%')
+            ->first();
+        if ($rutaMerced) {
+            $resultado = app(AsistenteRutaService::class)->obtener($rutaMerced);
+            return response()->json($resultado);
+        }
         return response()->json(app(\App\Services\VistaPreviaMerced::class)->obtener());
     }
 
     public function show(Request $request, Ruta $ruta, AsistenteRutaService $asistente)
     {
         $this->activo($request);
-        abort_unless((!$ruta->esDemo() && in_array($ruta->est_rut, ['PUBLICADA','DESACTUALIZADA'], true)) || ($ruta->ide_rut==='DEMO-RUT-LP-OSM' && $this->permiteDemo($request)), 403);
+        abort_unless(
+            in_array($ruta->est_rut, ['PUBLICADA', 'DESACTUALIZADA', 'APROBADA'], true)
+            || ($this->permiteDemo($request) && ($ruta->ide_rut === 'DEMO-RUT-LP-OSM' || $ruta->esDemo())),
+            403
+        );
         $resultado = $asistente->obtener($ruta);
         return response()->json($resultado, $resultado['success'] ? 200 : 422);
     }
@@ -84,7 +90,13 @@ class MovilidadController extends Controller
             'distancias_cm.*' => 'numeric|between:-1,10000',
         ]);
         $ruta = isset($datos['ruta_id']) ? Ruta::findOrFail($datos['ruta_id']) : null;
-        if ($ruta) abort_unless((!$ruta->esDemo() && in_array($ruta->est_rut, ['PUBLICADA','DESACTUALIZADA'], true)) || ($ruta->ide_rut==='DEMO-RUT-LP-OSM' && $this->permiteDemo($request)),403);
+        if ($ruta) {
+            abort_unless(
+                in_array($ruta->est_rut, ['PUBLICADA', 'DESACTUALIZADA', 'APROBADA'], true)
+                || ($this->permiteDemo($request) && ($ruta->ide_rut === 'DEMO-RUT-LP-OSM' || $ruta->esDemo())),
+                403
+            );
+        }
         $tramo = $ruta && isset($datos['latitud'],$datos['longitud'])
             ? $asociador->asociar($ruta, $datos['latitud'], $datos['longitud'], $datos['precision_m'] ?? null) : null;
         $evento = \Illuminate\Support\Facades\DB::transaction(function () use ($request,$datos,$tramo) {

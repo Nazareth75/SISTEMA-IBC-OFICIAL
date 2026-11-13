@@ -144,7 +144,24 @@ class ConstructorGrafoRuta
                 $tramosConRiesgoMedible++;
             }
 
-            // Desglose formateado para la tabla de la interfaz
+            $obstaculosActivos = (int) ($perfil['obstaculos_activos_count'] ?? 0);
+            $obstaculosReportados = (int) ($perfil['obstaculos_reportados_count'] ?? 0);
+            $totalObstaculosVigentes = $obstaculosActivos + $obstaculosReportados;
+            $riesgoNormalizado = null;
+
+            if ($cob === TramoRiskService::COBERTURA_SIN_DATOS || ($perfil['estado_evaluacion'] ?? 'NO_EVALUADO') === 'NO_EVALUADO') {
+                $estadoVisual = 'SIN_EVALUAR';
+            } else {
+                try {
+                    $riesgoNormalizado = app(CalculadorRiesgoTramoAco::class)->calcularDesdePerfil($perfil);
+                    $estadoVisual = $totalObstaculosVigentes > 0 ? 'EVALUADO_CON_OBSTACULOS' : 'EVALUADO_SIN_OBSTACULOS';
+                } catch (\InvalidArgumentException $e) {
+                    $riesgoNormalizado = null;
+                    $estadoVisual = 'SIN_EVALUAR';
+                }
+            }
+
+            // Desglose formateado para la tabla y mapa de la interfaz
             $tramosDetalle[] = [
                 'orden'               => $tramo->ord_ctr ?? ($tramo->pivot->ord_rct ?? null),
                 'id'                  => $tramo->cod_calles_tramos,
@@ -157,7 +174,11 @@ class ConstructorGrafoRuta
                 'nivel_seguridad'     => $perfil['nivel_seguridad_nombre'] ?? 'SIN EVALUAR',
                 'condiciones_count'   => $perfil['condiciones_count'] ?? 0,
                 'zonas_activas_count' => $perfil['zonas_activas_count'] ?? 0,
-                'obstaculos_count'    => ($perfil['obstaculos_activos_count'] ?? 0) + ($perfil['obstaculos_reportados_count'] ?? 0),
+                'obstaculos_count'    => $totalObstaculosVigentes,
+                'obstaculos_activos_count' => $obstaculosActivos,
+                'obstaculos_reportados_count' => $obstaculosReportados,
+                'riesgo_normalizado'  => $riesgoNormalizado,
+                'estado_visual'       => $estadoVisual,
                 'cobertura_datos'     => $cob,
                 'geo'                 => $geo,
                 'es_geo_valido'       => $esValido,

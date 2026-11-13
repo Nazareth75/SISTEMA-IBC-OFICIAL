@@ -332,10 +332,6 @@ Route::middleware(['auth'])->group(function () {
             ->name('reportes-obstaculos.create');
         Route::post('reportes-obstaculos', [ReporteObstaculoController::class, 'store'])
             ->name('reportes-obstaculos.store');
-        Route::get('mis-reportes-obstaculos', [ReporteObstaculoController::class, 'misReportes'])
-            ->name('reportes-obstaculos.mis-reportes');
-        Route::get('mapa-monitoreo', [ReporteObstaculoController::class, 'mapaMonitoreo'])
-            ->name('reportes-obstaculos.mapa-monitoreo');
 
         // Verificación colaborativa por voluntarios (Fase 5D)
         Route::get('obstaculos/{obstaculo}/verificar', [\App\Http\Controllers\VerificacionObstaculoController::class, 'create'])
@@ -345,6 +341,11 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::middleware(['role:SUPERADMINISTRADOR,ADMINISTRADOR,TECNICO'])->group(function () {
+        Route::get('mis-reportes-obstaculos', [ReporteObstaculoController::class, 'misReportes'])
+            ->name('reportes-obstaculos.mis-reportes');
+        Route::get('mapa-monitoreo', [ReporteObstaculoController::class, 'mapaMonitoreo'])
+            ->name('reportes-obstaculos.mapa-monitoreo');
+
         // Bandeja de decisiones técnicas sobre consenso colaborativo (Fase 5D)
         Route::get('verificaciones-pendientes', [\App\Http\Controllers\VerificacionObstaculoController::class, 'bandejaTecnico'])
             ->name('verificaciones.bandeja');

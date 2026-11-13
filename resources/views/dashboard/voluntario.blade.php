@@ -8,9 +8,6 @@
                     <p class="text-gray-600 mt-3 max-w-3xl">Tu acceso es limitado y puedes reportar obstáculos durante recorridos.</p>
                 </div>
                 <div class="flex flex-col sm:flex-row gap-4">
-                    <a href="{{ route('reportes-obstaculos.mis-reportes') }}" class="px-6 py-3 bg-white border border-[#006837] text-[#006837] font-bold rounded-xl shadow hover:bg-gray-50 transition-all text-center">
-                        Mis Reportes
-                    </a>
                     <a href="{{ route('reportes-obstaculos.create') }}" class="px-6 py-3 bg-[#006837] text-white font-bold rounded-xl shadow-lg hover:bg-[#004d27] transition-all text-center">
                         + Nuevo Reporte
                     </a>

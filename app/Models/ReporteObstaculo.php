@@ -41,6 +41,25 @@ class ReporteObstaculo extends Model
         'fecha_resolucion' => 'datetime',
     ];
 
+    protected static function booted(): void
+    {
+        // Priority/state changes alter risk even when the obstacle state stays unchanged.
+        $invalidar = static function (self $reporte): void {
+            $ids = array_filter(array_unique([$reporte->cod_obstaculos_rpo,
+                $reporte->getOriginal('cod_obstaculos_rpo')]));
+            foreach (Obstaculo::whereIn('cod_obstaculos', $ids)->with('tramo.rutas')->get() as $obstaculo) {
+                foreach ($obstaculo->tramo?->rutas ?? [] as $ruta) {
+                    app(\App\Services\Aco\ServicioEstadoRecomendacionAco::class)
+                        ->marcarDesactualizadaPorModificacion($ruta, 'Cambio de prioridad, estado o vinculacion de evidencia del tramo.');
+                }
+            }
+        };
+        static::saved(static function (self $reporte) use ($invalidar): void {
+            if ($reporte->wasRecentlyCreated || $reporte->wasChanged(['prioridad','estado','cod_obstaculos_rpo'])) $invalidar($reporte);
+        });
+        static::deleted($invalidar);
+    }
+
     public function reportadoPor()
     {
         return $this->belongsTo(User::class, 'reportado_por', 'cod_usuarios');

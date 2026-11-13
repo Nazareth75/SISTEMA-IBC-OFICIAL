@@ -37,7 +37,7 @@
                     <div class="pt-2 border-t border-gray-200 mt-2">
                         <div class="flex items-center gap-2">
                             <span class="w-6 h-0.5 border-t-2 border-dashed border-[#004d27] inline-block"></span>
-                            <span class="text-[10px] font-bold text-gray-500 uppercase">TRAYECTORIA GPS (DEMO BASTÓN)</span>
+                            <span class="text-[10px] font-bold text-gray-500 uppercase">TRAYECTORIA GPS (BASTÓN INTELIGENTE)</span>
                         </div>
                     </div>
                 </div>
@@ -140,7 +140,7 @@
             <div class="mt-6 pt-6 border-t border-gray-200 shrink-0 flex flex-col gap-2">
                 <button type="button" onclick="toggleSmartCaneRoute()" id="btn-toggle-route" class="w-full py-3 bg-[#e8f7ef] text-[#006837] border-2 border-[#006837] rounded-lg font-bold text-xs uppercase shadow-sm hover:bg-[#cbece0] transition-colors flex items-center justify-center gap-2">
                     <span class="material-symbols-outlined text-[18px]">timeline</span>
-                    <span>TRAYECTORIA GPS (DEMO BASTÓN)</span>
+                    <span>TRAYECTORIA GPS (BASTÓN INTELIGENTE)</span>
                 </button>
                 <button type="button" onclick="startLocationReport()" class="w-full py-3.5 bg-red-600 text-white rounded-lg font-bold text-xs uppercase shadow-md hover:bg-red-700 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
                     <span class="material-symbols-outlined text-[18px]">add_alert</span>

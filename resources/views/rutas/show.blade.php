@@ -161,27 +161,17 @@
 
             @if($analisisAco->esLineal)
                 <section class="border border-amber-300 bg-amber-50 rounded p-4" aria-label="Explicacion de trayectoria unica">
-                    <strong>ESTA RUTA TIENE UN SOLO CAMINO Y {{ $ruta->tramos->count() }} TRAMOS.</strong>
-                    <p>Se muestran todos sus tramos registrados. Un camino unico no permite comparar alternativas ni mostrar diferentes refuerzos ACO.</p>
-                    <a href="{{ route('rutas.previa-merced') }}" class="underline font-bold">VER DEMOSTRACION ACO IBC - HOSPITAL LA MERCED: 4 CAMINOS Y FEROMONAS REALES</a>
+                    <strong>ESTA RUTA TIENE UN SOLO CAMINO Y {{ $ruta->tramos->count() }} TRAMOS REGISTRADOS.</strong>
+                    <p class="text-xs text-amber-900 mt-1">Se muestran todos sus tramos registrados con su trazo base. Al ser una trayectoria lineal única, no requiere comparar caminos alternativos.</p>
                 </section>
             @endif
-            <section class="border border-green-600 bg-green-50 rounded p-5">
-                <strong>RUTA QUE USA ISRAEL EN EL CELULAR: IBC - HOSPITAL LA MERCED</strong>
-                <p>Esta ficha corresponde a {{ $ruta->ide_rut }}. Para ver exactamente los caminos y tramos enviados a la app, abre el mapa compartido.</p>
-                <a href="{{ route('rutas.previa-merced') }}" class="inline-block rounded text-white font-bold px-5 py-3 mt-2" style="background:#166534">VER EL MISMO MAPA DE LA APP</a>
-            </section>
-            @if($ruta->esDemo())
-                @include('rutas.partials.mapa_compartido')
-                <details class="border rounded p-3">
-                    <summary class="font-bold cursor-pointer">FICHA TECNICA HISTORICA DE {{ $ruta->ide_rut }} (NO ES LA RUTA DEL CELULAR)</summary>
-            @endif
+
             {{-- ── VISTA PREVIA DEL TRAYECTO ───────────────────── --}}
             <div class="bg-white rounded-lg shadow p-6">
                 <div class="flex items-center justify-between gap-3 mb-3">
                     <h3 class="font-bold text-gray-700 uppercase">
                         <i class="fas fa-map-marked-alt mr-2" style="color:#2d6a27"></i>
-                        CAMINOS ACO SOBRE LOS TRAMOS REGISTRADOS
+                        MAPA VIAL DE LA RUTA: {{ $ruta->nom_rut }}
                     </h3>
                     @if($trayectoDetalle && !empty($trayectoDetalle['distancia_metros']))
                         <span class="text-xs font-bold uppercase bg-green-100 text-green-700 px-2 py-1 rounded">
@@ -194,11 +184,51 @@
                     ORIGEN: {{ $ruta->ori_rut }} <span class="mx-1">→</span> DESTINO: {{ $ruta->dst_rut }}
                 </p>
 
-                @if(!empty($analisisAco->aristas))
+                @if(!empty($analisisAco->aristas) || ($trayectoDetalle && !empty($trayectoDetalle['trayecto_coords'])))
                     <div id="mapa-detalle-ruta" class="w-full rounded border border-green-100 h-[520px] lg:h-[620px]"></div>
                     <p class="text-[11px] text-green-700 font-semibold uppercase mt-2">
-                        LA RECOMENDACIÓN Y CADA ALTERNATIVA SE FORMAN CON LOS MISMOS TRAMOS DEL GRAFO. ACTIVA CADA CAMINO EN EL SELECTOR DE CAPAS.
+                        EL MAPA MUESTRA LA GEOMETRÍA BASE REGISTRADA (OSRM), LOS TRAMOS ASOCIADOS, SUS OBSTÁCULOS Y LA RECOMENDACIÓN ACO DE MENOR RIESGO.
                     </p>
+
+                    {{-- ── LEYENDA VISUAL: ESTADOS Y GROSOR POR RIESGO VIAL ── --}}
+                    <div class="mt-4 p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs space-y-2">
+                        <p class="font-bold uppercase text-slate-800 flex items-center gap-2">
+                            <i class="fas fa-layer-group text-green-700"></i> LEYENDA DEL MAPA: ESTADOS, OBSTÁCULOS Y GROSOR POR SEGURIDAD
+                        </p>
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
+                            <div class="flex items-center gap-2 bg-white p-2 rounded border border-slate-200">
+                                <span class="w-8 rounded bg-emerald-600 shrink-0" style="height:6px"></span>
+                                <div>
+                                    <p class="font-bold text-emerald-900 uppercase">EVALUADO · MENOR RIESGO</p>
+                                    <p class="text-[10px] text-slate-600">Línea continua gruesa. Seguro / sin obstáculos activos.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 bg-white p-2 rounded border border-slate-200">
+                                <span class="w-8 rounded bg-red-600 shrink-0" style="height:2.5px"></span>
+                                <div>
+                                    <p class="font-bold text-red-900 uppercase">EVALUADO · MAYOR RIESGO</p>
+                                    <p class="text-[10px] text-slate-600">Línea continua delgada. Obstáculos vigentes o mayor riesgo.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 bg-white p-2 rounded border border-slate-200">
+                                <span class="w-3.5 h-3.5 rounded-full bg-red-500 border border-white shadow shrink-0"></span>
+                                <div>
+                                    <p class="font-bold text-red-800 uppercase">OBSTÁCULO EN TRAMO</p>
+                                    <p class="text-[10px] text-slate-600">Marcador de peligro (bache, obra, poste, etc.).</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 bg-white p-2 rounded border border-slate-200">
+                                <span class="w-8 border-b-2 border-dashed border-slate-500 shrink-0"></span>
+                                <div>
+                                    <p class="font-bold text-slate-700 uppercase">SIN EVALUAR</p>
+                                    <p class="text-[10px] text-slate-600">Línea discontinua gris. Geometría registrada pendiente de inspección.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-[11px] text-slate-500 italic">
+                            * En los tramos evaluados, un menor riesgo vial produce mayor grosor en el mapa. Al resolverse o eliminarse los obstáculos de un tramo, este recalcula su riesgo y aumenta su grosor volviéndose más seguro. En la optimización ACO, la <strong>Ruta Recomendada</strong> se dibuja con el <strong>trazo más grueso</strong> por tener el menor riesgo.
+                        </p>
+                    </div>
                 @else
                     <div class="rounded border border-yellow-200 bg-yellow-50 p-4 text-xs text-yellow-700 uppercase font-semibold">
                         <i class="fas fa-exclamation-triangle mr-1"></i>
@@ -213,10 +243,8 @@
                 @include('rutas.partials.seccion_aco')
             </details>
             <div id="caminos-aco-lista" aria-label="Caminos completos del grafo"></div>
-            <p>REFERENCIA HISTÓRICA: GEO_RUT U OSRM. NO DEFINE LA RECOMENDACIÓN ACO. DISPONIBLE EN LAS CAPAS TÉCNICAS.</p>
-            <p class="text-sm text-purple-900 uppercase">MAYOR GROSOR = MAYOR REFUERZO DE FEROMONA OBTENIDO POR ACO, EN EL TRAZO COLOREADO. EL CONTORNO BLANCO DESTACA LA RECOMENDADA. LAS TARJETAS MUESTRAN DISTANCIA, RIESGO Y COSTO: LA SEGURIDAD NO SE DEDUCE SOLO DE LA FEROMONA.</p>
-
-            @if($ruta->esDemo())</details>@endif
+            <p class="text-xs text-slate-500 uppercase mt-2">TRAZO REGISTRADO (OSRM): GEOMETRÍA BASE INICIAL. LA RECOMENDACIÓN ACO DETERMINA EL CAMINO ÓPTIMO CON MENOR RIESGO PEATONAL.</p>
+            <p class="text-xs text-emerald-900 font-bold uppercase mt-1">MAYOR GROSOR = MENOR RIESGO Y MAYOR REFUERZO ACO. EL TRAZO VERDE GRUESO DESTACA LA RUTA RECOMENDADA.</p>
             {{-- ── TRAMOS ──────────────────────────────────────────── --}}
             <div>
                 <h3 class="font-bold text-gray-700 uppercase mb-3">
@@ -624,6 +652,39 @@
 
         const trayectoDetalle = @json($trayectoDetalle);
         const tramosDetalle = @json($analisisAco->tramosDetalle ?? []);
+        @php
+            $obstaculosParaMapa = [];
+            foreach ($ruta->tramos as $tramo) {
+                foreach ($tramo->obstaculos as $ob) {
+                    $lat = $ob->lat_obs;
+                    $lng = $ob->lng_obs;
+                    if (!$lat || !$lng) {
+                        $rep = $ob->reportes->first();
+                        if ($rep && $rep->latitud && $rep->longitud) {
+                            $lat = (float) $rep->latitud;
+                            $lng = (float) $rep->longitud;
+                        } elseif (is_array($tramo->geo_ctr) && count($tramo->geo_ctr) > 0) {
+                            $mid = (int) floor(count($tramo->geo_ctr) / 2);
+                            $lat = (float) ($tramo->geo_ctr[$mid]['lat'] ?? 0);
+                            $lng = (float) ($tramo->geo_ctr[$mid]['lng'] ?? 0);
+                        }
+                    }
+                    if ($lat && $lng) {
+                        $obstaculosParaMapa[] = [
+                            'id' => $ob->getKey(),
+                            'tipo' => $ob->tip_obs,
+                            'descripcion' => $ob->des_obs,
+                            'estado' => $ob->est_obs,
+                            'tramo_id' => $tramo->getKey(),
+                            'tramo_nombre' => $tramo->nom_ctr,
+                            'lat' => $lat,
+                            'lng' => $lng,
+                        ];
+                    }
+                }
+            }
+        @endphp
+        const obstaculosParaMapa = @json($obstaculosParaMapa);
         const mapContainer = document.getElementById('mapa-detalle-ruta');
 
         window.tramosLayers = {};
@@ -685,7 +746,7 @@
 
             let allBounds = window.L.latLngBounds([]);
 
-            // 1. Dibujar trayectoria general base registrada
+            // 1. Dibujar trayectoria general base registrada (OSRM)
             if (trayectoDetalle && Array.isArray(trayectoDetalle.trayecto_coords) && trayectoDetalle.trayecto_coords.length >= 2) {
                 const puntosBase = trayectoDetalle.trayecto_coords
                     .filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lng))
@@ -693,25 +754,52 @@
 
                 if (puntosBase.length >= 2) {
                     const line = window.L.polyline(puntosBase, {
-                        color: '#94a3b8',
+                        color: '#64748b',
                         weight: 4,
-                        opacity: 0.6,
+                        opacity: 0.7,
                         dashArray: '6, 6'
                     });
-                    map._referenciasTecnicas = {'REFERENCIA HISTÓRICA / OSRM (NO ES EL CAMINO ACO)':line};
+                    map._referenciasTecnicas = {'TRAYECTORIA BASE REGISTRADA (OSRM)': line};
 
-                    line.bindPopup('<div class="p-1 text-xs font-bold uppercase text-slate-700">TRAYECTORIA REGISTRADA</div><div class="text-[10px] text-slate-500">Trazo vial global de referencia.</div>');
+                    line.bindPopup('<div class="p-1 text-xs font-bold uppercase text-slate-700">TRAYECTORIA BASE REGISTRADA (OSRM)</div><div class="text-[10px] text-slate-500">Trazo vial global registrado al crear la ruta.</div>');
                     allBounds.extend(line.getBounds());
                 }
             }
 
             const capaTramosTecnicos = window.L.layerGroup().addTo(map);
             const etiquetasTramos = window.L.layerGroup().addTo(map);
+            const capaObstaculos = window.L.layerGroup().addTo(map);
             map._referenciasTecnicas = map._referenciasTecnicas || {};
-            map._referenciasTecnicas['TODOS LOS TRAMOS DE ESTA RUTA'] = capaTramosTecnicos;
+            map._referenciasTecnicas['TRAMOS REGISTRADOS (GROSOR POR RIESGO)'] = capaTramosTecnicos;
+            map._referenciasTecnicas['OBSTÁCULOS EN TRAMOS'] = capaObstaculos;
             map._referenciasTecnicas['ETIQUETAS DE TRAMOS'] = etiquetasTramos;
-            // 2. Dibujar tramos físicos registrados
-            const paletaColores = ['#15803d', '#0284c7', '#7c3aed', '#d97706', '#dc2626', '#0d9488'];
+
+            // Dibujar marcadores de obstáculos en los tramos
+            if (Array.isArray(obstaculosParaMapa)) {
+                obstaculosParaMapa.forEach(ob => {
+                    const esActivo = ob.estado === 'ACTIVO';
+                    const esReportado = ob.estado === 'REPORTADO';
+                    const colorObs = esActivo ? '#dc2626' : (esReportado ? '#d97706' : '#10b981');
+                    const marker = window.L.circleMarker([ob.lat, ob.lng], {
+                        radius: 7,
+                        color: '#ffffff',
+                        fillColor: colorObs,
+                        fillOpacity: 0.95,
+                        weight: 2
+                    });
+                    marker.bindPopup(`
+                        <div class="p-2 text-xs space-y-1">
+                            <p class="font-bold uppercase text-slate-900 flex items-center gap-1.5"><i class="fas fa-exclamation-triangle" style="color:${colorObs}"></i> OBSTÁCULO: ${ob.tipo}</p>
+                            <p class="text-[11px] font-semibold text-slate-700">Estado: <span class="px-1.5 py-0.5 rounded text-white text-[10px]" style="background:${colorObs}">${ob.estado}</span></p>
+                            <p class="text-[11px] text-slate-600">${ob.descripcion || 'Sin descripción adicional.'}</p>
+                            <p class="text-[10px] text-slate-500 pt-1 border-t border-slate-200">Tramo: <strong>${ob.tramo_nombre}</strong></p>
+                        </div>
+                    `);
+                    capaObstaculos.addLayer(marker);
+                    allBounds.extend([ob.lat, ob.lng]);
+                });
+            }
+            // 2. Dibujar tramos físicos registrados según evaluación y riesgo
             tramosDetalle.forEach((t, idx) => {
                 if (Array.isArray(t.geo) && t.geo.length >= 2) {
                     const puntosTramo = t.geo
@@ -719,20 +807,54 @@
                         .map(p => [p.lat, p.lng]);
 
                     if (puntosTramo.length >= 2) {
-                        const colorTramo = paletaColores[idx % paletaColores.length];
+                        let pesoLinea = 4;
+                        let colorLinea = '#64748b'; // gris neutro para tramo sin evaluar
+                        let patronDash = '6, 8'; // discontinuo para sin evaluar
+                        let opacidadLinea = 0.85;
+                        let estadoTexto = 'SIN EVALUAR (CONSERVA GEOMETRÍA)';
+                        let badgeColor = 'background:#f1f5f9;color:#475569';
+
+                        if (t.estado_visual === 'SIN_EVALUAR' || t.riesgo_normalizado === null || t.riesgo_normalizado === undefined) {
+                            pesoLinea = 4;
+                            colorLinea = '#64748b';
+                            patronDash = '6, 8';
+                            estadoTexto = 'SIN EVALUAR';
+                            badgeColor = 'background:#f1f5f9;color:#475569';
+                        } else {
+                            patronDash = null; // Línea continua
+                            const r = Math.max(0, Math.min(1, Number(t.riesgo_normalizado)));
+                            // Menor riesgo = más grueso (hasta 11px); mayor riesgo = más delgado (hasta 4px)
+                            pesoLinea = Math.round(11 - (r * 7));
+                            if (pesoLinea < 4) pesoLinea = 4;
+
+                            if (t.obstaculos_count > 0) {
+                                estadoTexto = `EVALUADO · ${t.obstaculos_count} OBSTÁCULO(S) VIGENTE(S)`;
+                                colorLinea = r >= 0.65 ? '#dc2626' : '#d97706';
+                                badgeColor = r >= 0.65 ? 'background:#fee2e2;color:#991b1b' : 'background:#fef3c7;color:#92400e';
+                            } else {
+                                estadoTexto = 'EVALUADO SIN OBSTÁCULOS ACTIVOS';
+                                colorLinea = r <= 0.25 ? '#059669' : '#0284c7';
+                                badgeColor = 'background:#dcfce7;color:#166534';
+                            }
+                        }
+
                         const polyTramo = window.L.polyline(puntosTramo, {
-                            color: colorTramo,
-                            weight: 5,
-                            opacity: 0.85
+                            color: colorLinea,
+                            weight: pesoLinea,
+                            opacity: opacidadLinea,
+                            dashArray: patronDash
                         });
                         capaTramosTecnicos.addLayer(polyTramo);
 
                         const popupHtml = `
-                            <div class="p-1 text-xs">
+                            <div class="p-2 text-xs space-y-1">
                                 <p class="font-bold text-slate-900 uppercase">[TRAMO ${t.orden ?? (idx + 1)}] ${t.nombre}</p>
-                                <p class="text-[11px] text-slate-600 uppercase mt-0.5">Tipo: <strong>${t.tipo}</strong> · Longitud: <strong>${Number(t.longitud).toFixed(1)} M</strong></p>
-                                <p class="text-[11px] font-mono text-emerald-800 mt-1">Conexión: <strong>${t.nodo_inicial} → ${t.nodo_final}</strong></p>
-                                <p class="text-[10px] text-slate-500 mt-1">Cobertura de riesgo: <strong>${t.cobertura_datos}</strong></p>
+                                <span class="inline-block text-[10px] font-bold px-1.5 py-0.5 rounded uppercase" style="${badgeColor}">${estadoTexto}</span>
+                                <p class="text-[11px] text-slate-600 uppercase mt-1">Tipo: <strong>${t.tipo}</strong> · Longitud: <strong>${Number(t.longitud).toFixed(1)} M</strong></p>
+                                <p class="text-[11px] font-mono text-emerald-800">Conexión: <strong>${t.nodo_inicial} → ${t.nodo_final}</strong></p>
+                                <p class="text-[11px] text-slate-700">Riesgo normalizado: <strong>${t.riesgo_normalizado !== null && t.riesgo_normalizado !== undefined ? Number(t.riesgo_normalizado).toFixed(3) : 'SIN EVALUAR'}</strong> · Grosor en mapa: <strong>${pesoLinea} px</strong></p>
+                                <p class="text-[10px] text-slate-500">Obstáculos vigentes: <strong>${t.obstaculos_count ?? 0}</strong> (Activos: ${t.obstaculos_activos_count ?? 0}, Reportados: ${t.obstaculos_reportados_count ?? 0})</p>
+                                <p class="text-[9px] text-slate-400 italic">Grosor de línea: menor riesgo vial = mayor grosor.</p>
                             </div>
                         `;
                         polyTramo.bindPopup(popupHtml);
@@ -744,11 +866,12 @@
                             .addTo(etiquetasTramos);
                         window.tramosLayers[t.id] = polyTramo;
 
+                        const pesoBase = pesoLinea;
                         polyTramo.on('mouseover', function() {
-                            this.setStyle({ weight: 8, opacity: 1.0 });
+                            this.setStyle({ weight: pesoBase + 3, opacity: 1.0 });
                         });
                         polyTramo.on('mouseout', function() {
-                            this.setStyle({ weight: 5, opacity: 0.85 });
+                            this.setStyle({ weight: pesoBase, opacity: opacidadLinea });
                         });
 
                         allBounds.extend(polyTramo.getBounds());

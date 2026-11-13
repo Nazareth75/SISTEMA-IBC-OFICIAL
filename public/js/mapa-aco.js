@@ -18,21 +18,26 @@ window.renderizarCaminosAco = function(map, data, opciones = {}) {
             texto('p',`Refuerzo relativo: ${(camino.refuerzo_relativo*100).toFixed(1)} % · Media de feromona ponderada por distancia: ${camino.feromona_media_ponderada.toPrecision(4)}`));
         return div;
     };
+    let grupoRecomendada = null;
     caminos.forEach((camino,i) => {
         const grupo = L.featureGroup();
+        if (camino.recomendada) grupoRecomendada = grupo;
         const color = opciones.celular ? (camino.recomendada ? '#166534' : '#1e88e5') : (camino.recomendada ? '#15803d' : colores[1 + (i % (colores.length-1))]);
-        const grosor = 3 + 11 * camino.refuerzo_relativo;
+        const grosor = camino.recomendada ? 10 : Math.max(3, Math.round(3 + 5 * (camino.refuerzo_relativo || 0.4)));
         camino.geometria.forEach((geo,indiceTramo) => {
             if (!Array.isArray(geo) || geo.length<2) return;
             const puntos = geo.map(p => [p.lat,p.lng]);
-            // El halo solo identifica la recomendación; el trazo coloreado mide refuerzo.
-            if(camino.recomendada && !opciones.celular) L.polyline(puntos,{color:'#ffffff',weight:grosor+4,opacity:0.8,interactive:false}).addTo(grupo);
+            // El halo blanco solo identifica la recomendación destacándola; la línea verde gruesa representa el camino seguro.
+            if(camino.recomendada && !opciones.celular) L.polyline(puntos,{color:'#ffffff',weight:grosor+4,opacity:0.85,interactive:false}).addTo(grupo);
             const fichaTramo = resumen(camino);
             fichaTramo.append(texto('strong', `TRAMO ${camino.tramos_ids[indiceTramo]}: ${camino.tramos_nombres[indiceTramo]}`));
             L.polyline(puntos,{color,weight:grosor,opacity:camino.recomendada?1:0.62,
                 dashArray:opciones.celular?null:(camino.recomendada?null:'10 5')}).bindPopup(fichaTramo,{maxWidth:420}).addTo(grupo);
         });
-        overlays[camino.nombre] = grupo;
+        const nombreCapa = camino.recomendada
+            ? '★ RUTA RECOMENDADA (MENOR RIESGO · LÍNEA GRUESA)'
+            : `${camino.nombre} (LÍNEA DELGADA)`;
+        overlays[nombreCapa] = grupo;
         map._capasCaminosAco.push(grupo);
         if (camino.recomendada || opciones.alternativas) grupo.addTo(map);
         if ((camino.recomendada || opciones.alternativas) && grupo.getLayers().length) bounds.extend(grupo.getBounds());
@@ -45,8 +50,7 @@ window.renderizarCaminosAco = function(map, data, opciones = {}) {
         }
     });
     const recomendada = caminos.find(c => c.recomendada);
-    if(opciones.celular) [...caminos].sort((a,b)=>(Number(a.recomendada)-Number(b.recomendada)) || (a.refuerzo_relativo-b.refuerzo_relativo)).forEach(c=>overlays[c.nombre]?.bringToFront());
-    else if(recomendada)overlays[recomendada.nombre]?.bringToFront();
+    if(grupoRecomendada) grupoRecomendada.bringToFront();
     if(recomendada && L.circleMarker) {
         recomendada.geometria.forEach((geo,i) => {
             if(!geo.length)return;

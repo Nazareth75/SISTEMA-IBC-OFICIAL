@@ -142,24 +142,30 @@
 
         @endif
 
-        @if(auth()->user()->tieneRol('SUPERADMINISTRADOR', 'ADMINISTRADOR', 'TECNICO', 'VOLUNTARIO', 'ADMINISTRADOR_NO_VIDENTE'))
+        @if(auth()->user()->tieneRol('SUPERADMINISTRADOR', 'ADMINISTRADOR', 'TECNICO', 'ADMINISTRADOR_NO_VIDENTE'))
         <div class="px-5 pt-4 pb-2 text-[11px] font-bold uppercase tracking-widest text-gray-400">
             Observatorio
         </div>
 
-        @if(auth()->user()->tieneRol('SUPERADMINISTRADOR', 'ADMINISTRADOR', 'TECNICO', 'ADMINISTRADOR_NO_VIDENTE'))
         <a href="{{ route('reportes-obstaculos.index') }}"
            class="ibc-sidebar-link {{ request()->routeIs('reportes-obstaculos.index', 'reportes-obstaculos.show') ? 'ibc-sidebar-active' : '' }}">
             <span class="material-symbols-outlined">visibility</span>
             <span>Reportes de Obstáculos</span>
         </a>
-        @endif
 
-        @if(!auth()->user()->tieneRol('ADMINISTRADOR_NO_VIDENTE'))
+        @if(auth()->user()->tieneRol('SUPERADMINISTRADOR', 'ADMINISTRADOR', 'TECNICO'))
         <a href="{{ route('reportes-obstaculos.mapa-monitoreo') }}"
            class="ibc-sidebar-link {{ request()->routeIs('reportes-obstaculos.mapa-monitoreo') ? 'ibc-sidebar-active' : '' }}">
             <span class="material-symbols-outlined">map</span>
             <span>Mapa de Monitoreo</span>
+        </a>
+        @endif
+
+        @if(!auth()->user()->tieneRol('ADMINISTRADOR_NO_VIDENTE'))
+        <a href="{{ route('reportes-obstaculos.mis-reportes') }}"
+           class="ibc-sidebar-link {{ request()->routeIs('reportes-obstaculos.mis-reportes') ? 'ibc-sidebar-active' : '' }}">
+            <span class="material-symbols-outlined">folder_shared</span>
+            <span>Mis Reportes</span>
         </a>
 
         <a href="{{ route('reportes-obstaculos.create') }}"
@@ -167,13 +173,18 @@
             <span class="material-symbols-outlined">report</span>
             <span>Reportar Obstáculo</span>
         </a>
-
-        <a href="{{ route('reportes-obstaculos.mis-reportes') }}"
-           class="ibc-sidebar-link {{ request()->routeIs('reportes-obstaculos.mis-reportes') ? 'ibc-sidebar-active' : '' }}">
-            <span class="material-symbols-outlined">folder_shared</span>
-            <span>Mis Reportes</span>
-        </a>
         @endif
+        @endif
+
+        @if(auth()->user()->esVoluntario())
+        <div class="px-5 pt-4 pb-2 text-[11px] font-bold uppercase tracking-widest text-gray-400">
+            Reportes en Terreno
+        </div>
+        <a href="{{ route('reportes-obstaculos.create') }}"
+           class="ibc-sidebar-link {{ request()->routeIs('reportes-obstaculos.create') ? 'ibc-sidebar-active' : '' }}">
+            <span class="material-symbols-outlined">report</span>
+            <span>Reportar Obstáculo</span>
+        </a>
         @endif
     </nav>
 
