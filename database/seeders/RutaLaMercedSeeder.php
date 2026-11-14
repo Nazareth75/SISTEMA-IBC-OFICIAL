@@ -105,3 +105,4 @@ class RutaLaMercedSeeder extends Seeder
         }
     }
 }
+

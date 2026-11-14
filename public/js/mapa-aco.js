@@ -51,15 +51,18 @@ window.renderizarCaminosAco = function(map, data, opciones = {}) {
     });
     const recomendada = caminos.find(c => c.recomendada);
     if(grupoRecomendada) grupoRecomendada.bringToFront();
-    if(recomendada && L.circleMarker) {
+    if(recomendada && L.circleMarker && (opciones.mostrarNodos || opciones.celular)) {
+        const grupoNodos = L.featureGroup();
         recomendada.geometria.forEach((geo,i) => {
             if(!geo.length)return;
             const p=geo[0];
-            const limite=L.circleMarker([p.lat,p.lng],{radius:5,color:'#0f172a',fillColor:'#fff',fillOpacity:1,weight:2})
+            L.circleMarker([p.lat,p.lng],{radius:4,color:'#475569',fillColor:'#fff',fillOpacity:0.9,weight:1.5})
                 .bindTooltip(opciones.celular ? `T${recomendada.tramos_ids[i]}` : `Tramo ${recomendada.tramos_ids[i]}: ${recomendada.tramos_nombres[i]}`,{permanent:!!opciones.celular,direction:'top'})
-                .addTo(map);
-            map._capasCaminosAco.push(limite);
+                .addTo(grupoNodos);
         });
+        map._capasCaminosAco.push(grupoNodos);
+        if(opciones.celular) grupoNodos.addTo(map);
+        else overlays['CONEXIONES DE TRAMOS'] = grupoNodos;
     }
     if(recomendada?.geometria.length) {
         const inicio=recomendada.geometria[0][0],ultimo=recomendada.geometria.at(-1),fin=ultimo.at(-1);

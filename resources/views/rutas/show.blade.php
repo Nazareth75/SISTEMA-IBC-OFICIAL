@@ -767,11 +767,11 @@
             }
 
             const capaTramosTecnicos = window.L.layerGroup().addTo(map);
-            const etiquetasTramos = window.L.layerGroup().addTo(map);
+            const etiquetasTramos = window.L.layerGroup();
             const capaObstaculos = window.L.layerGroup().addTo(map);
             map._referenciasTecnicas = map._referenciasTecnicas || {};
             map._referenciasTecnicas['TRAMOS REGISTRADOS (GROSOR POR RIESGO)'] = capaTramosTecnicos;
-            map._referenciasTecnicas['OBSTÁCULOS EN TRAMOS'] = capaObstaculos;
+            map._referenciasTecnicas['OBSTÁCULOS EN TRAMOS (PELIGROS ACTIVOS)'] = capaObstaculos;
             map._referenciasTecnicas['ETIQUETAS DE TRAMOS'] = etiquetasTramos;
 
             // Dibujar marcadores de obstáculos en los tramos
