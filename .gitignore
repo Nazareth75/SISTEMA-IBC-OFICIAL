@@ -27,3 +27,6 @@ claude.md
 .claude/
 .github/agents/
 .scannerwork/
+
+*.apk
+aplicaciones para cel/
