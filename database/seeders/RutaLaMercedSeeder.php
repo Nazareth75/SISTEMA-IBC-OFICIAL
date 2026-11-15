@@ -80,16 +80,19 @@ class RutaLaMercedSeeder extends Seeder
             }
         }
 
-        $nivelBajo = NivelSeguridad::first();
-        if ($nivelBajo) {
+        $nivelOptimo = NivelSeguridad::where('niv_nse', 5)
+            ->orWhere('nom_nse', 'like', '%ÓPTIMO%')
+            ->first() ?? NivelSeguridad::first();
+
+        if ($nivelOptimo) {
             foreach ($ruta->tramos as $tramo) {
                 if ($tramo->evaluaciones()->count() === 0) {
                     EvaluacionRiesgo::create([
                         'cod_calles_tramos_eri' => $tramo->getKey(),
-                        'cod_niveles_seguridad_eri' => $nivelBajo->getKey(),
+                        'cod_niveles_seguridad_eri' => $nivelOptimo->getKey(),
                         'cod_usuarios_eri' => 1,
                         'fee_eri' => now()->toDateString(),
-                        'obs_eri' => 'Evaluación técnica peatonal estándar.',
+                        'obs_eri' => 'Evaluación técnica peatonal estándar accesible.',
                         'fcr_eri' => now(),
                     ]);
                 }
@@ -98,6 +101,7 @@ class RutaLaMercedSeeder extends Seeder
                         'cod_calles_tramos_cen' => $tramo->getKey(),
                         'tip_cen' => 'ILUMINACION',
                         'des_cen' => 'Alumbrado público LED operativo en acera.',
+                        'niv_cen' => 'BUENO',
                         'fcr_cen' => now(),
                     ]);
                 }
